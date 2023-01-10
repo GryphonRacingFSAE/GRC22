@@ -6,7 +6,7 @@ void BMS::generateValues() {
     static float voltage = 620;
     static float current = 0;
     static float percent = 0;
-    static float temp = -40;
+    static float temp = -15;
     emit newAccumulatorOpenVoltage(voltage += 0.8f);
     emit newAccumulatorSOC(percent += 0.7f);
     emit newBMSTemp(temp += 0.9f);
@@ -15,7 +15,7 @@ void BMS::generateValues() {
     emit newAccumulatorInstVoltage(voltage -= 2.7f);
 
     if (temp >= 80) {
-        temp = -40;
+        temp = -15;
     }
     if (percent >= 100) {
         percent = 0;

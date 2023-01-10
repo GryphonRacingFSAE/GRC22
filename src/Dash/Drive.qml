@@ -304,29 +304,26 @@ Item {
 
     Connections {
         target: MotorController
-        function onNewMotorRPM(rpm)
-        {
-            var speed = rpm%120                               //Speed in km/h is calculated here
+        function onNewMotorRPM(rpm) {
+            let gear_ratio = 1/3.48; // 3.48:1 gear ratio
+            let wheel_rpm = rpm * gear_ratio;
+            let wheel_diameter_inch = 16; // 16" OD
+            let wheel_circumfrence_m = wheel_diameter_inch * 0.0254 * 3.14; // inch -> m = inch * 0.0254
+            let wheel_surface_speed_mpm = wheel_circumfrence_m * wheel_rpm;
+            let wheel_surface_speed_kmph = wheel_surface_speed_mpm / 1000 * 60 // m/min -> km/h = m / 1000 * 60, 
 
-            speedValue.text = `${speed}`                                //Text display of speed
+            speedValue.text = `${wheel_surface_speed_kmph.toFixed(0)}`
         }
         function onNewCoolantTemp(coolant_temp)
         {
-            //Getting positive values within the right range
-            if (coolant_temp < 0)
-            {
-                coolant_temp = 180+(coolant_temp*20%120)
-            }
-            else{coolant_temp = 180-(coolant_temp*20%120)}
-
             coolantTempValue.text = `${coolant_temp.toFixed(1)}`
 
             //Color coding value ranges
-            if (coolant_temp < 90)
+            if (coolant_temp < 25)
             {
                 coolantTempValue.color="blue"
             }
-            else if(coolant_temp > 120)
+            else if(coolant_temp > 60)
             {
                 coolantTempValue.color="red"
             }
@@ -334,49 +331,26 @@ Item {
                 coolantTempValue.color="green"
             }
         }
-        function onNewOilTemp(oil_temp)
-        {
-
-            //Getting positive values within the right range
-            if (oil_temp < 0)
-            {
-                oil_temp = 170+(oil_temp*25%110)
-            }
-            else{oil_temp = 170-(oil_temp*25%110)}
-
+        function onNewOilTemp(oil_temp) {
             oilTempValue.text = `${oil_temp.toFixed(1)}`
 
             //Color coding value ranges
-            if (oil_temp < 90)
-            {
+            if (oil_temp < 30) {
                 oilTempValue.color="blue"
-            }
-            else if(oil_temp > 120)
-            {
+            } else if(oil_temp > 70) {
                 oilTempValue.color="red"
-            }
-            else {
+            } else {
                 oilTempValue.color="green"
             }
-
         }
-        function onNewMotorTemp(temp)
-        {
-            //Getting positive values within the right range
-            if (temp < 0)
-            {
-                temp = 160+(temp*20%100)
-            }
-            else{temp = 160-(temp*20%100)}
-
+        function onNewMotorTemp(temp) {
             motorTempValue.text = `${temp.toFixed(1)}`
 
             //Color coding value ranges
-            if (temp < 90)
-            {
+            if (temp < 30){
                 motorTempValue.color="blue"
             }
-            else if(temp > 120)
+            else if(temp > 75)
             {
                 motorTempValue.color="red"
             }
@@ -397,13 +371,12 @@ Item {
             battery_percent_text.text = `Battery: ${percent.toFixed(1)}%`
             battery_bar.width = (battery_bar.parent.width-10)/100*percent
 
-            if (percent >= (100/3))
-            {
-                battery_bar.color = "green"
-            }
-            else
-            {
+            if (percent <= 20) {
                 battery_bar.color = "red"
+            } else if (percent <= 40) {
+                battery_bar.color = "yellow"
+            } else {
+                battery_bar.color = "green"
             }
         }
         function onNewBMSTemp(temp)
@@ -411,8 +384,17 @@ Item {
         }
         function onNewAccumulatorMaxTemp(temp)
         {
-            accumTempValue.text = coolantTempValue.text
-            accumTempValue.color = coolantTempValue.color
+            accumTempValue.text = `${temp.toFixed(1)}`
+            if (temp < 25){
+                accumTempValue.color="blue"
+            }
+            else if(temp > 60)
+            {
+                accumTempValue.color="red"
+            }
+            else {
+                accumTempValue.color="green"
+            }
         }
         function onNewAccumulatorCurrent(current)
         {

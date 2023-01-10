@@ -2,6 +2,8 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>Drive.qml</file>
+        <file>Debug.qml</file>
+        <file>Tuning.qml</file>
     </qresource>
 
     <qresource prefix="/images">
