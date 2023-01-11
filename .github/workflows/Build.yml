@@ -22,8 +22,8 @@ jobs:
       - name: Install conan
         run: python -m pip install conan
   
-      # - name: Add Conan Server
-      # run: conan remote add grc /* Remote URL */ False --force
+      - name: Add Conan Server
+        run: conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} False --force
 
       - name: Clear Conan Cache
         run: conan remove "*" -f
@@ -33,4 +33,9 @@ jobs:
       
       - name: Conan Build
         run: conan build . -if build
+      
+      - name: Clear Conan Cache
+        run: conan remove "*" -f
+      
+      - run: conan remote remove grc
 
