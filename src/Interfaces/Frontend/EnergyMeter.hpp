@@ -6,8 +6,7 @@
 class EnergyMeter : public QObject, public CAN::FakeInterface {
     Q_OBJECT
   public:
-    EnergyMeter(QObject* parent = nullptr)
-        : QObject(parent){
+    EnergyMeter(QObject* parent = nullptr) : QObject(parent) {
         this->CAN::FakeInterface::startReceiving();
     }
     ~EnergyMeter() = default;

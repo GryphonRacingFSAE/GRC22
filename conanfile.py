@@ -1,9 +1,9 @@
-from conans import ConanFile
+from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 from conan.tools.layout import cmake_layout
 from conan.tools.build import cross_building
 from conan.tools.files import copy
-from conans.errors import ConanInvalidConfiguration
+from conan.errors import ConanInvalidConfiguration
 import os
 
 class GRCDash(ConanFile):

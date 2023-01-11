@@ -13,7 +13,7 @@ void MotorController::generateValues() {
     emit newOilTemp(oil_temp);
     emit newMotorTemp(motor_temp);
     emit new12VVoltage(voltage);
-    
+
     rpm += 50.0f;
     if (rpm >= 5000) {
         rpm = 0.0f;
