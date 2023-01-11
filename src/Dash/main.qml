@@ -16,7 +16,7 @@ ApplicationWindow {
 
     Loader {
         id: active_dash
-        source: "Drive/Drive.qml"
+        source: display_sources[selected_display]
         anchors.fill: parent
     }
 
