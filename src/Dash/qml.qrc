@@ -1,9 +1,11 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>Drive.qml</file>
-        <file>Debug.qml</file>
-        <file>Tuning.qml</file>
+        <file>Drive/Drive.qml</file>
+        <file>Drive/DataBox.qml</file>
+        <file>Drive/Battery.qml</file>
+        <file>Debug/Debug.qml</file>
+        <file>Tuning/Tuning.qml</file>
     </qresource>
 
     <qresource prefix="/images">
