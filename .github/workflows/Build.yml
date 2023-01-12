@@ -23,13 +23,13 @@ jobs:
         run: python -m pip install conan
   
       - name: Add Conan Server
-        run: conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} False --force
+        run: conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} --force
 
       - name: Clear Conan Cache
         run: conan remove "*" -f
       
       - name: Conan Install
-        run: conan install . -if build -pr:h ConanProfiles/Linux-gcc-12-Debug.ini -pr:b ConanProfiles/Linux-gcc-12-Debug.ini -r grc
+        run: conan install . -if build -pr:h ConanProfiles/Linux-gcc-12-Debug.ini -pr:b ConanProfiles/Linux-gcc-12-Debug.ini -r grc -c tools.system.package_manager:mode=install
       
       - name: Conan Build
         run: conan build . -if build
