@@ -20,8 +20,8 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
-    readonly property var display_sources: ["Drive/Drive.qml", "Debug/Debug.qml", "Tuning/Tuning.qml"];
-    property int selected_display: 0;
+    readonly property var display_sources: ["Drive/Drive.qml", "Debug/Debug_A.qml", "Debug/Debug_B.qml", "Tuning/Tuning.qml"];
+    property int selected_display: 1;
     MouseArea {
         anchors.fill: parent
         onClicked: () => {
