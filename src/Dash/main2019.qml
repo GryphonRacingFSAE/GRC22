@@ -78,6 +78,18 @@ ApplicationWindow {
             Layout.preferredWidth: app_window.width/16*6
             Layout.fillHeight: true
             Text {
+                id: speedtext
+                text: "kmph"
+                font.bold: true
+                color:"black"
+                font.pointSize: main.height/15
+                anchors{
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                    topMargin: main.height/15
+                }
+            }
+            Text {
                 id: speedValue
                 font.pointSize: main.height/3.5
                 opacity: 0.9
@@ -85,19 +97,7 @@ ApplicationWindow {
                 color:"black"
                 text: ""
                 anchors{
-                    top: parent.top
-                    horizontalCenter: parent.horizontalCenter
-                    topMargin: main.height/25
-                }
-            }
-            Text {
-                id: speedtext
-                text: "kmph"
-                font.bold: true
-                color:"black"
-                font.pointSize: main.height/15
-                anchors{
-                    top:speedValue.bottom
+                    top:speedtext.bottom
                     horizontalCenter: parent.horizontalCenter
                     topMargin: - main.height/15
                 }
@@ -110,7 +110,7 @@ ApplicationWindow {
                 low: 20
                 high: 40
                 anchors{
-                    top:speedtext.bottom
+                    top:speedValue.bottom
                     horizontalCenter: parent.horizontalCenter
                     topMargin: main.height/8
                 }
