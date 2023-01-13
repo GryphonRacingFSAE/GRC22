@@ -9,7 +9,7 @@ void AN400ECU::generateValues() {
     static float tps = 0;
     static float rpm = 0;
     static float temp = -15;
-    
+
     emit newMAP(map += 0.8f);
     emit newLambda(lambda += 0.2f);
     emit newTPS(tps += 0.3f);

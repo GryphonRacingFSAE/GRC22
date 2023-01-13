@@ -13,8 +13,7 @@ int main(int argc, char* argv[]) {
     AN400ECU* ecu = new AN400ECU(); // Should be before QQml engine
     QQmlApplicationEngine engine;
 
-    qmlRegisterSingletonInstance<AN400ECU>(
-        "CAN.AN400ECU", 1, 0, "AN400ECU", ecu);
+    qmlRegisterSingletonInstance<AN400ECU>("CAN.AN400ECU", 1, 0, "AN400ECU", ecu);
 #ifdef QT_DEBUG
     RuntimeQml* rt = new RuntimeQml(&engine);
     rt->parseQrc(ROOT_SOURCE_PATH "/qml.qrc");
