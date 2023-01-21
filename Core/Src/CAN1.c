@@ -16,21 +16,24 @@ void startCAN1TxTask() {
 	CAN_TxHeaderTypeDef replacementCanHeader;
 
 	while (1) {
+		// Grab CAN message from CAN1 queue
 		if (osMessageQueueGet(CAN1_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
 			replacementCanHeader.StdId = txMsg.StdId;
 			replacementCanHeader.ExtId = txMsg.ExtId;
 			replacementCanHeader.IDE = txMsg.IDE;
 			replacementCanHeader.DLC = txMsg.DLC;
-			replacementCanHeader.RTR = CAN_RTR_DATA;
-			replacementCanHeader.TransmitGlobalTime = DISABLE;
+			replacementCanHeader.RTR = CAN_RTR_DATA; // Disable RTR
+			replacementCanHeader.TransmitGlobalTime = DISABLE; // Disable TGT
 
+			// Send out TX message on CAN
 			HAL_CAN_AddTxMessage(&hcan1, &replacementCanHeader, txMsg.aData, NULL);
 
+			// Print out the TX message
 			myprintf("%X ", txMsg.StdId);
 			for (int i = 0; i < txMsg.DLC; i++) {
 				myprintf("%02X", txMsg.aData[i]);
 			}
-			myprintf("\n\r");
+			myprintf("\n");
 		}
 
 	}
@@ -55,14 +58,13 @@ void startCANRxTask() {
 		flagsSet = osThreadFlagsWait(CAN1_FLAG | CAN2_FLAG, osFlagsWaitAny | osFlagsNoClear, osWaitForever);
 
 		if (flagsSet & CAN1_FLAG) {
-			//clear flag
 			osThreadFlagsClear(CAN1_FLAG);
 
-			//get message from fifo and send to msg handler
+			// Receive message from CAN1's FIFO buffer, and forward to the message handler
 			HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rxHeader, canData);
 			canMsgHandler(&rxHeader, canData);
 
-			//set flag if more messages remain in fifo
+			// If elements still exist in the buffer, set the flag again
 			if (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) > 0) {
 				osThreadFlagsSet(CANRxTaskHandle, CAN1_FLAG);
 			}
@@ -70,9 +72,11 @@ void startCANRxTask() {
 		} else if (flagsSet & CAN2_FLAG) {
 			osThreadFlagsClear(CAN2_FLAG);
 
+			// Receive message from CAN2's FIFO buffer, and forward to the message handler
 			HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &rxHeader, canData);
 			canMsgHandler(&rxHeader, canData);
 
+			// If elements still exist in the buffer, set the flag again
 			if (HAL_CAN_GetRxFifoFillLevel(&hcan2, CAN_RX_FIFO0) > 0) {
 				osThreadFlagsSet(CANRxTaskHandle, CAN2_FLAG);
 			}
