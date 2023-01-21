@@ -23,9 +23,9 @@ extern osMutexId_t Ctrl_Data_MtxHandle;
 
 void startControlTask();
 
-void BSPC();
-void RTD();
-void pumpCtrl();
-void fanCtrl();
+void BSPC(); // Brake system plausibility check
+void RTD(); // Ready to drive
+void pumpCtrl(); // Motor & Motor controller cooling pump control
+void fanCtrl(); // Accumulator cooling fan control
 
 #endif /* INC_CONTROL_H_ */
