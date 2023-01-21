@@ -15,7 +15,7 @@
 
 extern volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
 
-typedef struct{
+typedef struct {
 	uint16_t torque;
 	uint16_t pedalPos;
 	uint32_t flags;

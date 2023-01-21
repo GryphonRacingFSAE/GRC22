@@ -11,12 +11,12 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-typedef struct{
-	uint32_t wheelspeed[4];
+typedef struct {
+	uint32_t wheelSpeed[4];
 	uint32_t motorControllerTemp;
 	uint32_t coolantTemp;
-	uint32_t tractiveV;
-}Ctrl_Data_Struct;
+	uint32_t tractiveVoltage;
+} Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
 extern osMutexId_t Ctrl_Data_MtxHandle;
