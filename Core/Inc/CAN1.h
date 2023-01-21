@@ -35,6 +35,6 @@ typedef struct {
 
 void startCAN1TxTask();
 void startCANRxTask();
-void MsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
+void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
 
 #endif /* INC_CAN1_H_ */
