@@ -13,20 +13,13 @@ extern osThreadId_t CANRxTaskHandle;
 
 void startCAN1TxTask() {
 	CANMsg txMsg;
-	CAN_TxHeaderTypeDef replacementCanHeader;
 
 	while (1) {
 		// Grab CAN message from CAN1 queue
 		if (osMessageQueueGet(CAN1_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
-			replacementCanHeader.StdId = txMsg.StdId;
-			replacementCanHeader.ExtId = txMsg.ExtId;
-			replacementCanHeader.IDE = txMsg.IDE;
-			replacementCanHeader.DLC = txMsg.DLC;
-			replacementCanHeader.RTR = CAN_RTR_DATA; // Disable RTR
-			replacementCanHeader.TransmitGlobalTime = DISABLE; // Disable TGT
 
 			// Send out TX message on CAN
-			HAL_CAN_AddTxMessage(&hcan1, &replacementCanHeader, txMsg.aData, NULL);
+			HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, NULL);
 
 			// Print out the TX message
 			myprintf("%X ", txMsg.StdId);

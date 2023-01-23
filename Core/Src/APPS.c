@@ -31,11 +31,13 @@ void startAPPSTask() {
 		txMsg.aData[1] = adc_avg >> 16 & 0xFFU;
 		txMsg.aData[0] = adc_avg >> 24 & 0xFFU;
 
-		txMsg.DLC = 4;
-		txMsg.StdId = 0x69U;
+		txMsg.header.DLC = 4;
+		txMsg.header.StdId = 0x69U;
 
-		txMsg.ExtId = 0;
-		txMsg.IDE = 0;
+		txMsg.header.ExtId = 0;
+		txMsg.header.IDE = 0;
+		txMsg.header.RTR = CAN_RTR_DATA;
+		txMsg.header.TransmitGlobalTime = DISABLE;
 
 		myprintf("ADC: %d \n\r", adc_avg);
 
