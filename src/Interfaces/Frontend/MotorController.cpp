@@ -34,4 +34,11 @@ void MotorController::generateValues() {
     if (voltage >= 14.5f) {
         voltage = 8.00f;
     }
+
+    // debug screen
+    static float test_value = 0.0f;
+    emit onNewTestValue(test_value += 1.0f);
+    if (test_value >= 100.0f) {
+        test_value = 0.0f;
+    }
 }

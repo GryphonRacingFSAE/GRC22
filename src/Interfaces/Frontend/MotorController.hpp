@@ -19,6 +19,9 @@ class MotorController : public QObject, public CAN::FakeInterface {
     void newOilTemp(float temp);
     void new12VVoltage(float voltage);
 
+    // debug screen
+    void newTestValue(float test_value);
+
   private:
     void generateValues();
 };

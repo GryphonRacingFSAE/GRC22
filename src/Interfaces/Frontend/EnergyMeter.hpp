@@ -15,6 +15,9 @@ class EnergyMeter : public QObject, public CAN::FakeInterface {
     void newVoltage(float voltage);
     void newCurrent(float current);
 
+    // debug screen
+    void newTestValue(float test_value);
+
   private:
     void generateValues();
 };

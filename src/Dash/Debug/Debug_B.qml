@@ -69,6 +69,7 @@ Rectangle {
             }
         }
     }
+
     Item {
         id: section_B
 
@@ -119,5 +120,9 @@ Rectangle {
                 title: "Torque Shudder"
             }
         }
+    }
+
+    Connections {
+        target: MotorController
     }
 }

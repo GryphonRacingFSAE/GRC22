@@ -20,6 +20,9 @@ class BMS : public QObject, public CAN::FakeInterface {
     void newAccumulatorOpenVoltage(float voltage);
     void newAccumulatorSOC(float percent);
 
+    // debug screen
+    void newTestValue(float test_value);
+
   private:
     void generateValues();
 };
