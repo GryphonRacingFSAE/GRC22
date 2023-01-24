@@ -28,9 +28,6 @@ class GRCDash(ConanFile):
             raise ConanInvalidConfiguration("Non-Linux backend for canbus not supported")
 
     def configure(self):
-        if self.settings.compiler == 'Visual Studio':
-            del self.options.fPIC
-
         self.options["qt"].shared = True
         self.options["qt"].qtdeclarative = True
         self.options["qt"].qtshadertools = True
@@ -38,7 +35,7 @@ class GRCDash(ConanFile):
 
     def requirements(self):
         if self.options.dev != "back":
-            self.requires("qt/6.3.1")
+            self.requires("qt/6.4.2")
             self.requires("runtimeqml/cci.20220923")
         else:
             self.generators = "virtualrunenv",
@@ -60,8 +57,8 @@ class GRCDash(ConanFile):
         deps.generate()
 
     def build(self):
-        copy(self, "*.dbc", os.path.join(self.source_folder, "src/2022"), os.path.join(self.build_folder, "bin"), keep_path=False)
-        copy(self, "*.dbc", os.path.join(self.source_folder, "src/2019"), os.path.join(self.build_folder, "bin"), keep_path=False)
+        copy(self, "*.dbc", os.path.join(self.source_folder, "src"), os.path.join(self.build_folder, "bin/2022"), keep_path=False)
+        copy(self, "*.dbc", os.path.join(self.source_folder, "src"), os.path.join(self.build_folder, "bin/2019"), keep_path=False)
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
