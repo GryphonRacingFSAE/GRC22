@@ -26,7 +26,7 @@ void Dump::newFrame(const can_frame& frame) {
                frame.data[7]);
 }
 
-void Dump::newError(const can_frame& frame) {
+void Dump::newError(const can_frame&) {
     fmt::print("Error\n");
 }
 

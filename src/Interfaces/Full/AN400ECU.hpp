@@ -15,13 +15,6 @@ class AN400ECU : public QObject, public CAN::DBCInterface<AN400ECU> {
         can_signal_dispatch["Thermistor2_Temp"] = &AN400ECU::newOilTemp;
         can_signal_dispatch["Battery_Voltage"] = &AN400ECU::batteryVoltageToSOC;
         can_signal_dispatch["Air_Temp"] = &AN400ECU::newAccumulatorMaxTemp;
-        // can_signal_dispatch["Pack_Current"] = &AN400ECU::newAccumulatorCurrent;
-        // can_signal_dispatch["Internal_Temperature"] = &AN400ECU::newBMSTemp;
-        // can_signal_dispatch["Current"] = &AN400ECU::newCurrent;
-        // can_signal_dispatch["Voltage"] = &AN400ECU::newVoltage;
-        // can_signal_dispatch["INV_Analog_Input_1"] = &AN400ECU::new12VVoltage;
-        // can_signal_dispatch["Pack_Open_Voltage"] = &AN400ECU::newAccumulatorOpenVoltage;
-        // can_signal_dispatch["Pack_Inst_Voltage"] = &AN400ECU::newAccumulatorInstVoltage;
     }
 
     void batteryVoltageToSOC(float voltage) {

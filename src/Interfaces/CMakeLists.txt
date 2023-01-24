@@ -22,7 +22,9 @@ else()
         Frontend/EnergyMeter.hpp
         Frontend/BMS.hpp
         Frontend/BMS.cpp
-    ) # Currently no fake interfaces
+        Frontend/AN400ECU.hpp
+        Frontend/AN400ECU.cpp
+    )
     target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Frontend)
 endif()
 set_target_properties(CANInterfaces PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
