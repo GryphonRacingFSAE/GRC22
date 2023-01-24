@@ -13,22 +13,15 @@ class GRCDash(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     
     options = {
-        "shared": [True, False],
-        "fPIC": [True, False],
         "dev": ["front", "back", "full"]
     }
 
     default_options = {
-        "shared": False,
-        "fPIC": True,
         "dev": "full"
     }
 
     generators = "virtualrunenv", "qt"
     exports_sources = "CMakeLists.txt", "src/*"
-
-    def imports(self):
-        self.copy("*.dll", dst=os.path.join(self.build_folder, "bin"), src="@bindirs")
 
     def validate(self):
         if self.settings.os != "Linux" and self.options.dev != "front":
@@ -41,7 +34,7 @@ class GRCDash(ConanFile):
         self.options["qt"].shared = True
         self.options["qt"].qtdeclarative = True
         self.options["qt"].qtshadertools = True
-        self.options["qt"].with_libjpeg = "libjpeg-turbo"
+        self.options["qt"].with_libjpeg = "libjpeg"
 
     def requirements(self):
         if self.options.dev != "back":
@@ -60,6 +53,8 @@ class GRCDash(ConanFile):
         tc = CMakeToolchain(self)
         if self.options.dev != "back":
             tc.variables["QT_BIN_PATH"] = self.deps_cpp_info["qt"].bin_paths[0].replace("\\", "/")
+        tc.variables["BUILD_FRONTEND"] = self.options.dev != "back"
+        tc.variables["BUILD_BACKEND"] = self.options.dev != "front"
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -68,8 +63,5 @@ class GRCDash(ConanFile):
         copy(self, "*.dbc", os.path.join(self.source_folder, "src/2022"), os.path.join(self.build_folder, "bin"), keep_path=False)
         copy(self, "*.dbc", os.path.join(self.source_folder, "src/2019"), os.path.join(self.build_folder, "bin"), keep_path=False)
         cmake = CMake(self)
-        cmake.configure(variables={
-            "BUILD_FRONTEND": self.options.dev != "back",
-            "BUILD_BACKEND": self.options.dev != "front"
-        })
+        cmake.configure()
         cmake.build()
