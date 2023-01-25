@@ -41,7 +41,7 @@ jobs:
           key: ${{ runner.os }}-${{ github.ref_name }}
 
       - name: Conan Install
-        run: conan install . -if build -pr:h ConanProfiles/Ubuntu-gcc-11-Debug.ini -pr:b ConanProfiles/Ubuntu-gcc-11-Debug.ini -r grc -c tools.system.package_manager:mode=install -c tools.system.package_manager:tool=apt-get -c tools.system.package_manager:sudo=True
+        run: conan install . -if build -pr:h ConanProfiles/Ubuntu-gcc-11-Debug.ini -pr:b ConanProfiles/Ubuntu-gcc-11-Debug.ini -r grc -e NOT_ON_C3I=1 -c tools.system.package_manager:mode=install -c tools.system.package_manager:tool=apt-get -c tools.system.package_manager:sudo=True
       
       - name: Save Conan Cache
         uses: actions/cache/save@v3
