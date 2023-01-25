@@ -1203,7 +1203,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOD, GPIO_D5_Pin|GPIO_D6_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, GPIO_PUMP_Pin|USB_PowerSwitchOn_Pin|GPIO_RTD_BUZZER_Pin|GPIO_BRAKE_LIGHT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, GPIO_RTD_BUZZER_Pin|USB_PowerSwitchOn_Pin|GPIO_PUMP_Pin|GPIO_ACC_FAN_Pin
+                          |GPIO_RAD_FAN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USER_Btn_Pin */
   GPIO_InitStruct.Pin = USER_Btn_Pin;
@@ -1234,14 +1235,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_BRAKE_SWITCH_Pin USB_OverCurrent_Pin GPIO_START_BTN_Pin GPIO_START_BTNG14_Pin */
-  GPIO_InitStruct.Pin = GPIO_BRAKE_SWITCH_Pin|USB_OverCurrent_Pin|GPIO_START_BTN_Pin|GPIO_START_BTNG14_Pin;
+  /*Configure GPIO pins : GPIO_START_BTN_Pin USB_OverCurrent_Pin GPIO_BRAKE_SW_Pin GPIO_BRAKE_LIGHT_Pin */
+  GPIO_InitStruct.Pin = GPIO_START_BTN_Pin|USB_OverCurrent_Pin|GPIO_BRAKE_SW_Pin|GPIO_BRAKE_LIGHT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_PUMP_Pin USB_PowerSwitchOn_Pin GPIO_RTD_BUZZER_Pin GPIO_BRAKE_LIGHT_Pin */
-  GPIO_InitStruct.Pin = GPIO_PUMP_Pin|USB_PowerSwitchOn_Pin|GPIO_RTD_BUZZER_Pin|GPIO_BRAKE_LIGHT_Pin;
+  /*Configure GPIO pins : GPIO_RTD_BUZZER_Pin USB_PowerSwitchOn_Pin GPIO_PUMP_Pin GPIO_ACC_FAN_Pin
+                           GPIO_RAD_FAN_Pin */
+  GPIO_InitStruct.Pin = GPIO_RTD_BUZZER_Pin|USB_PowerSwitchOn_Pin|GPIO_PUMP_Pin|GPIO_ACC_FAN_Pin
+                          |GPIO_RAD_FAN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

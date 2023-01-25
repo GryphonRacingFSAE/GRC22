@@ -22,8 +22,8 @@ void startCAN1TxTask() {
 			HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, NULL);
 
 			// Print out the TX message
-			myprintf("%X ", txMsg.StdId);
-			for (int i = 0; i < txMsg.DLC; i++) {
+			myprintf("%X ", txMsg.header.StdId);
+			for (int i = 0; i < txMsg.header.DLC; i++) {
 				myprintf("%02X", txMsg.aData[i]);
 			}
 			myprintf("\n");
