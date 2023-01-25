@@ -12,8 +12,8 @@ on:
 jobs:
   build:
     env:
-      NOT_ON_C3I=1
-      UBUNTU_CI_BUILD=1
+      NOT_ON_C3I: 1
+      UBUNTU_CI_BUILD: 1
     runs-on: ubuntu-latest
 
     steps:
