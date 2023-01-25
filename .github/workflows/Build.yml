@@ -11,6 +11,9 @@ on:
 
 jobs:
   build:
+    env:
+      NOT_ON_C3I=1
+      UBUNTU_CI_BUILD=1
     runs-on: ubuntu-latest
 
     steps:
@@ -18,11 +21,6 @@ jobs:
         with:
           lfs: false
           submodules: false
-
-      - name: Environment Variables
-        run: |
-          export UBUNTU_CI_BUILD=1
-          export NOT_ON_C3I=1
 
       - name: Install conan
         run: python -m pip install conan
