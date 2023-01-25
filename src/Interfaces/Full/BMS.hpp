@@ -6,7 +6,7 @@
 class BMS : public QObject, public CAN::DBCInterface<BMS> {
     Q_OBJECT
   public:
-    BMS(QObject* parent = nullptr) : QObject(parent), DBCInterface("Orion_CANBUS.dbc") {
+    BMS(const std::string& dbc_file_path = "Orion_CANBUS.dbc") : QObject(nullptr), DBCInterface(dbc_file_path) {
         can_signal_dispatch["Pack_Open_Voltage"] = &BMS::newAccumulatorOpenVoltage;
         can_signal_dispatch["Pack_SOC"] = &BMS::newAccumulatorSOC;
         can_signal_dispatch["Pack_Inst_Voltage"] = &BMS::newAccumulatorInstVoltage;

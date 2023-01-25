@@ -8,7 +8,7 @@
 class AN400ECU : public QObject, public CAN::DBCInterface<AN400ECU> {
     Q_OBJECT
   public:
-    AN400ECU(QObject* parent = nullptr) : QObject(parent), DBCInterface("AN400ECU.dbc") {
+    AN400ECU(const std::string& dbc_file_path = "AN400ECU.dbc") : QObject(nullptr), DBCInterface(dbc_file_path) {
         can_signal_dispatch["RPM"] = &AN400ECU::newRPM;
         can_signal_dispatch["TPS"] = &AN400ECU::newTPS;
         can_signal_dispatch["MAP"] = &AN400ECU::newMAP;

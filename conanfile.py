@@ -3,6 +3,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 from conan.tools.layout import cmake_layout
 from conan.tools.build import cross_building
 from conan.tools.files import copy
+from conan.tools.env import Environment
 from conan.errors import ConanInvalidConfiguration
 import os
 
@@ -20,7 +21,7 @@ class GRCDash(ConanFile):
         "dev": "full"
     }
 
-    generators = "virtualrunenv", "qt"
+    generators = "VirtualRunEnv", "VirtualBuildEnv", "qt"
     exports_sources = "CMakeLists.txt", "src/*"
 
     def validate(self):
@@ -38,7 +39,7 @@ class GRCDash(ConanFile):
             self.requires("qt/6.4.2")
             self.requires("runtimeqml/cci.20220923")
         else:
-            self.generators = "virtualrunenv",
+            self.generators = "VirtualRunEnv", "VirtualBuildEnv",
         if self.options.dev != "front":
             self.requires("dbcppp/3.2.6")
         self.requires("fmt/9.0.0")
@@ -48,8 +49,6 @@ class GRCDash(ConanFile):
     
     def generate(self):
         tc = CMakeToolchain(self)
-        if self.options.dev != "back":
-            tc.variables["QT_BIN_PATH"] = self.deps_cpp_info["qt"].bin_paths[0].replace("\\", "/")
         tc.variables["BUILD_FRONTEND"] = self.options.dev != "back"
         tc.variables["BUILD_BACKEND"] = self.options.dev != "front"
         tc.generate()
@@ -57,8 +56,10 @@ class GRCDash(ConanFile):
         deps.generate()
 
     def build(self):
-        copy(self, "*.dbc", os.path.join(self.source_folder, "src"), os.path.join(self.build_folder, "bin/2022"), keep_path=False)
-        copy(self, "*.dbc", os.path.join(self.source_folder, "src"), os.path.join(self.build_folder, "bin/2019"), keep_path=False)
-        cmake = CMake(self)
-        cmake.configure()
-        cmake.build()
+        env = Environment()
+        env.append_path("PATH", self.deps_cpp_info["qt"].bin_paths[0].replace("\\", "/")) # Add qmake & windeployqt to path
+        env.define("QML_SOURCES_PATHS", os.path.join(self.source_folder, "src/Dash"))
+        with env.vars(self).apply():
+            cmake = CMake(self)
+            cmake.configure()
+            cmake.build()

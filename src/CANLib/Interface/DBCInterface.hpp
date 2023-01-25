@@ -15,8 +15,14 @@ template <class CANNode>
 class DBCInterface : public CAN::Interface {
   public:
     // Load a dbc file and start the CAN interface using settings from child classes
-    DBCInterface(const char* dbc_file, const char* interface_name = "can0")
+    DBCInterface(const std::string& dbc_file, const char* interface_name = "can0")
         : dbc_network(std::move(dbcppp::INetwork::LoadNetworkFromFile(dbc_file)[""])) {
+
+        if (dbc_network == nullptr){
+            fmt::print("DBC ({}) and CAN interface unavailable.\n", dbc_file);
+            return;
+        }
+
         // Startup HW interface
         this->CAN::Interface::startReceiving(
             interface_name, CANNode::filters, CANNode::num_of_filters, CANNode::timeout_ms);

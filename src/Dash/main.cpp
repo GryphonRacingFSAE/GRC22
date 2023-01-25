@@ -12,9 +12,12 @@
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
-    MotorController* motor_controller = new MotorController(); // Should be before QQml engine
-    EnergyMeter* energy_meter = new EnergyMeter();             // Should be before QQml engine
-    BMS* bms = new BMS();                                      // Should be before QQml engine
+    std::string app_root = app.applicationDirPath().toStdString();
+    // Should be before QQml engine
+    MotorController* motor_controller = new MotorController(app_root + "/20220510_Gen5_CAN_DB.dbc"); 
+    EnergyMeter* energy_meter = new EnergyMeter(app_root + "/Energy_Meter_CAN_Messages.dbc");
+    BMS* bms = new BMS(app_root + "/Orion_CANBUS.dbc");
+
     QQmlApplicationEngine engine;
 
     qmlRegisterSingletonInstance<MotorController>(

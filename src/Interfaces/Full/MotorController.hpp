@@ -6,8 +6,8 @@
 class MotorController : public QObject, public CAN::DBCInterface<MotorController> {
     Q_OBJECT
   public:
-    MotorController(QObject* parent = nullptr)
-        : QObject(parent), DBCInterface("20220510_Gen5_CAN_DB.dbc") {
+    MotorController(const std::string& dbc_file_path = "20220510_Gen5_CAN_DB.dbc")
+        : QObject(nullptr), DBCInterface(dbc_file_path) {
         can_signal_dispatch["INV_Motor_Speed"] = &MotorController::newMotorRPM;
         can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
         can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
