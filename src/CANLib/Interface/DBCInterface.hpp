@@ -18,7 +18,7 @@ class DBCInterface : public CAN::Interface {
     DBCInterface(const std::string& dbc_file, const char* interface_name = "can0")
         : dbc_network(std::move(dbcppp::INetwork::LoadNetworkFromFile(dbc_file)[""])) {
 
-        if (dbc_network == nullptr){
+        if (dbc_network == nullptr) {
             fmt::print("DBC ({}) and CAN interface unavailable.\n", dbc_file);
             return;
         }
