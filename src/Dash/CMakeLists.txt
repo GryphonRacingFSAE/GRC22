@@ -24,7 +24,18 @@ if(WIN32)
         COMMAND "${windeployqt};--qmldir;${CMAKE_CURRENT_SOURCE_DIR};$<TARGET_FILE_DIR:GryphonDash2019>"
         COMMAND_EXPAND_LISTS)
 elseif(UNIX AND NOT APPLE)
-    message(STATUS "No deployment for Linux, implement.")
+    if(DEFINED ENV{UBUNTU_CI_BUILD})  
+        add_custom_command(
+            TARGET GryphonDash POST_BUILD
+            COMMAND ${CMAKE_SOURCE_DIR}/linuxdeployqt-continuous-x86_64.AppImage -qmake=${QT_BIN_PATH}/qmake $<TARGET_FILE:GryphonDash>
+            COMMAND_EXPAND_LISTS)
+            
+        # add_custom_command(
+        #     TARGET GryphonDash2019 POST_BUILD
+        #     COMMAND "${windeployqt};--qmldir;${CMAKE_CURRENT_SOURCE_DIR};$<TARGET_FILE:GryphonDash2019>")
+    else()
+        message(STATUS "No deployment for Linux, implement.")
+    endif()
 elseif(APPLE)
     message(STATUS "No deployment for Apple, implement.")
 else()
