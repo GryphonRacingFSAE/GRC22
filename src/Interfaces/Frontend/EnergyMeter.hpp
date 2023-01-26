@@ -6,7 +6,7 @@
 class EnergyMeter : public QObject, public CAN::FakeInterface {
     Q_OBJECT
   public:
-    EnergyMeter(const std::string& /* dbc_file_path */) : QObject(nullptr) {
+    EnergyMeter(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
         this->CAN::FakeInterface::startReceiving();
     }
     ~EnergyMeter() = default;

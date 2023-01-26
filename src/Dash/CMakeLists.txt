@@ -20,7 +20,8 @@ if(WIN32)
     )
 elseif(UNIX AND NOT APPLE)
     # Package into AppImages only on Release, and the LINUX_X86_64_BUILD_APP_IMAGE env var is defined
-    if(DEFINED ENV{LINUX_X86_64_BUILD_APP_IMAGE} AND CMAKE_BUILD_TYPE STREQUAL Release)  
+    if(DEFINED ENV{LINUX_X86_64_BUILD_APP_IMAGE} AND CMAKE_BUILD_TYPE STREQUAL Release)
+        execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/bin)
         file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
         add_custom_command(
             TARGET GryphonDash POST_BUILD

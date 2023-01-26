@@ -7,7 +7,7 @@
 class AN400ECU : public QObject, public CAN::FakeInterface {
     Q_OBJECT
   public:
-    AN400ECU(const std::string& /* dbc_file_path */) : QObject(nullptr) {
+    AN400ECU(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
         this->CAN::FakeInterface::startReceiving();
     }
     ~AN400ECU() = default;
