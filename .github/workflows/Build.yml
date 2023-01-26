@@ -69,8 +69,8 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v3
         with:
-          name: UbuntuDashBuild-Debug
-          path: build/Debug/bin
+          name: UbuntuDashBuild-Release
+          path: build/Release/bin
 
       - name: Clear Conan Cache
         run: conan remove "*" -f
