@@ -9,6 +9,8 @@ target_link_libraries(GryphonDash2019 PRIVATE fmt::fmt qt::qt runtimeqml::runtim
 
 # TODO: Add the deployment for linux
 if(WIN32)
+    set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
+    set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
     add_custom_command(
         TARGET GryphonDash POST_BUILD
         COMMAND windeployqt.exe --qmldir ${CMAKE_CURRENT_SOURCE_DIR} $<TARGET_FILE_DIR:GryphonDash>
