@@ -19,8 +19,8 @@ if(WIN32)
         COMMAND windeployqt.exe --qmldir ${CMAKE_CURRENT_SOURCE_DIR} $<TARGET_FILE_DIR:GryphonDash2019>
     )
 elseif(UNIX AND NOT APPLE)
-    # Package into AppImages only on Release, and the LINUX_X86_64_BUILD_APP_IMAGE env var is defined
-    if(DEFINED ENV{LINUX_X86_64_BUILD_APP_IMAGE} AND CMAKE_BUILD_TYPE STREQUAL Release)
+    # Package into AppImages only when LINUX_X86_64_BUILD_APP_IMAGE env var is defined
+    if(DEFINED ENV{LINUX_X86_64_BUILD_APP_IMAGE})
         execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/bin)
         file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
         add_custom_command(
@@ -29,7 +29,7 @@ elseif(UNIX AND NOT APPLE)
             COMMAND rm -r -f $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
             COMMAND mkdir -p $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
             COMMAND cp ${dbc_files} -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
-            COMMAND ${CMAKE_SOURCE_DIR}/linuxdeploy-x86_64.AppImage
+            COMMAND linuxdeploy-x86_64.AppImage
                     -v2
                     --appdir $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
                     --executable $<TARGET_FILE:GryphonDash> 
