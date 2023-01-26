@@ -19,6 +19,9 @@ else()
     )
 endif()
 
+# Add DEBUG macro
+add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+
 if(${BUILD_FRONTEND})
     find_package(Qt6 CONFIG REQUIRED)
     find_package(runtimeqml CONFIG REQUIRED)

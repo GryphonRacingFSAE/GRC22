@@ -7,7 +7,7 @@
 class MotorController : public QObject, public CAN::FakeInterface {
     Q_OBJECT
   public:
-    MotorController(QObject* parent = nullptr) : QObject(parent) {
+    MotorController(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
         this->CAN::FakeInterface::startReceiving();
     }
     ~MotorController() = default;

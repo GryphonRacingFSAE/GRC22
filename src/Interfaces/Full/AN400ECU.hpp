@@ -8,45 +8,25 @@
 class AN400ECU : public QObject, public CAN::DBCInterface<AN400ECU> {
     Q_OBJECT
   public:
-    AN400ECU(QObject* parent = nullptr) : QObject(parent), DBCInterface("AN400ECU.dbc") {
-        can_signal_dispatch["RPM"] = &AN400ECU::newMotorRPM;
-        can_signal_dispatch["Thermistor1_Temp"] = &AN400ECU::newMotorTemp;
+    AN400ECU(const std::string& dbc_file_path = "AN400ECU.dbc")
+        : QObject(nullptr), DBCInterface(dbc_file_path) {
+        can_signal_dispatch["RPM"] = &AN400ECU::newRPM;
+        can_signal_dispatch["TPS"] = &AN400ECU::newTPS;
+        can_signal_dispatch["MAP"] = &AN400ECU::newMAP;
+        can_signal_dispatch["Lambda"] = &AN400ECU::newLambda;
+        can_signal_dispatch["Battery_Voltage"] = &AN400ECU::newBatteryVoltage;
         can_signal_dispatch["Coolant_Temp"] = &AN400ECU::newCoolantTemp;
-        can_signal_dispatch["Thermistor2_Temp"] = &AN400ECU::newOilTemp;
-        can_signal_dispatch["Battery_Voltage"] = &AN400ECU::batteryVoltageToSOC;
-        can_signal_dispatch["Air_Temp"] = &AN400ECU::newAccumulatorMaxTemp;
-    }
-
-    void batteryVoltageToSOC(float voltage) {
-        fmt::print("Battery voltage");
-        float empty_battery = 11.f; // 11 Volts becomes 0% Battery
-        float full_battery = 15.f;  // 15 Volts becomes 100% Battery
-        float clamped_voltages =
-            std::clamp(voltage, empty_battery, full_battery); // Now contains values from 11v - 15v
-        float calculated_SOC =
-            (clamped_voltages - empty_battery) * (100 / (full_battery - empty_battery));
-        emit newAccumulatorSOC(calculated_SOC);
+        can_signal_dispatch["Air_Temp"] = &AN400ECU::newAirTemp;
     }
 
   signals:
-    // Inpersonates Motor Controller for GRC22
-    void newMotorRPM(float rpm);
-    void newMotorTemp(float temp);
+    void newRPM(float rpm);
+    void newTPS(float tps);
+    void newMAP(float map);
+    void newLambda(float lambda);
+    void newBatteryVoltage(float voltage);
     void newCoolantTemp(float temp);
-    void new12VVoltage(float voltage);
-    void newOilTemp(float temp);
-
-    // Inpersonates Energy Meter for GRC22
-    void newVoltage(float voltage);
-    void newCurrent(float current);
-
-    // Inpersonates BMS for GRC22
-    void newBMSTemp(float temp);
-    void newAccumulatorMaxTemp(float temp);
-    void newAccumulatorCurrent(float current);
-    void newAccumulatorInstVoltage(float voltage);
-    void newAccumulatorOpenVoltage(float voltage);
-    void newAccumulatorSOC(float percent);
+    void newAirTemp(float temp);
 
   public:
     static constexpr size_t num_of_filters = 5;

@@ -7,7 +7,7 @@
 class BMS : public QObject, public CAN::FakeInterface {
     Q_OBJECT
   public:
-    BMS(QObject* parent = nullptr) : QObject(parent) {
+    BMS(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
         this->CAN::FakeInterface::startReceiving();
     }
     ~BMS() = default;
