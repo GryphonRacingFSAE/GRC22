@@ -13,6 +13,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
         can_signal_dispatch["INV_Analog_Input_1"] = &MotorController::new12VVoltage;
         can_signal_dispatch["INV_Analog_Input_2"] = &MotorController::newOilTemp;
+        can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
     }
 
   signals:
@@ -21,6 +22,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void newCoolantTemp(float temp);
     void new12VVoltage(float voltage);
     void newOilTemp(float temp);
+    void newModuleATemp(float temp);
 
   public:
     static constexpr size_t num_of_filters = 2;

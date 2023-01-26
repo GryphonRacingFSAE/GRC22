@@ -2,7 +2,7 @@ import QtQuick
 
 Item {
     required property string title;
-    required property double value;
+    property double value;
     property int precision;
     property double low;
     property double high;

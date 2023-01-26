@@ -29,7 +29,7 @@ void BMS::generateValues() {
 
     // debug screen
     static float test_value = 0.0f;
-    emit onNewTestValue(test_value += 1.0f);
+    emit newTestValue(test_value += 1.0f);
     if (test_value >= 100.0f) {
         test_value = 0.0f;
     }

@@ -1,4 +1,7 @@
 import QtQuick
+import CAN.MotorController
+import CAN.BMS
+import CAN.EnergyMeter
 
 Rectangle {
     color: "black"
@@ -130,8 +133,8 @@ Rectangle {
         target: EnergyMeter
 
         function onNewTestValue(test_value) {
-            em_current.text = test_value
-            em_voltage.text = test_value
+            em_current.value = test_value
+            em_voltage.value = test_value
         }
     }
 
@@ -139,12 +142,12 @@ Rectangle {
         target: BMS
 
         function onNewTestValue(test_value) {
-            bms_current.text = test_value
-            bms_open_voltage.text = test_value
-            bms_state_of_charge.text = test_value
-            bms_instantaneous_voltage.text = test_value
-            bms_high_temp.text = test_value
-            bms_internal_temp.text = test_value
+            bms_current.value = test_value
+            bms_open_voltage.value = test_value
+            bms_state_of_charge.value = test_value
+            bms_instantaneous_voltage.value = test_value
+            bms_high_temp.value = test_value
+            bms_internal_temp.value = test_value
         }
     }
 
@@ -152,17 +155,17 @@ Rectangle {
         target: MotorController
 
         function onNewTestValue(test_value) {
-            mc_module_a_temp.text = test_value
-            mc_module_b_temp.text = test_value
-            mc_module_c_temp.text = test_value
-            mc_rtd_1_temp.text = test_value
-            mc_rtd_2_temp.text = test_value
-            mc_rtd_3_temp.text = test_value
-            mc_rtd_4_temp.text = test_value
-            mc_rtd_5_temp.text = test_value
-            mc_gate_driver_board_temp.text = test_value
-            mc_control_board_temp.text = test_value
-            mc_motor_temp.text = test_value
+            mc_module_a_temp.value = test_value
+            mc_module_b_temp.value = test_value
+            mc_module_c_temp.value = test_value
+            mc_rtd_1_temp.value = test_value
+            mc_rtd_2_temp.value = test_value
+            mc_rtd_3_temp.value = test_value
+            mc_rtd_4_temp.value = test_value
+            mc_rtd_5_temp.value = test_value
+            mc_gate_driver_board_temp.value = test_value
+            mc_control_board_temp.value = test_value
+            mc_motor_temp.value = test_value
         }
     }
 }
