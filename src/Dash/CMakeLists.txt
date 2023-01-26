@@ -36,7 +36,7 @@ elseif(UNIX AND NOT APPLE)
                     --desktop-file ${CMAKE_CURRENT_SOURCE_DIR}/GryphonDash.desktop
                     --plugin qt
                     --output appimage
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
             COMMAND_EXPAND_LISTS
         )
     else()
