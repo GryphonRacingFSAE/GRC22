@@ -34,22 +34,26 @@ jobs:
       - name: Clear Conan Cache
         run: conan remove "*" -f
 
+      - run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
       - name: Restore Conan Cache
         id: cache-conan-pkgs
         uses: actions/cache/restore@v3
         with:
           path: ~/.conan
-          key: ${{ runner.os }}-${{ github.ref_name }}
+          key: ${{ runner.os }}-${{ github.ref_name }}-${{ env.NOW }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-
 
       - name: Conan Install
-        run: conan install . -if build -pr:h ConanProfiles/Ubuntu-gcc-11-Debug.ini -pr:b ConanProfiles/Ubuntu-gcc-11-Debug.ini -r grc -c tools.system.package_manager:mode=install -c tools.system.package_manager:tool=apt-get -c tools.system.package_manager:sudo=True
+        run: conan install . -if build -pr:h ConanProfiles/Ubuntu-gcc-11-Release.ini -pr:b ConanProfiles/Ubuntu-gcc-11-Release.ini -r grc
       
       - name: Save Conan Cache
         if: always()
         uses: actions/cache/save@v3
         with:
           path: ~/.conan
-          key: ${{ runner.os }}-${{ github.ref_name }}
+          key: ${{ runner.os }}-${{ github.ref_name }}-${{ emv.NOW }}
 
       - name: Prep Linux Deploy
         run: |
