@@ -23,7 +23,7 @@ jobs:
           submodules: false
 
       - name: Install Ubuntu Dependencies
-        run: sudo apt install libgl-dev
+        run: sudo apt install libgl-dev libx11-dev
 
       - name: Install conan
         run: python -m pip install conan
