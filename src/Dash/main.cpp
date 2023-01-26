@@ -1,12 +1,13 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QtGlobal>
 #include <fmt/core.h>
 
 #include <BMS.hpp>
 #include <EnergyMeter.hpp>
 #include <MotorController.hpp>
 
-#ifdef QT_DEBUG
+#ifdef DEBUG
 #include <runtimeqml.hpp>
 #endif
 
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
         "CAN.MotorController", 1, 0, "MotorController", motor_controller);
     qmlRegisterSingletonInstance<EnergyMeter>("CAN.EnergyMeter", 1, 0, "EnergyMeter", energy_meter);
     qmlRegisterSingletonInstance<BMS>("CAN.BMS", 1, 0, "BMS", bms);
-#ifdef QT_DEBUG
+#ifdef DEBUG
     RuntimeQml* rt = new RuntimeQml(&engine);
     rt->parseQrc(ROOT_SOURCE_PATH "/qml.qrc");
     rt->setAutoReload(true); // Reload automatically on file update
