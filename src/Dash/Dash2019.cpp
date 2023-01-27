@@ -12,7 +12,8 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     std::string app_root = app.applicationDirPath().toStdString();
-    auto ecu = std::make_unique<AN400ECU>(app_root + "/AN400ECU.dbc"); // Should be before QQml engine
+    auto ecu =
+        std::make_unique<AN400ECU>(app_root + "/AN400ECU.dbc"); // Should be before QQml engine
     QQmlApplicationEngine engine;
 
     qmlRegisterSingletonInstance<AN400ECU>("CAN.AN400ECU", 1, 0, "AN400ECU", ecu.get());
