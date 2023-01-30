@@ -11,6 +11,10 @@
 #include "main.h"
 #include "cmsis_os.h"
 
+#define MAX(a,b) (a>b ? a:b)
+#define MIN(a,b) (a<b ? a:b)
+#define ABS(a) ((a)<0 ? ((a)*-1):a)
+
 int myprintf(const char *format, ...);
 
 #endif /* INC_UTILS_H_ */

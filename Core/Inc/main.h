@@ -43,7 +43,7 @@ extern "C" {
 /* USER CODE BEGIN EC */
 
 //Task periods in system ticks (each tick is 1ms)
-#define APPS_PERIOD 5000U
+#define APPS_PERIOD 20U
 #define CTRL_PERIOD 10U
 /* USER CODE END EC */
 
