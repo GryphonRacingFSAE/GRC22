@@ -1,0 +1,38 @@
+# Verifies building
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    env:
+      NOT_ON_C3I: 1
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: false
+          submodules: false
+      - uses: docker-practice/actions-setup-docker@master
+      - uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: armv6
+          distro: bullseye
+          githubToken: ${{ github.token }}
+
+          install: |
+            sudo apt-get install python3 fuse libgl-dev libxcb-util-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxaw7-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxss-dev libxt-dev libxtst-dev libxv-dev libxvmc-dev libxxf86vm-dev libxcb-render0-dev libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev
+            python3 -m pip install conan
+
+          run: |
+            conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} --force
+            conan remove "*" -f
+            conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini -r grc -o dev="front" --build=missing
+            conan build . -if build
+            conan upload "*" -c --all --parallel -r grc
+      - name: Upload Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: RPI1.2b+DashFront-Release
+          path: build/src/Dash/Release
