@@ -21,12 +21,13 @@ void startCAN1TxTask() {
 			// Send out TX message on CAN
 			HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, NULL);
 
-			// Print out the TX message
-			myprintf("%X ", txMsg.header.StdId);
-			for (int i = 0; i < txMsg.header.DLC; i++) {
-				myprintf("%02X", txMsg.aData[i]);
-			}
-			myprintf("\n");
+			/* Print out the TX message */
+
+//			myprintf("%X ", txMsg.header.StdId);
+//			for (int i = 0; i < txMsg.header.DLC; i++) {
+//				myprintf("%02X", txMsg.aData[i]);
+//			}
+//			myprintf("\n");
 		}
 
 	}

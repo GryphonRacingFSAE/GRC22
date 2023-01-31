@@ -11,8 +11,8 @@
 #include <string.h>
 
 #define AVG_WINDOW			3
-#define APPS1_MIN 			409
-#define APPS1_MAX			1300
+#define APPS1_MIN 			410
+#define APPS1_MAX			1230
 #define APPS_DIFF_THRESH	90
 
 
@@ -23,10 +23,10 @@ volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
 void startAPPSTask() {
 
 	//used for averaging the apps signal
-	uint32_t apps1Avg = 0;
-	uint32_t apps2Avg = 0;
+	int32_t apps1Avg = 0;
+	int32_t apps2Avg = 0;
 
-
+	int32_t appsPos = 0;
 
 	CANMsg txMsg;
 
@@ -52,6 +52,7 @@ void startAPPSTask() {
 				apps2Avg += ADC1_buff[i];
 			}
 		}
+
 		apps1Avg = (apps1Avg + (1<<8)) >> 10;
 		apps2Avg = (apps2Avg + (1<<8)) >> 10;
 
@@ -73,10 +74,25 @@ void startAPPSTask() {
 		apps1Avg = apps1Avg/AVG_WINDOW;
 		apps2Avg = apps2Avg/AVG_WINDOW;
 
+
 		//TODO compare APPS signal to detect plausibility error;
+
+
+		appsPos= (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
+
+		appsPos = MAX(MIN(appsPos,100),0);
+
+		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
+			APPS_Data.pedalPos = appsPos;
+
+			osMutexRelease(APPS_Data_MtxHandle);
+		}
+
 
 		//Formatting sample can message
 		//TODO format can message as motor controller torque command
+
+
 		txMsg.aData[3] = apps1Avg & 0xFFU;
 		txMsg.aData[2] = apps1Avg >> 8 & 0xFFU;
 		txMsg.aData[1] = apps1Avg >> 16 & 0xFFU;
@@ -90,10 +106,10 @@ void startAPPSTask() {
 		txMsg.header.RTR = CAN_RTR_DATA;
 		txMsg.header.TransmitGlobalTime = DISABLE;
 
-		myprintf("APPS1:%d, APPS2:%d\n\r", apps1Avg, apps2Avg);
-;
+		myprintf("APPS1:%d, APPS_POS:%d\n\r", apps1Avg, appsPos);
 
-		osMessageQueuePut(CAN1_QHandle, &txMsg, 0, APPS_PERIOD-2);
+
+		osMessageQueuePut(CAN1_QHandle, &txMsg, 0, 5);
 
 
 		tick+= APPS_PERIOD;

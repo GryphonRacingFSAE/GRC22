@@ -91,7 +91,7 @@ const osThreadAttr_t CAN1TxTask_attributes = {
 osThreadId_t APPSTaskHandle;
 const osThreadAttr_t APPSTask_attributes = {
   .name = "APPSTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for CANRxTask */
