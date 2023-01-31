@@ -27,10 +27,11 @@ jobs:
 
           run: |
             conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} --force
+            conan user -r grc ${{ secrets.CONAN_USER }} -p ${{ secrets.CONAN_PASSWORD }}
             conan remove "*" -f
             conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini -r grc -o dev="front" --build=missing
-            conan build . -if build
             conan upload "*" -c --all --parallel -r grc
+            conan build . -if build
 
       - name: Upload Build
         uses: actions/upload-artifact@v3
