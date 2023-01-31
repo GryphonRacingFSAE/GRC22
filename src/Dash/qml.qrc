@@ -2,20 +2,25 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>main2019.qml</file>
+
         <file>Drive/Drive.qml</file>
-        <file>Drive/DataBox.qml</file>
         <file>Drive/Battery.qml</file>
-        <file>Debug/DataBox.qml</file>
+        <file>Drive/DataBox.qml</file>
+        
         <file>Debug/Debug_A.qml</file>
         <file>Debug/Debug_B.qml</file>
+        <file>Debug/Debug_C.qml</file>
+        <file>Debug/Debug_D.qml</file>
+        <file>Debug/DataBox.qml</file>
         <file>Debug/SectionHeader.qml</file>
+
         <file>Tuning/Tuning.qml</file>
     </qresource>
 
     <qresource prefix="/images">
-        <file alias = "Speedometer">images/Speedometer.png</file>
         <file alias = "Battery">images/Battery.png</file>
         <file alias = "BatterySymbol">images/BatterySymbol.png</file>
         <file alias = "Logo">images/Logo.png</file>
+        <file alias = "Speedometer">images/Speedometer.png</file>
     </qresource>
 </RCC>
