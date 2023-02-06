@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import CAN.MotorController
 
 ApplicationWindow {
     id: application_window
@@ -26,6 +27,15 @@ ApplicationWindow {
         anchors.fill: parent
         onClicked: () => {
             active_dash.source = display_sources[++selected_display % display_sources.length];
+        }
+    }
+
+    Button {
+        anchors.centerIn: parent
+        text: "Click me"
+        onClicked: {
+            MotorController.clearFaultCodes()
+            console.log("Clicked")
         }
     }
 }

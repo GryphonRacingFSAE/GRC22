@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <fmt/core.h>
 
 #include <FakeInterface.hpp>
 
@@ -11,6 +12,10 @@ class MotorController : public QObject, public CAN::FakeInterface {
         this->CAN::FakeInterface::startReceiving();
     }
     ~MotorController() = default;
+
+  Q_INVOKABLE void clearFaultCodes() {
+    fmt::print("Attempt to clear faults\n");
+  }
 
   signals:
     void newMotorRPM(float rpm);
