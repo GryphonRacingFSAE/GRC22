@@ -30,12 +30,12 @@ ApplicationWindow {
         }
     }
 
-    Button {
-        anchors.centerIn: parent
-        text: "Click me"
-        onClicked: {
-            MotorController.clearFaultCodes()
-            console.log("Clicked")
+    Item {
+        focus: true
+        Keys.onShortcutOverride: (event) => event.accepted = (event.key === Qt.Key_Delete)
+        Keys.onDeletePressed: {
+            MotorController.clearFaultCodes();
+            console.log("Fault codes cleared!");
         }
-    }
+    }    
 }

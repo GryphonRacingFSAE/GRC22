@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import CAN.BMS
 import CAN.EnergyMeter
 import CAN.MotorController
