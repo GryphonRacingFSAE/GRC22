@@ -80,4 +80,16 @@ void startCANRxTask() {
 
 void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 	//TODO handle CAN messages
+	//INV_DC_Bus_Voltage
+	if(msgHeader -> StdID == 0x0A7){
+		uint16_t INV_DC_Bus_Voltage = ((uint16_t)msgData[1] << 8) | ((uint16_t)msgData[0]);
+		Ctrl_Data.tractiveVoltage = *(int16_t*)(&INV_DC_Bus_Voltage);
+	}//INV_Hot_Spot_Temp, INV_Coolant_Temp
+	else if(msgHeader -> StdID == 0x0A2){
+		uint16_t INV_Hot_Spot_Temp = ((uint16_t)msgData[3] << 8) | ((uint16_t)msgData[2]);
+		Ctrl_Data.motorControllerTemp = *(int16_t*)(&INV_Hot_Spot_Temp);
+
+		uint16_t INV_Coolant_Temp = ((uint16_t)msgData[1] << 8) | ((uint16_t)msgData[0]);
+		Ctrl_Data.coolantTemp = *(int16_t*)(&INV_Coolant_Temp);
+	}
 }
