@@ -4,7 +4,7 @@ Item {
     required property string title;
 
     width: 500
-    height: 60
+    height: 44
 
     Text {
         text: parent.title

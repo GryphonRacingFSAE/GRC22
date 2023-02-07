@@ -17,7 +17,7 @@ Rectangle {
         }
 
         Column {
-            leftPadding: 24
+            leftPadding: 16
 
             SectionHeader {
                 title: "HEADER"
@@ -40,7 +40,7 @@ Rectangle {
         }
 
         Column {
-            leftPadding: 12
+            leftPadding: 8
 
             SectionHeader {
                 title: "HEADER"

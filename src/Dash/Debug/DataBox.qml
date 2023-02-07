@@ -4,25 +4,17 @@ Item {
     required property string title;
     property double value;
     property int precision;
-    property double low;
-    property double high;
 
     width: 500
-    height: 20
+    height: 18
 
     onValueChanged: () => {
-        display_value.text = value.toFixed(precision)
-        if (value < low) {
-            display_value.color="blue"
-        } else if (value > high) {
-            display_value.color="red"
-        } else {
-            display_value.color="green"
-        }
+        display_value.text = value.toFixed(1) // TODO: update individual precision values
     }
 
     Text {
-        text: parent.title + ": "
+        id: title_text
+        text: parent.title + ":  "
         font.pointSize: 10
         color: "white"
     }
@@ -31,6 +23,11 @@ Item {
         id: display_value
         text: ""
         font.pointSize: 10
-        color: "white"
+        font.bold: true
+        color: "green"
+
+        anchors {
+            left: title_text.right
+        }
     }
 }

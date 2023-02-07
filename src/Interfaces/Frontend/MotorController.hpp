@@ -21,6 +21,7 @@ class MotorController : public QObject, public CAN::FakeInterface {
 
     // debug screen
     void newTestValue(float test_value);
+    void newTestFault(int test_fault);
 
   private:
     void generateValues();

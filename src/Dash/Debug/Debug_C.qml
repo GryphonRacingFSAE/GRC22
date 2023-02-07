@@ -17,14 +17,73 @@ Rectangle {
         }
 
         Column {
-            leftPadding: 24
+            leftPadding: 16
 
             SectionHeader {
-                title: "HEADER"
+                title: "Current"
             }
             DataBox {
-                id: data_box_A
-                title: "DATA BOX"
+                id: mc_current_sensor_low
+                title: "Current Sensor Low"
+            }
+            DataBox {
+                title: "Current Sensor High"
+            }
+
+            SectionHeader {
+                title: "Voltage"
+            }
+            DataBox {
+                title: "1.5V Sense Voltage Low"
+            }
+            DataBox {
+                title: "1.5V Sense Voltage High"
+            }
+            DataBox {
+                title: "2.5V Sense Voltage Low"
+            }
+            DataBox {
+                title: "2.5V Sense Voltage High"
+            }
+            DataBox {
+                title: "5V Sense Voltage Low"
+            }
+            DataBox {
+                title: "5V Sense Voltage High"
+            }
+            DataBox {
+                title: "12V Sense Voltage Low"
+            }
+            DataBox {
+                title: "12V Sense Voltage High"
+            }
+            DataBox {
+                title: "DC Bus Voltage Low"
+            }
+            DataBox {
+                title: "DC Bus Voltage High"
+            }
+
+            SectionHeader {
+                title: "Temperature"
+            }
+            DataBox {
+                title: "Module Temperature Low"
+            }
+            DataBox {
+                title: "Module Temperature High"
+            }
+            DataBox {
+                title: "Control PCB Temperature Low"
+            }
+            DataBox {
+                title: "Control PCB Temperature High"
+            }
+            DataBox {
+                title: "Gate Drive PCB Temperature Low"
+            }
+            DataBox {
+                title: "Gate Drive PCB Temperature High"
             }
         }
     }
@@ -40,14 +99,61 @@ Rectangle {
         }
 
         Column {
-            leftPadding: 12
+            leftPadding: 8
 
             SectionHeader {
-                title: "HEADER"
+                title: "Accelerator"
             }
             DataBox {
-                id: data_box_B
-                title: "DATA BOX"
+                title: "Accelerator Shorted"
+            }
+            DataBox {
+                title: "Accelerator Open"
+            }
+
+            SectionHeader {
+                title: "Brake"
+            }
+            DataBox {
+                title: "Brake Shorted"
+            }
+            DataBox {
+                title: "Brake Open"
+            }
+
+            SectionHeader {
+                title: "EEPROM"
+            }
+            DataBox {
+                title: "EEPROM Checksum Invalid"
+            }
+            DataBox {
+                title: "EEPROM Data Out of Range"
+            }
+            DataBox {
+                title: "EEPROM Update Required"
+            }
+
+            SectionHeader {
+                title: "Other"
+            }
+            DataBox {
+                title: "Hardware Gate/Desaturation Fault"
+            }
+            DataBox {
+                title: "HW Over-current Fault"
+            }
+            DataBox {
+                title: "Pre-charge Timeout"
+            }
+            DataBox {
+                title: "Pre-charge Voltage Failure"
+            }
+            DataBox {
+                title: "Hardware DC Bus Over-Voltage"
+            }
+            DataBox {
+                title: "Gate Driver Initialization"
             }
         }
     }
@@ -65,5 +171,13 @@ Rectangle {
     Connections {
         target: MotorController
 
+        function onNewTestFault(value) {
+            // if (value == 0) {
+            //     mc_current_sensor_low.display_value.color = "green"
+            // } else {
+            //     mc_current_sensor_low.display_value.color = "red"
+            // }
+            mc_current_sensor_low.value = value
+        }
     }
 }

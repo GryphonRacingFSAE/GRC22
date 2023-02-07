@@ -41,4 +41,11 @@ void MotorController::generateValues() {
     if (test_value >= 100.0f) {
         test_value = 0.0f;
     }
+    static int test_fault = 0;
+    emit newTestFault(test_fault);
+    if (test_fault == 0) {
+        test_fault = 1;
+    } else {
+        test_fault = 0;
+    }
 }
