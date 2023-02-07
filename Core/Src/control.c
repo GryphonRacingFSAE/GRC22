@@ -52,7 +52,6 @@ void BSPC() {
 	} else {
 		myprintf("Missed osMutexAcquire(APPS_Data_MtxHandle): control.c:BSPC\n");
 	}
-
 }
 
 // Ready to drive
