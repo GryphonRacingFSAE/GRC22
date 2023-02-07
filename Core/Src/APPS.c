@@ -18,6 +18,7 @@
 
 APPS_Data_Struct APPS_Data;
 
+//Buffer from DMA
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
 
 void startAPPSTask() {
@@ -61,6 +62,7 @@ void startAPPSTask() {
 		if(++circBuffPos == AVG_WINDOW){
 			circBuffPos = 0;
 		}
+		//Circular for moving average
 		apps1PrevMesurments[circBuffPos] = apps1Avg;
 		apps2PrevMesurments[circBuffPos] = apps2Avg;
 
@@ -71,6 +73,8 @@ void startAPPSTask() {
 			apps1Avg += apps1PrevMesurments[i];
 			apps2Avg += apps2PrevMesurments[i];
 		}
+
+		//Moving average of raw analog value
 		apps1Avg = apps1Avg/AVG_WINDOW;
 		apps2Avg = apps2Avg/AVG_WINDOW;
 
@@ -80,6 +84,7 @@ void startAPPSTask() {
 
 		appsPos= (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
 
+		//Used for BSPC
 		appsPos = MAX(MIN(appsPos,100),0);
 
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){

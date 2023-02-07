@@ -13,8 +13,8 @@
 
 typedef struct {
 	uint32_t wheelSpeed[4];
-	uint32_t motorControllerTemp;
-	uint32_t coolantTemp;
+	int32_t motorControllerTemp;
+	int32_t coolantTemp;
 	uint32_t tractiveVoltage;
 } Ctrl_Data_Struct;
 
