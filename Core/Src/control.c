@@ -7,6 +7,9 @@
  */
 
 #include "control.h"
+#include "APPS.h"
+#include "utils.h"
+#include "main.h"
 #include <string.h>
 
 Ctrl_Data_Struct Ctrl_Data;
@@ -32,6 +35,23 @@ void startControlTask() {
 
 // Brake system plausibility check
 void BSPC() {
+	if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
+		// If the BSPC is in the invalid state,
+		if (APPS_Data.flags & APPS_BSPC_INVALID){
+			// Check if the pedal position is <5% to put APPS back into a valid state (EV.5.7.2)
+			if (APPS_Data.pedalPos < 5) {
+				APPS_Data.flags &= ~APPS_BSPC_INVALID; // Remove the invalid flag
+			}
+		}
+		// Only try to put the APPS into an invalid state if it's valid regarding the BSPC
+		// Set to invalid if over >25% travel and brakes engaged (EV.5.7.1)
+		else if (APPS_Data.pedalPos > 25 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin)) {
+			APPS_Data.flags |= APPS_BSPC_INVALID; // Consider APPS as invalid due to BSPC
+		}
+		osMutexRelease(APPS_Data_MtxHandle);
+	} else {
+		myprintf("Missed osMutexAcquire(APPS_Data_MtxHandle): control.c:BSPC\n");
+	}
 
 }
 

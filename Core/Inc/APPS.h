@@ -23,6 +23,8 @@ typedef struct {
 	uint32_t flags;
 } APPS_Data_Struct;
 
+#define APPS_BSPC_INVALID 0x1
+
 extern APPS_Data_Struct APPS_Data;
 
 void startAPPSTask();
