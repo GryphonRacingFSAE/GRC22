@@ -1,5 +1,7 @@
 #include <cassert>
 #include <tools.hpp>
+#include <fmt/core.h>
+
 
 // Mask for can errors
 bool CAN::isError(const can_frame& frame) {
