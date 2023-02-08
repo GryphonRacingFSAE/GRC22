@@ -1,0 +1,22 @@
+name: Build VCU-Firmware
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build STM32CubeIde project
+        uses: xanderhendriks/action-build-stm32cubeide@v7.2
+        with:
+          project-path: "."
+          project-target: "APPS_FW_22"
+          
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: VCU_Firmware
+          path: Release/*.*
