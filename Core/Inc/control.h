@@ -16,6 +16,7 @@ typedef struct {
 	int32_t motorControllerTemp;
 	int32_t coolantTemp;
 	uint32_t tractiveVoltage;
+	int32_t motorSpeed;
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;

@@ -93,7 +93,10 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 
 			uint16_t INV_Coolant_Temp = ((uint16_t)msgData[1] << 8) | ((uint16_t)msgData[0]);
 			Ctrl_Data.coolantTemp = *(int16_t*)(&INV_Coolant_Temp);
-		}
+		}//INV_Motor_Speed
+		else if(msgHeader -> StdID == 0x0A5){
+			uint16_t INV_Motor_Speed = ((uint16_t)msgData[3] << 8) | ((uint16_t)msgData[2]);
+			Ctrl_Data.motorSpeed = *(int16_t*)(&INV_Motor_Speed);}
 
 		osMutexRelease(Ctrl_Data_MtxHandle);
 	}
