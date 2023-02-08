@@ -14,22 +14,14 @@
 
 Ctrl_Data_Struct Ctrl_Data;
 
-Ctrl_Data_Struct localCtrlData;
-
 void startControlTask() {
+	uint32_t tick = osKernelGetTickCount();
 	while (1) {
-		// Use mutex to grab latest data - Determine if timeout should be changed to 0 due to later osDelay
-		if (osMutexAcquire(Ctrl_Data_MtxHandle, CTRL_PERIOD) == osOK) {
-			memcpy(&localCtrlData, &Ctrl_Data, sizeof(Ctrl_Data_Struct)); // Copy over latest data
-			osMutexRelease(Ctrl_Data_MtxHandle); // Release the acquired mutex
-		}
-
 		BSPC();
 		RTD();
 		pumpCtrl();
 		fanCtrl();
-
-		osDelay(CTRL_PERIOD);
+		osDelayUntil(tick += CTRL_PERIOD);
 	}
 }
 
@@ -61,10 +53,30 @@ void RTD() {
 
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
-
+	if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK){
+		// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin,
+				Ctrl_Data.motorControllerTemp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractiveVoltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD);
+		osMutexRelease(Ctrl_Data_MtxHandle);
+	} else {
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Turn on pump if cannot acquire mutex
+		myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:pumpCtrl\n");
+	}
 }
 
-// Accumulator cooling fan control
+// Motor controller cooling fan control
 void fanCtrl() {
-
+	if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK){
+		// Turn on fan based on coolant temperature threshold
+		HAL_GPIO_WritePin(GPIO_RAD_FAN_GPIO_Port, GPIO_RAD_FAN_Pin,
+				Ctrl_Data.coolantTemp > RAD_FAN_COOLANT_TEMP_THRESHOLD);
+		HAL_GPIO_WritePin(GPIO_ACC_FAN_GPIO_Port, GPIO_ACC_FAN_Pin,
+				Ctrl_Data.accumulatorMaxTemp > ACC_FAN_ACC_TEMP_THRESHOLD);
+		osMutexRelease(Ctrl_Data_MtxHandle);
+	} else {
+		// Turn on fans if cannot acquire mutex
+		HAL_GPIO_WritePin(GPIO_RAD_FAN_GPIO_Port, GPIO_RAD_FAN_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIO_ACC_FAN_GPIO_Port, GPIO_ACC_FAN_Pin, GPIO_PIN_SET);
+		myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:fanCtrl\n");
+	}
 }
