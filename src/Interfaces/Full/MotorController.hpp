@@ -18,7 +18,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
 
     Q_INVOKABLE void clearFaultCodes() {
 
-        RetCode ans = write(0x0C1, 0, 20, 1, 0, 0x00, 0x00, 0x00, 0x00);
+        RetCode ans = write(0x0C1, {0, 20, 1, 0, 0x00, 0x00, 0x00, 0x00}, false, false, false);
 
         if (ans != RetCode::Success) {
             fmt::print("Failed to clear fault codes\n");
