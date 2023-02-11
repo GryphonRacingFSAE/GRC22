@@ -13,9 +13,9 @@ class MotorController : public QObject, public CAN::FakeInterface {
     }
     ~MotorController() = default;
 
-  Q_INVOKABLE void clearFaultCodes() {
-    fmt::print("Attempt to clear faults\n");
-  }
+    Q_INVOKABLE void clearFaultCodes() {
+        fmt::print("Attempt to clear fault codes\n");
+    }
 
   signals:
     void newMotorRPM(float rpm);
