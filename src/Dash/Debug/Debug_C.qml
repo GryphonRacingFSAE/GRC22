@@ -24,7 +24,6 @@ Item {
                 title: "Current"
             }
             DataBox {
-                id: mc_current_sensor_low
                 title: "Current Sensor Low"
             }
             DataBox {
@@ -182,15 +181,6 @@ Item {
 
     Connections {
         target: BMS
-        
-        function onNewTestFault(value) {
-            // if (value == 0) {
-            //     mc_current_sensor_low.display_value.color = "green"
-            // } else {
-            //     mc_current_sensor_low.display_value.color = "red"
-            // }
-            mc_current_sensor_low.value = value
-        }
     }
 
     Connections {
