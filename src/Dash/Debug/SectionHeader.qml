@@ -3,7 +3,7 @@ import QtQuick
 Item {
     required property string title;
 
-    width: 500
+    width: parent.width
     height: 44
 
     Text {

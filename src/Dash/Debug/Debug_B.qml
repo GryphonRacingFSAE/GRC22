@@ -1,53 +1,79 @@
 import QtQuick
-import QtQuick.Controls
 import CAN.BMS
 import CAN.EnergyMeter
 import CAN.MotorController
 
-Rectangle {
-    color: "black"
-
-    Item {
+Item {
+    Rectangle {
         id: section_A
 
-        width: parent.width/2
+        width: parent.width/3
         height: parent.height
+        color: "black"
         anchors {
             top: parent.top
             left: parent.left
         }
 
         Column {
-            leftPadding: 16
+            width: parent.width - 32
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
 
             SectionHeader {
                 title: "HEADER"
             }
             DataBox {
-                id: data_box_A
                 title: "DATA BOX"
             }
         }
     }
 
-    Item {
+    Rectangle {
         id: section_B
 
-        width: parent.width/2
+        width: parent.width/3
         height: parent.height
+        color: "black"
         anchors {
             top: parent.top
             left: section_A.right
         }
 
         Column {
-            leftPadding: 8
+            width: parent.width - 32
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
 
             SectionHeader {
                 title: "HEADER"
             }
             DataBox {
-                id: data_box_B
+                title: "DATA BOX"
+            }
+        }
+    }
+
+    Rectangle {
+        id: section_C
+
+        width: parent.width/3
+        height: parent.height
+        color: "black"
+        anchors {
+            top: parent.top
+            left: section_B.right
+        }
+
+        Column {
+            width: parent.width - 32
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            SectionHeader {
+                title: "HEADER"
+            }
+            DataBox {
                 title: "DATA BOX"
             }
         }

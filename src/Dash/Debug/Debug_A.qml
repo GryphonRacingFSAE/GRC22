@@ -3,24 +3,25 @@ import CAN.BMS
 import CAN.EnergyMeter
 import CAN.MotorController
 
-Rectangle {
-    color: "black"
-
-    Item {
+Item {
+    Rectangle {
         id: section_A
 
-        width: parent.width/2
+        width: parent.width/3
         height: parent.height
+        color: "black"
         anchors {
             top: parent.top
             left: parent.left
         }
 
         Column {
-            leftPadding: 16
+            width: parent.width - 32
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
 
             SectionHeader {
-                title: "BMS"
+                title: "[Current]  BMS"
             }
             DataBox {
                 id: bms_avg_pack_current
@@ -56,7 +57,7 @@ Rectangle {
             }
 
             SectionHeader {
-                title: "Energy Meter"
+                title: "[Current]  Energy Meter"
             }
             DataBox {
                 id: em_current
@@ -64,7 +65,7 @@ Rectangle {
             }
 
             SectionHeader {
-                title: "Motor Controller"
+                title: "[Current]  Motor Controller"
             }
             DataBox {
                 id: mc_dc_bus_current
@@ -73,21 +74,24 @@ Rectangle {
         }
     }
 
-    Item {
+    Rectangle {
         id: section_B
 
-        width: parent.width/2
+        width: parent.width/3
         height: parent.height
+        color: "black"
         anchors {
             top: parent.top
             left: section_A.right
         }
 
         Column {
-            leftPadding: 8
+            width: parent.width - 32
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
 
             SectionHeader {
-                title: "BMS"
+                title: "[Voltage]  BMS"
             }
             DataBox {
                 id: bms_voltage
@@ -143,7 +147,7 @@ Rectangle {
             }
 
             SectionHeader {
-                title: "Energy Meter"
+                title: "[Voltage]  Energy Meter"
             }
             DataBox {
                 id: em_voltage
@@ -151,7 +155,7 @@ Rectangle {
             }
 
             SectionHeader {
-                title: "Motor Controller"
+                title: "[Voltage]  Motor Controller"
             }
             DataBox {
                 id: mc_dc_bus_voltage
@@ -160,6 +164,84 @@ Rectangle {
             DataBox {
                 id: mc_output_voltage
                 title: "Output Voltage"
+            }
+        }
+    }
+
+    Rectangle {
+        id: section_C
+
+        width: parent.width/3
+        height: parent.height
+        color: "black"
+        anchors {
+            top: parent.top
+            left: section_B.right
+        }
+
+        Column {
+            width: parent.width - 32
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            SectionHeader {
+                title: "[Temp]  BMS"
+            }
+            DataBox {
+                id: bms_avg_temp
+                title: "Average Temp"
+            }
+            DataBox {
+                id: bms_lowest_temp
+                title: "Lowest Temp"
+            }
+            DataBox {
+                id: bms_highest_temp
+                title: "Highest Temp"
+            }
+            DataBox {
+                id: bms_heatsink_temp
+                title: "Heatsink Temp"
+            }
+            DataBox {
+                id: bms_hottest_thermistor_id
+                title: "Hottest Thermistor ID"
+            }
+
+            SectionHeader {
+                title: "[Temp]  Motor Controller"
+            }
+            DataBox {
+                id: mc_module_a_temp
+                title: "Module A Temp"
+            }
+            DataBox {
+                id: mc_module_b_temp
+                title: "Module B Temp"
+            }
+            DataBox {
+                id: mc_module_c_temp
+                title: "Module C Temp"
+            }
+            DataBox {
+                id: mc_gate_driver_board_temp
+                title: "Gate Driver Board Temp"
+            }
+            DataBox {
+                id: mc_control_board_temp
+                title: "Control Board Temp"
+            }
+            DataBox {
+                id: mc_coolant_temp
+                title: "Coolant Temp"
+            }
+            DataBox {
+                id: mc_hot_spot_temp
+                title: "Hot Spot Temp"
+            }
+            DataBox {
+                id: mc_motor_temp
+                title: "Motor Temp"
             }
         }
     }
@@ -190,6 +272,12 @@ Rectangle {
             bms_high_cell_open_voltage.value = value
             bms_min_cell_voltage.value = value
             bms_max_cell_voltage.value = value
+
+            bms_avg_temp.value = value
+            bms_lowest_temp.value = value
+            bms_highest_temp.value = value
+            bms_heatsink_temp.value = value
+            bms_hottest_thermistor_id.value = value
         }
     }
 
@@ -207,8 +295,18 @@ Rectangle {
 
         function onNewTestValue(value) {
             mc_dc_bus_current.value = value
+
             mc_dc_bus_voltage.value = value
             mc_output_voltage.value = value
+
+            mc_module_a_temp.value = value
+            mc_module_b_temp.value = value
+            mc_module_c_temp.value = value
+            mc_gate_driver_board_temp.value = value
+            mc_control_board_temp.value = value
+            mc_coolant_temp.value = value
+            mc_hot_spot_temp.value = value
+            mc_motor_temp.value = value
         }
     }
 }

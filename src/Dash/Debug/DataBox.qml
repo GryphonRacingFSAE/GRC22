@@ -5,7 +5,7 @@ Item {
     property double value;
     property int precision;
 
-    width: 500
+    width: parent.width
     height: 18
 
     onValueChanged: () => {
@@ -13,7 +13,6 @@ Item {
     }
 
     Text {
-        id: title_text
         text: parent.title + ":  "
         font.pointSize: 10
         color: "white"
@@ -25,9 +24,9 @@ Item {
         font.pointSize: 10
         font.bold: true
         color: "green"
-
+        
         anchors {
-            left: title_text.right
+            right: parent.right
         }
     }
 }
