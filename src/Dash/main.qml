@@ -42,6 +42,7 @@ ApplicationWindow {
         }
         Keys.onDeletePressed: {
             MotorController.clearFaultCodes();
+            console.log("Fault codes cleared");
         }
     }
 }

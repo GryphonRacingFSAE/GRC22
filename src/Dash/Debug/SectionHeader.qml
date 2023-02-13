@@ -1,17 +1,42 @@
 import QtQuick
 
 Item {
+    id: root
+
     required property string title;
 
     width: parent.width
-    height: 44
+    height: 40
 
-    Text {
-        text: parent.title
-        font.pointSize: 12
-        font.bold: true
-        color: "white"
+    Column {
+        width: parent.width
+        height: parent.height
 
-        anchors.verticalCenter: parent.verticalCenter
+        Rectangle {
+            width: parent.width
+            height: 12
+            color: "black"
+        }
+        Text {
+            text: root.title
+            font.pointSize: 12
+            font.bold: true
+            color: "white"
+        }
+        Rectangle {
+            width: parent.width
+            height: 1
+            color: "black"
+        }
+        Rectangle {
+            width: parent.width
+            height: 1
+            color: "white"
+        }
+        Rectangle {
+            width: parent.width
+            height: 14
+            color: "black"
+        }
     }
 }
