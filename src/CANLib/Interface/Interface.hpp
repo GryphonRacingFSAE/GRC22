@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <thread>
+#include <cstring>
 
 #include <defs.hpp>
 
@@ -30,10 +31,8 @@ class Interface {
 
     template <size_t N>
     RetCode write(uint32_t address,
-                  const std::array<std::byte, N>& payload,
-                  bool extended = false,
-                  bool error_frame = false,
-                  bool remote_transmission_request = false) {
+                  const std::array<uint8_t, N>& payload,
+                  bool extended = false) {
         static_assert(0 <= N && N <= 8, "Size of payload must be between 0 and 8");
         if (address & 0xE0000000) { // Disallow passing anything but the address.
             return RetCode::InvalidParam;
@@ -51,7 +50,7 @@ class Interface {
         can_frame frame;
         frame.can_id = address;
         frame.len = N;
-        memcpy(frame.data, payload, N);
+        memcpy(frame.data, payload.data(), N);
 
         if (::write(m_socket, (void*)&frame, sizeof(frame)) != sizeof(frame)) {
             return RetCode::WriteErr;
