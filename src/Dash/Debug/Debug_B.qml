@@ -240,5 +240,32 @@ Item {
 
             mc_motor_speed.value = value
         }
+
+        /*
+        function onNewPWMFrequency(state) {mc_pwm_frequency.value = state}
+        function onNewInverterState(state) {mc_inverter_state.value = state}
+        function onNewInverterRunMode(state) {mc_inverter_run_mode.value = state}
+        function onNewInverterActiveDischargeState(state) {mc_inverter_active_discharge_state.value = state}
+        function onNewInverterEnablelockout(state) {mc_inverter_enable_lockout.value = state}
+        function onNewBMSActive(state) {mc_bms_active.value = state}
+        function onNewBMSLimitingTorque(state) {mc_bms_limiting_torque.value = state}
+        function onNewLimitMaxSpeed(state) {mc_limit_max_speed.value = state}
+        function onNewLimitHotSpot(state) {mc_limit_hot_spot.value = state}
+        function onNewLowSpeedLimiting(state) {mc_low_speed_limiting.value = state}
+        function onNewCoolantTempLimiting(state) {mc_coolant_temp_limiting.value = state}
+
+        function onNewAnalogInput1(voltage) {mc_analog_input_1.value = voltage}
+        function onNewAnalogInput2(voltage) {mc_analog_input_2.value = voltage}
+        function onNewAnalogInput3(voltage) {mc_analog_input_3.value = voltage}
+        function onNewAnalogInput4(voltage) {mc_analog_input_4.value = voltage}
+        function onNewAnalogInput5(voltage) {mc_analog_input_5.value = voltage}
+        function onNewAnalogInput6(voltage) {mc_analog_input_6.value = voltage}
+
+        function onNewTorqueShudder(torque) {mc_torque_shudder.value = torque}
+        function onNewCommandedTorque(torque) {mc_commanded_torque.value = torque}
+        function onNewTorqueFeedback(torque) {mc_torque_feedback.value = torque}
+
+        function onNewMotorSpeed(speed) {mc_motor_speed.value = speed}
+        */
     }
 }
