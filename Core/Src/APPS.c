@@ -8,7 +8,7 @@
 #include "APPS.h"
 #include "utils.h"
 #include "CAN1.h"
-#include "rpmTable.h"
+#include "torqueTable.h"
 #include <string.h>
 
 #define AVG_WINDOW			3
@@ -16,10 +16,46 @@
 #define APPS1_MAX			1230
 #define APPS_DIFF_THRESH	90
 
-float interpolate(float a, float b)
+
+//Rows (pedal percent): 0   10	 20 	30 	    40 	    50 	    60 	    70 	 	80 		90 		100
+//Columns RPM		    0	454	 909	1363	1817	2271	2726	3180	3634	4089	4543	4997	5452	5906
+int torqueTable[11][14] = {
+	{-6,  -21,     29,  -28   -27,  -25,  -22,  -26,  -27,  -23,  -21,  -17,  -19,  -19},
+	{12,   -5,    -15,  -14,  -11,   -8,   -7,   -8,   -6,   -8,   -7,   -5,   -4,   -4},
+	{27,   15,      5,   7,     5,    5,    5,    5,    5,    4,    5,    5,    5,    5},
+	{45,   38,     27,  24,    24,   23,   22,   21,   24,   23,   20,   18,   13,   13},
+	{68,   57,     50,  50,    48,   51,   49,   50,   42,   47,   42,   46,   42,   42},
+	{84,   78,     73,  74,    73,   73,   70,   65,   63,   71,   62,   55,   57,   57},
+	{97,   101,    95,  94,    98,   96,   99,   91,   92,   86,   81,   76,   71,   71},
+	{110,  110,   109,  112,  108,  111,  110,  108,  106,  101,   89,   81,   72,   72},
+	{118,  118,   117,  125,  122,  126,  119,  116,  113,  106,   89,   89,   76,   76},
+	{127,  126,   126,  129,  127,  129,  124,  122,  116,  107,  106,   89,   80,   80},
+	{130,  131,   131,  130,  131,  131,  131,  131,  121,  110,   98,   87,   78,   78}
+};
+
+// Loopup table for the torqueTable array
+int rpms [14][2] = {
+	{0, 454},
+	{1, 909},
+	{2, 1363},
+	{3, 1817},
+	{4, 2271},
+	{5, 2726},
+	{6, 3180},
+	{7, 3634},
+	{8, 4088},
+	{9, 4543},
+	{10, 4997},
+	{11, 5452},
+	{12, 5906},
+	{13, 6360}
+};
+
+
+float interpolate(float a1, float b1, float a2, float b2, float x)
 {
-    // Interpolation formula: (a + b) / 2
-    return (a + b) / 2;
+	// Interpolation formula: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
+	return b1 + (x - a1) * (b2 - b1) / (a2 - a1);
 }
 
 APPS_Data_Struct APPS_Data;
@@ -96,56 +132,49 @@ void startAPPSTask() {
 		int pedalPercent = 0; //X value
 		int rpmNumber = 0; //Y value
 
-		int pedalPercentWholeNumber = pedalPercent/10; //Chops off the ones digit
-		int pedalPercentOnesColumn = pedalPercent%10; //Gets the ones digit
-
+		// Using the lookup table to find the column number
 		int rpmId = 0;
 		for (int i = 0; i < 14; i++) {
-			if (rpmNumber < rpms[2]) {
+			if (rpmNumber < torqueTable[i][2]) {
 				rpmId = i;
 				break;
 			}
 		}
 
-		int value;
+		int torque;
 		//Find the four points around the two values
-		int xDiff = pedalPercentWholeNumber % 10;
-		int lowerBound = pedalPercentWholeNumber - xDiff;
-		int upperBound = lowerBound + 10;
-		float xDiffAsPercent= Float(xDiff) * 0.001
+		int pedalPercentOnesColumn = pedalPercent % 10;	//Get the ones column from the pedal percent *** This assumes the percent is a whole number ***
+		int lowerBoundPedal = pedalPercent - pedalPercentOnesColumn; // This finds the table index value lower than
+		int upperBoundPedal = lowerBoundPedal + 10;	// This gets the upper bound of the pedal percent
+		// float pedalPercentOnesColumnAsPercent = (float)pedalPercentOnesColumn * 0.01;
 
-		float yDiff = Float(rpms[rpmId][1] % 454) * 0.01;
-		int lowerBoundRPM = rpms[rpmId][1];
-		int upperBoundRPM = lowerBoundRPM + 454;
+		// float yDiff = (float)(torqueTable[rpmId][1] % 454) * 0.01;
+		int lowerBoundRPM = torqueTable[rpmId][1];	//Find the rpm value lower than it
+		int upperBoundRPM = lowerBoundRPM + 454;	//Find the rpm value higher than it
 
 		// If it's not at its max x or y
-		if (pedalPercentWholeNumber != 120 && rpmId != 12) {
+		if (pedalPercent != 120 && rpmId != 12) {
+			float x1Interpolation = interpolate((float)lowerBoundPedal, (float)lowerBoundRPM, (float)lowerBoundPedal, (float)upperBoundPedal, (float)pedalPercent);
+			float x2Interpolation = interpolate((float)upperBoundPedal, (float)lowerBoundRPM, (float)upperBoundPedal, (float)upperBoundPedal, (float)pedalPercent);
 
-			float x1Interpolation = interpolate(Float(rpmTable[lowerBound][lowerBoundRPM]), Float(rpmTable[lowerBound][upperBoundRPM]));
-			float x2Interpolation = interpolate(Float(rpmTable[upperBound][lowerBoundRPM]), Float(rpmTable[upperBound][upperBoundRPM]));
+			// x1Interpolation *= pedalPercentOnesColumnAsPercent;
+			// x2Interpolation *= pedalPercentOnesColumnAsPercent;
 
-			x1Interpolation *= xDiffAsPercent;
-			x2Interpolation *= xDiffAsPercent;
-
-			float yInterpolation = interpolate(x1Interpolation, x2Interpolation);
-
-			value = yInterpolation * yDiff;
-
+			torque = interpolate(x1Interpolation, lowerBoundRPM, x2Interpolation, upperBoundRPM, (float)rpmNumber);
 
 		// If it's at its max x but not max y
 		} else if (pedalPercentWholeNumber == 100 && rpmId != 14) {
-
-			float yInterpolation = interpolate(Float(rpmTable[pedalPercentWholeNumber][lowerBoundRPM]), Float(rpmTable[pedalPercentWholeNumber][upperBoundRPM]));
-			value = yInterpolation * yDiff;
+			torque = interpolate((float)lowerBoundPedal, (float)lowerBoundRPM, (float)lowerBoundPedal, (float)upperBoundPedal, (float)pedalPercent);
 
 		// If it's at its max y but not max x
 		} else if (pedalPercentWholeNumber != 100 && rpmId == 14) {
-			float xInterpolation = interpolate(Float(rpmTable[lowerBound][rpmId]), Float(rpmTable[upperBound][rpmId]));
-			value = xInterpolation * xDiffAsPercent;
+			torque = interpolate((float)lowerBoundRPM, (float)lowerBoundPedal, (float)upperBoundRPM, (float)lowerBoundPedal, (float)rpmNumber);
+			// float xInterpolation = interpolate((float)(torqueTable[lowerBound][rpmId]), (float)(torqueTable[upperBound][rpmId]));
+			// torque = xInterpolation * pedalPercentOnesColumnAsPercent;
 
 		// If it's at its max x and y
 		} else {
-			value = rpmTable[pedalPercentWholeNumber][rpmId];
+			torque = torqueTable[pedalPercentWholeNumber][rpmId];
 		}
 
 		//Formatting sample can message
