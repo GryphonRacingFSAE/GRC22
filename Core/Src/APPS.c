@@ -90,46 +90,61 @@ void startAPPSTask() {
 		}
 
 		//Pedal Mapping
-		int pedalPercent = 0;
+		int rpmNumber = 0;
 		int speed = 0;
 
 		speedWholeNumber = speed/10; //Chops off the ones digit
 		speedOnesColumn = speed%10; //Gets the ones digit
 
-		pedalPercentWholeNumber = pedalPercent/10;
-		pedalPercentOnesColumn = pedalPercent%10;
+		int rpmId = 0;
+		for (int i = 0; i < 14; i++) {
+			if (rpmNumber < rpms[2]) {
+				rpmId = i;
+				break;
+			}
+		}
 
 		//If it's not the last element in the array
 		int value;
-		if speedWholeNumber != 120 && pedalPercentWholeNumber != 100 {
-			int a = rpmTable[pedalPercentWholeNumber][speedWholeNumber];
-			int b = rpmTable[pedalPercentWholeNumber + 1][speedWholeNumber + 1];
+		if (speedWholeNumber != 120 && rpmId != 12) {
+			int a = rpmTable[speedWholeNumber][rpmId];
+			int b = rpmTable[speedWholeNumber + 1][rpmId + 1];
 
 			int diff = b - a;
-			diff *= (speedOneColumn + pedalPercentOnesColumn)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
+
+			rpmDiff = rpms[rpmId + 1] - rpms[rpmId];
+
+			diff *= (speedOneColumn + rpmDiff)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
 
 			value = a + diff;
 
-		} else if (speedWholeNumber == 120 && pedalPercentWholeNumber != 100) {
-			int a = rpmTable[pedalPercentWholeNumber][speedWholeNumber];
-			int b = rpmTable[pedalPercentWholeNumber + 1][speedWholeNumber];
+		} else if (speedWholeNumber == 120 && rpmId != 12) {
+			int a = rpmTable[speedWholeNumber][rpmId];
+			int b = rpmTable[speedWholeNumber][rpmId + 1];
 
 			int diff = b - a;
-			diff *= pedalPercentOnesColumn/10; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
+
+			rpmDiff = rpms[rpmId + 1] - rpms[rpmId];
+
+			diff *= (speedOneColumn + rpmDiff)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
 
 			value = a + diff;
-		} else if (speedWholeNumber != 120 && pedalPercentWholeNumber == 100) {
-			int a = rpmTable[pedalPercentWholeNumber][speedWholeNumber];
-			int b = rpmTable[pedalPercentWholeNumber][speedWholeNumber + 1];
+
+		} else if (speedWholeNumber != 120 && rpmId == 12) {
+			int a = rpmTable[speedWholeNumber][rpmId];
+			int b = rpmTable[speedWholeNumber + 1][rpmId];
 
 			int diff = b - a;
-			diff *= speedOnesColumn/10; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
+
+			rpmDiff = rpms[rpmId + 1] - rpms[rpmId];
+
+			diff *= (speedOneColumn + rpmDiff)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
 
 			value = a + diff;
+
 		} else {
-			value = rpmTable[pedalPercentWholeNumber][speedWholeNumber];
+			value = rpmTable[speedWholeNumber][rpmId];
 		}
-
 
 		//Formatting sample can message
 		//TODO format can message as motor controller torque command
