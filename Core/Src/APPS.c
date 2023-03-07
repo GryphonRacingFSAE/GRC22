@@ -2,7 +2,7 @@
  * APPS.c
  *
  *  Created on: Jan 19, 2023
- *      Author: Matt
+ *      Author: Matt and Ian McKechnie
  */
 
 #include "APPS.h"
@@ -16,6 +16,11 @@
 #define APPS1_MAX			1230
 #define APPS_DIFF_THRESH	90
 
+float interpolate(float a, float b)
+{
+    // Interpolation formula: (a + b) / 2
+    return (a + b) / 2;
+}
 
 APPS_Data_Struct APPS_Data;
 
@@ -78,9 +83,7 @@ void startAPPSTask() {
 
 		//TODO compare APPS signal to detect plausibility error;
 
-
 		appsPos= (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
-
 		appsPos = MAX(MIN(appsPos,100),0);
 
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
@@ -90,11 +93,11 @@ void startAPPSTask() {
 		}
 
 		//Pedal Mapping
-		int rpmNumber = 0;
-		int speed = 0;
+		int pedalPercent = 0; //X value
+		int rpmNumber = 0; //Y value
 
-		speedWholeNumber = speed/10; //Chops off the ones digit
-		speedOnesColumn = speed%10; //Gets the ones digit
+		int pedalPercentWholeNumber = pedalPercent/10; //Chops off the ones digit
+		int pedalPercentOnesColumn = pedalPercent%10; //Gets the ones digit
 
 		int rpmId = 0;
 		for (int i = 0; i < 14; i++) {
@@ -104,46 +107,45 @@ void startAPPSTask() {
 			}
 		}
 
-		//If it's not the last element in the array
 		int value;
-		if (speedWholeNumber != 120 && rpmId != 12) {
-			int a = rpmTable[speedWholeNumber][rpmId];
-			int b = rpmTable[speedWholeNumber + 1][rpmId + 1];
+		//Find the four points around the two values
+		int xDiff = pedalPercentWholeNumber % 10;
+		int lowerBound = pedalPercentWholeNumber - xDiff;
+		int upperBound = lowerBound + 10;
+		float xDiffAsPercent= Float(xDiff) * 0.001
 
-			int diff = b - a;
+		float yDiff = Float(rpms[rpmId][1] % 454) * 0.01;
+		int lowerBoundRPM = rpms[rpmId][1];
+		int upperBoundRPM = lowerBoundRPM + 454;
 
-			rpmDiff = rpms[rpmId + 1] - rpms[rpmId];
+		// If it's not at its max x or y
+		if (pedalPercentWholeNumber != 120 && rpmId != 12) {
 
-			diff *= (speedOneColumn + rpmDiff)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
+			float x1Interpolation = interpolate(Float(rpmTable[lowerBound][lowerBoundRPM]), Float(rpmTable[lowerBound][upperBoundRPM]));
+			float x2Interpolation = interpolate(Float(rpmTable[upperBound][lowerBoundRPM]), Float(rpmTable[upperBound][upperBoundRPM]));
 
-			value = a + diff;
+			x1Interpolation *= xDiffAsPercent;
+			x2Interpolation *= xDiffAsPercent;
 
-		} else if (speedWholeNumber == 120 && rpmId != 12) {
-			int a = rpmTable[speedWholeNumber][rpmId];
-			int b = rpmTable[speedWholeNumber][rpmId + 1];
+			float yInterpolation = interpolate(x1Interpolation, x2Interpolation);
 
-			int diff = b - a;
+			value = yInterpolation * yDiff;
 
-			rpmDiff = rpms[rpmId + 1] - rpms[rpmId];
 
-			diff *= (speedOneColumn + rpmDiff)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
+		// If it's at its max x but not max y
+		} else if (pedalPercentWholeNumber == 100 && rpmId != 14) {
 
-			value = a + diff;
+			float yInterpolation = interpolate(Float(rpmTable[pedalPercentWholeNumber][lowerBoundRPM]), Float(rpmTable[pedalPercentWholeNumber][upperBoundRPM]));
+			value = yInterpolation * yDiff;
 
-		} else if (speedWholeNumber != 120 && rpmId == 12) {
-			int a = rpmTable[speedWholeNumber][rpmId];
-			int b = rpmTable[speedWholeNumber + 1][rpmId];
+		// If it's at its max y but not max x
+		} else if (pedalPercentWholeNumber != 100 && rpmId == 14) {
+			float xInterpolation = interpolate(Float(rpmTable[lowerBound][rpmId]), Float(rpmTable[upperBound][rpmId]));
+			value = xInterpolation * xDiffAsPercent;
 
-			int diff = b - a;
-
-			rpmDiff = rpms[rpmId + 1] - rpms[rpmId];
-
-			diff *= (speedOneColumn + rpmDiff)/20; // add the two ones columns together, make it a percent, then divide by 2 since the're two numbers
-
-			value = a + diff;
-
+		// If it's at its max x and y
 		} else {
-			value = rpmTable[speedWholeNumber][rpmId];
+			value = rpmTable[pedalPercentWholeNumber][rpmId];
 		}
 
 		//Formatting sample can message
