@@ -8,6 +8,7 @@ if (${BUILD_BACKEND})
         Full/MotorController.hpp
         Full/EnergyMeter.hpp
         Full/AN400ECU.hpp
+        Full/VCU.hpp
         Full/BMS.hpp
     )
     target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Full)
@@ -30,4 +31,4 @@ endif()
 set_target_properties(CANInterfaces PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
 set_target_properties(CANInterfaces PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<0:>)
 target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(CANInterfaces PUBLIC qt::qt fmt::fmt)
+target_link_libraries(CANInterfaces PUBLIC qt::qt fmt::fmt rapidcsv::rapidcsv)

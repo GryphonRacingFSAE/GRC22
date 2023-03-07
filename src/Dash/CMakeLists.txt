@@ -32,7 +32,7 @@ elseif(UNIX AND NOT APPLE)
             COMMAND mkdir -p $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
             COMMAND cp ${dbc_files} -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
             COMMAND linuxdeploy-x86_64.AppImage
-                    -v2
+                    -v0
                     --appdir $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
                     --executable $<TARGET_FILE:GryphonDash> 
                     --icon-file ${CMAKE_CURRENT_SOURCE_DIR}/images/GryphonDash.png

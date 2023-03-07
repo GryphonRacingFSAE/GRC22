@@ -2,8 +2,6 @@
 
 #include <DBCInterface.hpp>
 #include <QObject>
-#include <algorithm>
-#include <fmt/core.h>
 
 class AN400ECU : public QObject, public CAN::DBCInterface<AN400ECU> {
     Q_OBJECT

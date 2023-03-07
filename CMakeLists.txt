@@ -32,6 +32,7 @@ if(${BUILD_BACKEND})
 endif()
 
 find_package(fmt CONFIG REQUIRED)
+find_package(rapidcsv CONFIG REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD true)
 find_package(Threads REQUIRED)
 

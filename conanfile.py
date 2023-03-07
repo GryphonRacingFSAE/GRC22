@@ -43,6 +43,7 @@ class GRCDash(ConanFile):
         if self.options.dev != "front":
             self.requires("dbcppp/3.2.6")
         self.requires("fmt/9.0.0")
+        self.requires("rapidcsv/8.69")
 
     def layout(self):
         cmake_layout(self)
