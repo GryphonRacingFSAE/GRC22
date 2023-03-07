@@ -4,8 +4,8 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <thread>
 #include <cstring>
+#include <thread>
 
 #include <defs.hpp>
 
@@ -30,9 +30,7 @@ class Interface {
     virtual void newTimeout() = 0;
 
     template <size_t N>
-    RetCode write(uint32_t address,
-                  const std::array<uint8_t, N>& payload,
-                  bool extended = false) {
+    RetCode write(uint32_t address, const std::array<uint8_t, N>& payload, bool extended = false) {
         static_assert(0 <= N && N <= 8, "Size of payload must be between 0 and 8");
         if (address & 0xE0000000) { // Disallow passing anything but the address.
             return RetCode::InvalidParam;

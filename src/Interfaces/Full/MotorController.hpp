@@ -25,7 +25,8 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
         can_signal_dispatch["INV_Module_B_Temp"] = &MotorController::newModuleBTemp;
         can_signal_dispatch["INV_Module_C_Temp"] = &MotorController::newModuleCTemp;
-        can_signal_dispatch["INV_Gate_Driver_Board_Temp"] = &MotorController::newGateDriverBoardTemp;
+        can_signal_dispatch["INV_Gate_Driver_Board_Temp"] =
+            &MotorController::newGateDriverBoardTemp;
         can_signal_dispatch["INV_Control_Board_Temp"] = &MotorController::newControlBoardTemp;
         can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
         can_signal_dispatch["INV_Hot_Spot_Temp"] = &MotorController::newHotSpotTemp;
@@ -34,14 +35,17 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_PWM_Frequency"] = &MotorController::newPWMFrequency;
         can_signal_dispatch["INV_Inverter_State"] = &MotorController::newInverterState;
         can_signal_dispatch["INV_Inverter_Run_Mode"] = &MotorController::newInverterRunMode;
-        can_signal_dispatch["INV_Inverter_Discharge_State"] = &MotorController::newInverterActiveDischargeState;
-        can_signal_dispatch["INV_Inverter_Enable_Lockout"] = &MotorController::newInverterEnableLockout;
+        can_signal_dispatch["INV_Inverter_Discharge_State"] =
+            &MotorController::newInverterActiveDischargeState;
+        can_signal_dispatch["INV_Inverter_Enable_Lockout"] =
+            &MotorController::newInverterEnableLockout;
         can_signal_dispatch["INV_BMS_Active"] = &MotorController::newBMSActive;
         can_signal_dispatch["INV_BMS_Limiting_Torque"] = &MotorController::newBMSLimitingTorque;
         can_signal_dispatch["INV_Limit_Max_Speed"] = &MotorController::newLimitMaxSpeed;
         can_signal_dispatch["INV_Limit_Hot_Spot"] = &MotorController::newLimitHotSpot;
         can_signal_dispatch["INV_Low_Speed_Limiting"] = &MotorController::newLowSpeedLimiting;
-        can_signal_dispatch["INV_Limit_Coolant_Derating"] = &MotorController::newCoolantTempLimiting;
+        can_signal_dispatch["INV_Limit_Coolant_Derating"] =
+            &MotorController::newCoolantTempLimiting;
 
         can_signal_dispatch["INV_Analog_Input_1"] = &MotorController::newAnalogInput1;
         can_signal_dispatch["INV_Analog_Input_2"] = &MotorController::newAnalogInput2;
