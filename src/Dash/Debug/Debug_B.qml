@@ -214,6 +214,7 @@ Item {
     Connections {
         target: MotorController
 
+        /*
         function onNewTestValue(value) {
             mc_pwm_frequency.value = value
             mc_inverter_state.value = value
@@ -240,8 +241,8 @@ Item {
 
             mc_motor_speed.value = value
         }
+        */
 
-        /*
         function onNewPWMFrequency(state) {mc_pwm_frequency.value = state}
         function onNewInverterState(state) {mc_inverter_state.value = state}
         function onNewInverterRunMode(state) {mc_inverter_run_mode.value = state}
@@ -266,6 +267,5 @@ Item {
         function onNewTorqueFeedback(torque) {mc_torque_feedback.value = torque}
 
         function onNewMotorSpeed(speed) {mc_motor_speed.value = speed}
-        */
     }
 }

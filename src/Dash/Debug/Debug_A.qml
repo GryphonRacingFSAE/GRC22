@@ -284,20 +284,21 @@ Item {
     Connections {
         target: EnergyMeter
         
+        /*
         function onNewTestValue(value) {
             em_current.value = value
             em_voltage.value = value
         }
-
-        /*
-        function onNewCurrent(current) {em_current.value = current}
-        function onNewVoltage(voltage) {em_voltage.value = voltage};
         */
+
+        function onNewCurrent(current) {em_current.value = current}
+        function onNewVoltage(voltage) {em_voltage.value = voltage}
     }
 
     Connections {
         target: MotorController
 
+        /*
         function onNewTestValue(value) {
             mc_dc_bus_current.value = value
 
@@ -313,8 +314,8 @@ Item {
             mc_hot_spot_temp.value = value
             mc_motor_temp.value = value
         }
+        */
 
-        /*
         function onNewDCBusCurrent(current) {mc_dc_bus_current.value = current}
         
         function onNewDCBusVoltage(voltage) {mc_dc_bus_voltage.value = voltage}
@@ -328,6 +329,5 @@ Item {
         function onNewCoolentTemp(temp) {mc_coolant_temp.value = temp}
         function onNewHotSpotTemp(temp) {mc_hot_spot_temp.value = temp}
         function onNewMotorTemp(temp) {mc_motor_temp.value = temp}
-        */
     }
 }
