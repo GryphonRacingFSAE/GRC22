@@ -65,7 +65,7 @@ void RTD() {
 					callCounts = 0;
 				}				
 			} 
-			else if (APPS_Data.tractiveVoltage < RTD_TRACTIVE_VOLTAGE_OFF) {
+			else if (Ctrl_Data.tractiveVoltage < RTD_TRACTIVE_VOLTAGE_OFF) {
 				APPS_Data.flags |= APPS_RTD_INVALID; // Consider APPS as invalid due to RTD
 			}
 			osMutexRelease(APPS_Data_MtxHandle);
