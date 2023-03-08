@@ -43,23 +43,49 @@ Rectangle {
         }
     }
     Keys.onDigit1Pressed: () => {
-        repeater.itemAt(selectedIndex).torque = Math.max(repeater.itemAt(selectedIndex).torque - 1, -22) // TODO: replace with VCU.minTorque
+        repeater.itemAt(selectedIndex).torque = Math.max(repeater.itemAt(selectedIndex).torque - 1, VCU.minTorque)
     }
     Keys.onDigit2Pressed: () => {
         repeater.itemAt(selectedIndex).torque = Math.min(repeater.itemAt(selectedIndex).torque + 1, VCU.maxTorque)
+    }
+    Keys.onPressed: (event) => {
+        switch (event.key) {
+            case Qt.Key_S: {
+                // Array must be in row-major order to work as expected (each row is pedal position)
+                let torque_map = [];
+                for (let i = 0; i < rows * columns; i++) {
+                    torque_map.push(repeater.itemAt(i).torque);
+                }
+                VCU.saveTorqueMapCSV(torque_map); 
+                break;
+            }
+            case Qt.Key_Plus: VCU.profileId = Math.min(VCU.profileId + 1, 3); break;
+            case Qt.Key_Minus: VCU.profileId = Math.max(VCU.profileId - 1, 0); break;
+        }
     }
     Keys.onReturnPressed: () => {
         // Array must be in row-major order to work as expected (each row is pedal position)
         let torque_map = [];
         for (let i = 0; i < rows * columns; i++) {
-            torque_map.push(repeater.itemAt(selectedIndex).torque);
+            torque_map.push(repeater.itemAt(i).torque);
         }
         VCU.sendTorqueMap(torque_map);
     }
 
-    Label {
-        text: repeater.itemAt(selectedIndex)?.torque ?? "Null"
-        color: "white"
+    RowLayout {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        Label {
+            text: repeater.itemAt(selectedIndex)?.torque ?? "Null"
+            color: "white"
+            font.pixelSize: 18
+        }
+        Label {
+            Layout.alignment: Qt.AlignHCenter
+            text: `Profile #${VCU.profileId}`
+            color: "white"
+            font.pixelSize: 18
+        }
     }
     Rectangle {
         color: "white"
@@ -78,11 +104,9 @@ Rectangle {
             rowSpacing: 0
             Repeater {
                 id: repeater
-                model: root.rows * root.columns
+                model: VCU.currentTorqueMap
                 Rectangle {
-                    required property int index
-
-                    property int torque: index - 22
+                    property int torque: modelData
 
                     property bool isSelected: index == root.selectedIndex
                     border {
@@ -94,7 +118,7 @@ Rectangle {
                     Layout.fillHeight: true
                     color: {
                         if (torque < 0) {
-                            return Qt.rgba(1, 0, 0, torque/(-22)) // TODO replace with VCU.minTorque
+                            return Qt.rgba(1, 0, 0, torque/VCU.minTorque)
                         } else {
                             return Qt.rgba(0, 1, 0, torque/VCU.maxTorque)
                         }

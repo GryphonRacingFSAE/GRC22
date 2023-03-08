@@ -7,8 +7,18 @@ target_compile_definitions(GryphonDash2019 PRIVATE ROOT_SOURCE_PATH="${CMAKE_CUR
 target_link_libraries(GryphonDash PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
 target_link_libraries(GryphonDash2019 PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
 
-file(COPY ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/DBCs DESTINATION $<TARGET_FILE_DIR:GryphonDash>)
-file(COPY ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps DESTINATION $<TARGET_FILE_DIR:GryphonDash>)
+add_custom_command(
+    TARGET GryphonDash PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/DBCs
+        $<TARGET_FILE_DIR:GryphonDash>/DBCs
+)
+add_custom_command(
+    TARGET GryphonDash PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps
+        $<TARGET_FILE_DIR:GryphonDash>/TorqueMaps
+)
 
 # TODO: Add the deployment for linux
 if(WIN32)
@@ -31,6 +41,8 @@ elseif(UNIX AND NOT APPLE)
             TARGET GryphonDash POST_BUILD
             DEPENDS GryphonDash.desktop images/GryphonDash.png
             COMMAND rm -r -f $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
+            COMMAND cp $<TARGET_FILE_DIR:GryphonDash>/DBCs -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
+            COMMAND cp $<TARGET_FILE_DIR:GryphonDash>/TorqueMaps -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
             COMMAND linuxdeploy-x86_64.AppImage
                     -v2
                     --appdir $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir

@@ -4,21 +4,61 @@
 #include <QObject>
 #include <limits>
 #include <tools.hpp>
+#include <filesystem>
 #include <fmt/ranges.h>
+#include <rapidcsv.h>
 
 class VCU : public QObject, public CAN::Interface {
     Q_OBJECT
+    Q_PROPERTY(QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
+    Q_PROPERTY(int profileId MEMBER m_profile_id NOTIFY profileIdChanged)
     Q_PROPERTY(int maxTorque MEMBER torque_map_max CONSTANT)
     Q_PROPERTY(int minTorque MEMBER torque_map_min CONSTANT)
   public:
     VCU(const std::string& torque_map_directory = "")
-        : QObject(nullptr), m_torque_map_directory(torque_map_directory) {
-            
+        : QObject(nullptr), m_torque_map_directory(torque_map_directory), m_profile_id(0) {
+        
+        if (!std::filesystem::exists(m_torque_map_directory) || !std::filesystem::is_directory(m_torque_map_directory)) {
+            fmt::print("Torque map directory doesn't exist!");
+            throw "Bricked hard";
+        }
+
+        connect(this, &VCU::profileIdChanged, &VCU::readTorqueMapCSV);
+        
+        readTorqueMapCSV();
+
         // Startup HW interface
         this->CAN::Interface::startReceiving(
             "can0", VCU::filters, VCU::num_of_filters, VCU::timeout_ms);
     }
 
+    Q_INVOKABLE void saveTorqueMapCSV(QList<int> torque_map) {
+        auto save_path = m_torque_map_directory / fmt::format("torque_map_{}.csv", m_profile_id);
+        rapidcsv::Document doc(save_path, rapidcsv::LabelParams(-1, -1));
+        for (qsizetype i = 0; i < torque_map.size(); i++) {
+            doc.SetCell(i % 14, i / 14, torque_map.at(i));
+        }
+        doc.Save();
+    }
+
+  public slots:
+    void readTorqueMapCSV() {
+        m_current_torque_map.clear();
+        auto read_path = m_torque_map_directory / fmt::format("torque_map_{}.csv", m_profile_id);
+        rapidcsv::Document doc(read_path, rapidcsv::LabelParams(-1, -1));
+        for (size_t i = 0; i < doc.GetRowCount(); i++) {
+            for (const auto cell : doc.GetRow<int>(i)) {
+                m_current_torque_map.push_back(cell);
+            }
+        }
+        emit currentTorqueMapChanged();
+    }
+
+  signals:
+    void currentTorqueMapChanged();
+    void profileIdChanged();
+
+  public:
     Q_INVOKABLE void sendTorqueMap(QList<int> torque_map){
         uint8_t percent_division_count = 11; // 0-100 in increments of 10%
         uint8_t speed_division_count = 14; // 0-130 in increments of 10kmph
@@ -49,12 +89,13 @@ class VCU : public QObject, public CAN::Interface {
         } 
 
         // Data for 2D arrays should be sent in Row Major Order
-        auto header = std::array<uint8_t, 4>{
+        auto header = std::array<uint8_t, 5>{
             'T', // Initiate upload transaction for (T)orque map
             num_of_torque_map_data_points, // Size of transaction in bytes
             // The last 6 bytes is reserved for data specific to the transaction
             speed_division_count, // Count of data points on speed axis (X axis or number of columns)
             percent_division_count, // Count of data points on percent axis (Y axis or number of rows)
+            *reinterpret_cast<uint8_t*>(&torque_map_offset), // Send offset so VCU can decode the values
         };
 
         if (sendTransaction(header, transaction) != RetCode::Success) {
@@ -64,7 +105,7 @@ class VCU : public QObject, public CAN::Interface {
 
     template<size_t Header_N, class StorageClass>
     RetCode sendTransaction(std::array<uint8_t, Header_N> header, const StorageClass& transaction){
-        static_assert(std::is_same<decltype(transaction.begin()), uint8_t>::value);
+        static_assert(std::is_same<typename StorageClass::value_type, uint8_t>::value);
         // Send header
         RetCode ans = CAN::Interface::write(0x0D0, header);
         if (ans != RetCode::Success) {
@@ -104,10 +145,12 @@ class VCU : public QObject, public CAN::Interface {
     void newTimeout() override{};
 
   private:
-    std::string m_torque_map_directory;
+    std::filesystem::path m_torque_map_directory;
+    QList<int> m_current_torque_map;
+    int m_profile_id;
 
   public:
-    static constexpr int torque_map_offset = 128 - 25;
+    static constexpr int8_t torque_map_offset = 128 - 25;
     static constexpr int torque_map_max = std::numeric_limits<int8_t>::max() + torque_map_offset; // Estimated is around -22Nm
     static constexpr int torque_map_min = std::numeric_limits<int8_t>::min() + torque_map_offset; // Estimated is around +230Nm
     static constexpr size_t num_of_filters = 1;
