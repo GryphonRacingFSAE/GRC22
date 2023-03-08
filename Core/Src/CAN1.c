@@ -6,6 +6,7 @@
  */
 #include "CAN1.h"
 #include "utils.h"
+#include "control.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -71,13 +72,11 @@ void startCANRxTask() {
 }
 
 void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
-	switch (msgHeader->StdID) {
+	switch (msgHeader->StdId) {
 	case 0x0A2: { //INV_Hot_Spot_Temp, INV_Coolant_Temp
 		if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
-
 			uint16_t INV_Hot_Spot_Temp = ((uint16_t) msgData[3] << 8) | ((uint16_t) msgData[2]);
 			Ctrl_Data.motorControllerTemp = *(int16_t*) (&INV_Hot_Spot_Temp);
-
 			uint16_t INV_Coolant_Temp = ((uint16_t) msgData[1] << 8) | ((uint16_t) msgData[0]);
 			Ctrl_Data.coolantTemp = *(int16_t*) (&INV_Coolant_Temp);
 			osMutexRelease(Ctrl_Data_MtxHandle);
@@ -96,7 +95,7 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 		}
 		break;
 	}
-	case 0x0A5: { // INV_DC_Bus_Voltage
+	case 0x0A5: { // INV_Motor_Speed
 		if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
 			uint16_t INV_Motor_Speed = ((uint16_t) msgData[3] << 8) | ((uint16_t) msgData[2]);
 			Ctrl_Data.motorSpeed = *(int16_t*) (&INV_Motor_Speed);
@@ -107,12 +106,4 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 		break;
 	}
 	}
-	if (osMutexAcquire(Ctrl_Data_MtxHandle, osWaitForever) == osOK) {
-
-		//INV_Motor_Speed
-	else if (msgHeader->StdID == 0x0A5) {
-
-	}
-
-}
 }
