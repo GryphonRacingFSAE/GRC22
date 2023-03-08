@@ -20,16 +20,7 @@ void startCAN1TxTask() {
 
 			// Send out TX message on CAN
 			HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, NULL);
-
-			/* Print out the TX message */
-
-//			myprintf("%X ", txMsg.header.StdId);
-//			for (int i = 0; i < txMsg.header.DLC; i++) {
-//				myprintf("%02X", txMsg.aData[i]);
-//			}
-//			myprintf("\n");
 		}
-
 	}
 }
 
@@ -49,7 +40,8 @@ void startCANRxTask() {
 
 	while (1) {
 		// Wait for a message to be received on a CAN interface
-		flagsSet = osThreadFlagsWait(CAN1_FLAG | CAN2_FLAG, osFlagsWaitAny | osFlagsNoClear, osWaitForever);
+		flagsSet = osThreadFlagsWait(CAN1_FLAG | CAN2_FLAG,
+		osFlagsWaitAny | osFlagsNoClear, osWaitForever);
 
 		if (flagsSet & CAN1_FLAG) {
 			osThreadFlagsClear(CAN1_FLAG);
@@ -79,25 +71,48 @@ void startCANRxTask() {
 }
 
 void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
-	//TODO handle CAN messages
-	if (osMutexAcquire(Ctrl_Data_MtxHandle, osWaitForever) == osOK){
+	switch (msgHeader->StdID) {
+	case 0x0A2: { //INV_Hot_Spot_Temp, INV_Coolant_Temp
+		if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
 
-		//INV_DC_Bus_Voltage
-		if(msgHeader -> StdID == 0x0A7){
-			uint16_t INV_DC_Bus_Voltage = ((uint16_t)msgData[1] << 8) | ((uint16_t)msgData[0]);
-			Ctrl_Data.tractiveVoltage = *(int16_t*)(&INV_DC_Bus_Voltage);
-		}//INV_Hot_Spot_Temp, INV_Coolant_Temp
-		else if(msgHeader -> StdID == 0x0A2){
-			uint16_t INV_Hot_Spot_Temp = ((uint16_t)msgData[3] << 8) | ((uint16_t)msgData[2]);
-			Ctrl_Data.motorControllerTemp = *(int16_t*)(&INV_Hot_Spot_Temp);
+			uint16_t INV_Hot_Spot_Temp = ((uint16_t) msgData[3] << 8) | ((uint16_t) msgData[2]);
+			Ctrl_Data.motorControllerTemp = *(int16_t*) (&INV_Hot_Spot_Temp);
 
-			uint16_t INV_Coolant_Temp = ((uint16_t)msgData[1] << 8) | ((uint16_t)msgData[0]);
-			Ctrl_Data.coolantTemp = *(int16_t*)(&INV_Coolant_Temp);
-		}//INV_Motor_Speed
-		else if(msgHeader -> StdID == 0x0A5){
-			uint16_t INV_Motor_Speed = ((uint16_t)msgData[3] << 8) | ((uint16_t)msgData[2]);
-			Ctrl_Data.motorSpeed = *(int16_t*)(&INV_Motor_Speed);}
-
-		osMutexRelease(Ctrl_Data_MtxHandle);
+			uint16_t INV_Coolant_Temp = ((uint16_t) msgData[1] << 8) | ((uint16_t) msgData[0]);
+			Ctrl_Data.coolantTemp = *(int16_t*) (&INV_Coolant_Temp);
+			osMutexRelease(Ctrl_Data_MtxHandle);
+		} else {
+			myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
+		}
+		break;
 	}
+	case 0x0A7: { // INV_DC_Bus_Voltage
+		if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
+			uint16_t INV_DC_Bus_Voltage = ((uint16_t) msgData[1] << 8) | ((uint16_t) msgData[0]);
+			Ctrl_Data.tractiveVoltage = *(int16_t*) (&INV_DC_Bus_Voltage);
+			osMutexRelease(Ctrl_Data_MtxHandle);
+		} else {
+			myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
+		}
+		break;
+	}
+	case 0x0A5: { // INV_DC_Bus_Voltage
+		if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
+			uint16_t INV_Motor_Speed = ((uint16_t) msgData[3] << 8) | ((uint16_t) msgData[2]);
+			Ctrl_Data.motorSpeed = *(int16_t*) (&INV_Motor_Speed);
+			osMutexRelease(Ctrl_Data_MtxHandle);
+		} else {
+			myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
+		}
+		break;
+	}
+	}
+	if (osMutexAcquire(Ctrl_Data_MtxHandle, osWaitForever) == osOK) {
+
+		//INV_Motor_Speed
+	else if (msgHeader->StdID == 0x0A5) {
+
+	}
+
+}
 }
