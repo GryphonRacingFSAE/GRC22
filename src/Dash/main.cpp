@@ -16,7 +16,8 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     std::string app_root = app.applicationDirPath().toStdString();
     // Should be before QQml engine
-    MotorController* motor_controller = new MotorController(app_root + "/DBCs/20220510_Gen5_CAN_DB.dbc");
+    MotorController* motor_controller =
+        new MotorController(app_root + "/DBCs/20220510_Gen5_CAN_DB.dbc");
     EnergyMeter* energy_meter = new EnergyMeter(app_root + "/DBCs/Energy_Meter_CAN_Messages.dbc");
     BMS* bms = new BMS(app_root + "/DBCs/Orion_CANBUS.dbc");
     VCU* vcu = new VCU(app_root + "/TorqueMaps");
