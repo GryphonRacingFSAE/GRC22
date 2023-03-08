@@ -22,53 +22,76 @@ class VCU : public QObject, public CAN::Interface {
     Q_INVOKABLE void sendTorqueMap(QList<int> torque_map){
         uint8_t percent_division_count = 11; // 0-100 in increments of 10%
         uint8_t speed_division_count = 14; // 0-130 in increments of 10kmph
-        uint8_t required_torque_map_size = percent_division_count * speed_division_count;
+        unsigned int expected_data_points_in_torque_map = percent_division_count * speed_division_count;
+        if (expected_data_points_in_torque_map > 255) {
+            fmt::print("Number of data points inside torque map ({}) exceeds limit of 255\n", expected_data_points_in_torque_map);
+            return;
+        }
+        uint8_t num_of_torque_map_data_points = static_cast<uint8_t>(expected_data_points_in_torque_map);
 
-        if (torque_map.size() != required_torque_map_size) {
-            fmt::print("QML torque map size ({}) != required torque map size ({})\n", torque_map.size(), required_torque_map_size);
+        if (torque_map.size() != num_of_torque_map_data_points) {
+            fmt::print("QML torque map size ({}) != required torque map size ({})\n", torque_map.size(), num_of_torque_map_data_points);
             return;
         }
 
-        // Send header
-        RetCode ans = CAN::Interface::write(0x0D0, std::array<uint8_t, 3>{
-            'T', // Initiate upload transaction for (T)orque map
-            percent_division_count, // Count of data points on percent axis
-            speed_division_count, // Count of data points on speed axis
-        });
-        if (ans != RetCode::Success) {
-            fmt::print("Failed to send header\n");
-            return;
-        }
-
-        // Verify torque map is within bounds
-        for (qsizetype i = 0; i < torque_map.size(); i++) {
-            if (torque_map[i] > torque_map_max || torque_map[i] < torque_map_min) {
+        std::vector<uint8_t> transaction;
+        transaction.reserve(num_of_torque_map_data_points);
+        for (int torque : torque_map) {
+            // Verify torque is within bounds
+            if (torque > torque_map_max || torque < torque_map_min) {
                 fmt::print("Torque map values out of bounds\n");
                 return;
             }
+            int adjusted_data_point = torque - torque_map_offset; // Readjust torque values to between -128 and 127
+            int8_t data_point = static_cast<int8_t>(adjusted_data_point); // This is safe as values should already be within the bounds of this data type
+            uint8_t encoded_data_point = *reinterpret_cast<uint8_t*>(&data_point); // Encode the int8_t into a uint8_t
+            transaction.push_back(encoded_data_point);
+        } 
+
+        // Data for 2D arrays should be sent in Row Major Order
+        auto header = std::array<uint8_t, 4>{
+            'T', // Initiate upload transaction for (T)orque map
+            num_of_torque_map_data_points, // Size of transaction in bytes
+            // The last 6 bytes is reserved for data specific to the transaction
+            speed_division_count, // Count of data points on speed axis (X axis or number of columns)
+            percent_division_count, // Count of data points on percent axis (Y axis or number of rows)
+        };
+
+        if (sendTransaction(header, transaction) != RetCode::Success) {
+            fmt::print("Something went wrong sending the transaction");
+        }
+    }
+
+    template<size_t Header_N, class StorageClass>
+    RetCode sendTransaction(std::array<uint8_t, Header_N> header, const StorageClass& transaction){
+        static_assert(std::is_same<decltype(transaction.begin()), uint8_t>::value);
+        // Send header
+        RetCode ans = CAN::Interface::write(0x0D0, header);
+        if (ans != RetCode::Success) {
+            fmt::print("Failed to send header\n");
+            return ans;
         }
 
-        for (qsizetype i = 0; i < torque_map.size(); i++) {
+        for (auto it = transaction.begin(); it != transaction.end(); it++) {
             size_t packet_size = 0;
             std::array<uint8_t, 8> packet_values = {};
-            for (; packet_size < 8 && i < torque_map.size(); packet_size++, i++) {
-                int adjusted_data_point = torque_map[i] - torque_map_offset; // Readjust torque values to between -128 and 127
-                int8_t data_point = static_cast<int8_t>(adjusted_data_point); // This is safe as values should already be within the bounds of this data type
-                packet_values[packet_size] = *reinterpret_cast<uint8_t*>(&data_point); // Send as bitwise int8_t
+            for (; packet_size < 8 && it != transaction.end(); packet_size++, it++) {
+                packet_values[packet_size] = *it; 
             }
 
             RetCode ans = CAN::Interface::write(0x0D1, packet_values.data(), packet_size);
             if (ans != RetCode::Success) {
                 fmt::print("Failed to send packet (size: {}, packet: {})\n", packet_size, packet_values);
-                return;
+                return ans;
             }
         }
+        return RetCode::Success;
     }
 
     void newFrame(const can_frame& frame) override {
         switch (CAN::frameId(frame)) {
             case 0x0D2:
-                fmt::print("Torque map response (ack)\n");
+                fmt::print("({}) message ack, with data: \n", (char)frame.data[0], frame.data);
                 break;
             default: 
                 fmt::print("Anything else (lol)\n");
