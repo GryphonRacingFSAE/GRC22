@@ -59,6 +59,39 @@ class Interface {
         return RetCode::Success;
     }
 
+    RetCode write(uint32_t address,
+                  const uint8_t* payload,
+                  const uint8_t count,
+                  bool extended = false) {
+        if (count > 8 || count < 1) { // Force count to be a good value
+            return RetCode::InvalidParam;
+        }
+
+        if (address & 0xE0000000) { // Disallow passing anything but the address.
+            return RetCode::InvalidParam;
+        }
+
+        if ((address & 0x1FFFF800) &&
+            !extended) { // Check if there are any bits in the extended section.
+            return RetCode::InvalidParam;
+        }
+
+        if (extended) {
+            address |= CAN_EFF_FLAG; // Set extended format.
+        }
+
+        can_frame frame;
+        frame.can_id = address;
+        frame.len = count;
+        memcpy(frame.data, payload, count);
+
+        if (::write(m_socket, (void*)&frame, sizeof(frame)) != sizeof(frame)) {
+            return RetCode::WriteErr;
+        }
+
+        return RetCode::Success;
+    }
+
   private:
     RetCode openSocket(const char* canbus_interface_name,
                        can_filter* filters,

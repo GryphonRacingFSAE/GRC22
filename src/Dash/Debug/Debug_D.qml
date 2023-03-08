@@ -4,6 +4,7 @@ import CAN.EnergyMeter
 import CAN.MotorController
 
 Item {
+    Keys.onDeletePressed: MotorController.clearFaultCodes()
     Rectangle {
         id: section_A
 

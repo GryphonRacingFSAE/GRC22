@@ -92,6 +92,14 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
 - Name your branch as follows: `firstname/branchtopic`, ex. `dallas/move-from-previous-repo`
 - `main` is a protected branch, and thus needs a PR to approve merging with it.
 
+## CAN reservations
+
+| Item | Reserved CAN Addresses |
+|-|-|
+| Motor Controller | 0x0A0-0x0CF |
+| VCU | 0x0D0-0x0DF |
+| BMS | Undecided |
+
 ## Resources
 
 * [<linux/can.h>](https://github.com/torvalds/linux/blob/master/include/uapi/linux/can.h)

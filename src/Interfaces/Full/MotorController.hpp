@@ -18,7 +18,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
 
     Q_INVOKABLE void clearFaultCodes() {
         // CM200 CAN Protocol V5.9 Section 2.3.1 and 2.3.3 (Address 20 or 0x14)
-        RetCode ans = write(0x0C1, std::array<uint8_t, 8>{0x00, 0x14, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00});
+        RetCode ans = CAN::Interface::write(0x0C1, std::array<uint8_t, 8>{0x00, 0x14, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00});
 
         if (ans != RetCode::Success) {
             fmt::print("Failed to clear fault codes\n");

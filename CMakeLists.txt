@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(GRCDash LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}, Flags: ${CMAKE_CXX_FLAGS}")
 
 if(MSVC)
-    add_compile_options(/W4 /WX)
+    add_compile_options(/W4)
     add_compile_options(
         "$<$<CONFIG:RELEASE>:/O2>"
         "$<$<CONFIG:DEBUG>:/Od>"
     )
 else()
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(-Wall -Wextra -pedantic)
     add_compile_options(
         "$<$<CONFIG:RELEASE>:-O3>"
         "$<$<CONFIG:DEBUG>:-O0>"

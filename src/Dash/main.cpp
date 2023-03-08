@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     MotorController* motor_controller = new MotorController(app_root + "/20220510_Gen5_CAN_DB.dbc");
     EnergyMeter* energy_meter = new EnergyMeter(app_root + "/Energy_Meter_CAN_Messages.dbc");
     BMS* bms = new BMS(app_root + "/Orion_CANBUS.dbc");
-    VCU* vcu = new VCU(app_root + "/VCU.dbc");
+    VCU* vcu = new VCU();
 
     QQmlApplicationEngine engine;
 
@@ -37,5 +37,6 @@ int main(int argc, char* argv[]) {
 #else
     engine.load(QStringLiteral("qrc:/main.qml"));
 #endif
-    return app.exec();
+    auto retcode = app.exec();
+    return retcode;
 }
