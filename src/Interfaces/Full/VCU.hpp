@@ -108,7 +108,7 @@ class VCU : public QObject, public CAN::Interface {
                                     // columns)
             percent_division_count, // Count of data points on percent axis (Y axis or number of
                                     // rows)
-            *reinterpret_cast<uint8_t*>(
+            *reinterpret_cast<const uint8_t*>(
                 &torque_map_offset), // Send offset so VCU can decode the values
         };
 
