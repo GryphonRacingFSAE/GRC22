@@ -99,8 +99,9 @@ class VCU : public QObject, public CAN::Interface {
             transaction.push_back(encoded_data_point);
         }
 
+        // Headers must be 6 bytes long
         // Data for 2D arrays should be sent in Row Major Order
-        auto header = std::array<uint8_t, 5>{
+        auto header = std::array<uint8_t, 6>{
             'T',                           // Initiate upload transaction for (T)orque map
             num_of_torque_map_data_points, // Size of transaction in bytes
             // The last 6 bytes is reserved for data specific to the transaction
@@ -110,6 +111,7 @@ class VCU : public QObject, public CAN::Interface {
                                     // rows)
             *reinterpret_cast<const uint8_t*>(
                 &torque_map_offset), // Send offset so VCU can decode the values
+            0 // Padding
         };
 
         if (sendTransaction(header, transaction) != RetCode::Success) {
@@ -117,8 +119,8 @@ class VCU : public QObject, public CAN::Interface {
         }
     }
 
-    template <size_t Header_N, class StorageClass>
-    RetCode sendTransaction(std::array<uint8_t, Header_N> header, const StorageClass& transaction) {
+    template <class StorageClass>
+    RetCode sendTransaction(std::array<uint8_t, 6> header, const StorageClass& transaction) {
         static_assert(std::is_same<typename StorageClass::value_type, uint8_t>::value);
         // Send header
         RetCode ans = CAN::Interface::write(0x0D0, header);
