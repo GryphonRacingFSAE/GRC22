@@ -1,6 +1,5 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
-#include <QtGlobal>
 #include <fmt/core.h>
 
 #include <BMS.hpp>
