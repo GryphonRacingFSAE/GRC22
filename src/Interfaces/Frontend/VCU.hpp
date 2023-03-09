@@ -5,7 +5,6 @@
 #include <fmt/ranges.h>
 #include <limits>
 #include <rapidcsv.h>
-#include <tools.hpp>
 
 class VCU : public QObject, public CAN::FakeInterface {
     Q_OBJECT
