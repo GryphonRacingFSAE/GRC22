@@ -97,11 +97,4 @@ class VCU : public QObject, public CAN::FakeInterface {
         std::numeric_limits<int8_t>::max() + torque_map_offset; // Estimated is around -22Nm
     static constexpr int torque_map_min =
         std::numeric_limits<int8_t>::min() + torque_map_offset; // Estimated is around +230Nm
-    static constexpr size_t num_of_filters = 1;
-    inline static can_filter filters[num_of_filters] = {{
-        0x0D0,
-        0x0DF // Grab all messages VCU from 0D0 to 0DF (16 Addresses)
-    }};
-
-    static constexpr uint32_t timeout_ms = 500;
 };
