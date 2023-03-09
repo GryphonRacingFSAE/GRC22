@@ -1,6 +1,5 @@
 #pragma once
 
-#include <DBCInterface.hpp>
 #include <QObject>
 #include <filesystem>
 #include <fmt/ranges.h>
@@ -8,7 +7,7 @@
 #include <rapidcsv.h>
 #include <tools.hpp>
 
-class VCU : public QObject, public CAN::Interface {
+class VCU : public QObject, public CAN::FakeInterface {
     Q_OBJECT
     Q_PROPERTY(
         QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
@@ -28,10 +27,6 @@ class VCU : public QObject, public CAN::Interface {
         connect(this, &VCU::profileIdChanged, &VCU::readTorqueMapCSV);
 
         readTorqueMapCSV();
-
-        // Startup HW interface
-        this->CAN::Interface::startReceiving(
-            "can0", VCU::filters, VCU::num_of_filters, VCU::timeout_ms);
     }
 
     Q_INVOKABLE void saveTorqueMapCSV(QList<int> torque_map) {
@@ -89,77 +84,8 @@ class VCU : public QObject, public CAN::Interface {
                 fmt::print("Torque map values out of bounds\n");
                 return;
             }
-            int adjusted_data_point =
-                torque - torque_map_offset; // Readjust torque values to between -128 and 127
-            int8_t data_point =
-                static_cast<int8_t>(adjusted_data_point); // This is safe as values should already
-                                                          // be within the bounds of this data type
-            uint8_t encoded_data_point =
-                *reinterpret_cast<uint8_t*>(&data_point); // Encode the int8_t into a uint8_t
-            transaction.push_back(encoded_data_point);
-        }
-
-        // Headers must be 6 bytes long
-        // Data for 2D arrays should be sent in Row Major Order
-        auto header = std::array<uint8_t, 6>{
-            'T',                           // Initiate upload transaction for (T)orque map
-            num_of_torque_map_data_points, // Size of transaction in bytes
-            // The last 6 bytes is reserved for data specific to the transaction
-            speed_division_count,   // Count of data points on speed axis (X axis or number of
-                                    // columns)
-            percent_division_count, // Count of data points on percent axis (Y axis or number of
-                                    // rows)
-            *reinterpret_cast<const uint8_t*>(
-                &torque_map_offset), // Send offset so VCU can decode the values
-            0                        // Padding
-        };
-
-        if (sendTransaction(header, transaction) != RetCode::Success) {
-            fmt::print("Something went wrong sending the transaction");
         }
     }
-
-    template <class StorageClass>
-    RetCode sendTransaction(std::array<uint8_t, 6> header, const StorageClass& transaction) {
-        static_assert(std::is_same<typename StorageClass::value_type, uint8_t>::value);
-        // Send header
-        RetCode ans = CAN::Interface::write(0x0D0, header);
-        if (ans != RetCode::Success) {
-            fmt::print("Failed to send header\n");
-            return ans;
-        }
-
-        for (auto it = transaction.begin(); it != transaction.end(); it++) {
-            size_t packet_size = 0;
-            std::array<uint8_t, 8> packet_values = {};
-            for (; packet_size < 8 && it != transaction.end(); packet_size++, it++) {
-                packet_values[packet_size] = *it;
-            }
-
-            RetCode ans = CAN::Interface::write(0x0D1, packet_values.data(), packet_size);
-            if (ans != RetCode::Success) {
-                fmt::print(
-                    "Failed to send packet (size: {}, packet: {})\n", packet_size, packet_values);
-                return ans;
-            }
-        }
-        return RetCode::Success;
-    }
-
-    void newFrame(const can_frame& frame) override {
-        switch (CAN::frameId(frame)) {
-        case 0x0D2:
-            fmt::print("({}) message ack, with data: \n", (char)frame.data[0], frame.data);
-            break;
-        default:
-            fmt::print("Anything else (lol)\n");
-            break;
-        }
-    }
-    void newError(const can_frame&) override {
-        fmt::print("Error\n");
-    }
-    void newTimeout() override{};
 
   private:
     std::filesystem::path m_torque_map_directory;

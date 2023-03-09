@@ -25,6 +25,7 @@ else()
         Frontend/BMS.cpp
         Frontend/AN400ECU.hpp
         Frontend/AN400ECU.cpp
+        Frontend/VCU.hpp
     )
     target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Frontend)
 endif()
