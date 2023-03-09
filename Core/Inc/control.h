@@ -26,6 +26,7 @@ typedef struct {
 	int32_t accumulatorMaxTemp; // 10:1 conversion?
 	int32_t coolantTemp; // 10:1 conversion
 	int32_t tractiveVoltage; // 10:1 conversion
+	int32_t motorSpeed; // 1:1
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
