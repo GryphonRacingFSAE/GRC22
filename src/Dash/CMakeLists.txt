@@ -40,9 +40,12 @@ elseif(UNIX AND NOT APPLE)
         add_custom_command(
             TARGET GryphonDash POST_BUILD
             DEPENDS GryphonDash.desktop images/GryphonDash.png
-            COMMAND rm -r -f $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
-            COMMAND cp $<TARGET_FILE_DIR:GryphonDash>/DBCs -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
-            COMMAND cp $<TARGET_FILE_DIR:GryphonDash>/TorqueMaps -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/DBCs
+                $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin/DBCs
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps
+                $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin/TorqueMaps
             COMMAND linuxdeploy-x86_64.AppImage
                     -v2
                     --appdir $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
