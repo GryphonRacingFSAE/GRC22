@@ -95,6 +95,14 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
 - Name your branch as follows: `firstname/branchtopic`, ex. `dallas/move-from-previous-repo`
 - `main` is a protected branch, and thus needs a PR to approve merging with it.
 
+## Building For RPI1.2
+
+```bash
+docker build
+docker run
+docker cp # copy artifacts back to userspace
+```
+
 ## Resources
 
 * [<linux/can.h>](https://github.com/torvalds/linux/blob/master/include/uapi/linux/can.h)
