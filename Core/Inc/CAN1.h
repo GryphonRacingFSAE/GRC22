@@ -22,8 +22,27 @@ typedef struct {
 	uint8_t aData[8];
 } CANMsg;
 
+
+extern osMutexId_t Transaction_Data_MtxHandle;
+
+#define CAN_TRANSACTION_PAUSED 0x01
+
+typedef struct {
+	uint8_t buffer[256];
+	uint8_t type;
+	uint8_t transactionSize;
+	uint8_t currentTransactionSize;
+	uint8_t flags;
+	uint8_t transactionInfo[4];
+} Transaction_Data_Struct;
+
+extern Transaction_Data_Struct Transaction_Data;
+
+
 void startCAN1TxTask();
 void startCANRxTask();
 void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
+void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
+void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
 
 #endif /* INC_CAN1_H_ */
