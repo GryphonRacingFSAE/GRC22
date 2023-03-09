@@ -6,7 +6,7 @@
 #include <limits>
 #include <rapidcsv.h>
 
-class VCU : public QObject, public CAN::FakeInterface {
+class VCU : public QObject {
     Q_OBJECT
     Q_PROPERTY(
         QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
