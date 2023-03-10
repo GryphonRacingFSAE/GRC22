@@ -51,6 +51,9 @@ conan install . -if build -pr:h=ConanProfiles/MacOS-clang-Debug.ini -pr:b=ConanP
 # RPi 4b (gcc 10.2)
 conan install . -if build -pr:h=ConanProfiles/pi4b-Debug.ini -pr:b=ConanProfiles/pi4b-Debug.ini --build=missing -o dev="full"
 
+# RPi 1.2 b+ (gcc 10.2)
+conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini --build=missing
+
 # Linux gcc 12
 conan install . -if build -pr:h=ConanProfiles/Linux-gcc-12-Debug.ini -pr:b=ConanProfiles/Linux-gcc-12-Debug.ini --build=missing -o dev="full"
 ```
@@ -91,6 +94,14 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
 
 - Name your branch as follows: `firstname/branchtopic`, ex. `dallas/move-from-previous-repo`
 - `main` is a protected branch, and thus needs a PR to approve merging with it.
+
+## Building For RPI1.2
+
+```bash
+docker build
+docker run
+docker cp # copy artifacts back to userspace
+```
 
 ## Resources
 

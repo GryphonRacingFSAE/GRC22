@@ -1,7 +1,13 @@
 # Verifies building
 
 on:
-  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - closed
 
 jobs:
   build:
@@ -14,25 +20,44 @@ jobs:
         with:
           lfs: false
           submodules: false
-      - uses: docker-practice/actions-setup-docker@master
       - uses: uraimo/run-on-arch-action@v2
         with:
           arch: armv6
           distro: bullseye
           githubToken: ${{ github.token }}
 
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          # Mount the artifacts directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
           install: |
-            sudo apt-get install python3 fuse libgl-dev libxcb-util-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxaw7-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxss-dev libxt-dev libxtst-dev libxv-dev libxvmc-dev libxxf86vm-dev libxcb-render0-dev libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev
-            python3 -m pip install conan
+            sudo apt-get update
+            sudo apt-get install -y build-essential pkg-config gcc g++ python3 python3-pip cmake libgl-dev libxcb-util-dev libx11-xcb-dev
+            python3 -m pip install conan==1.59.0
 
           run: |
             conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} --force
+            conan user -r grc ${{ secrets.CONAN_USER }} -p ${{ secrets.CONAN_PASSWORD }}
             conan remove "*" -f
-            conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini -r grc -o dev="front" --build=missing
+            conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini -r grc -o dev="front" -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
             conan build . -if build
-            conan upload "*" -c --all --parallel -r grc
+            cp -r build/Release/bin/2022 /artifacts
+            cp -r build/Release/bin/2019 /artifacts
+
+      # - name: Build deploy bundle
+      #   run: |
+      #       wget -c -nv "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage"
+      #       wget -c -nv "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
+      #       chmod a+x linuxdeploy-plugin-qt-x86_64.AppImage
+      #       chmod a+x linuxdeploy-x86_64.AppImage
+      #       export QML_SOURCES_PATHS=./src/Dash
+
       - name: Upload Build
         uses: actions/upload-artifact@v3
         with:
           name: RPI1.2b+DashFront-Release
-          path: build/src/Dash/Release
+          path: artifacts
