@@ -10,11 +10,11 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         : QObject(nullptr), DBCInterface(dbc_file_path) {
         // DRIVER
         can_signal_dispatch["INV_Motor_Speed"] = &MotorController::newMotorRPM;
-        // can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
-        // can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
+        can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
+        can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
         can_signal_dispatch["INV_Analog_Input_1"] = &MotorController::new12VVoltage;
         can_signal_dispatch["INV_Analog_Input_2"] = &MotorController::newOilTemp;
-        // can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
+        can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
 
         // DEBUG
         can_signal_dispatch["INV_DC_Bus_Current"] = &MotorController::newDCBusCurrent;
@@ -22,15 +22,15 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_DC_Bus_Voltage"] = &MotorController::newDCBusVoltage;
         can_signal_dispatch["INV_Output_Voltage"] = &MotorController::newOutputVoltage;
 
-        can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
+        // can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
         can_signal_dispatch["INV_Module_B_Temp"] = &MotorController::newModuleBTemp;
         can_signal_dispatch["INV_Module_C_Temp"] = &MotorController::newModuleCTemp;
         can_signal_dispatch["INV_Gate_Driver_Board_Temp"] =
             &MotorController::newGateDriverBoardTemp;
         can_signal_dispatch["INV_Control_Board_Temp"] = &MotorController::newControlBoardTemp;
-        can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
+        // can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
         can_signal_dispatch["INV_Hot_Spot_Temp"] = &MotorController::newHotSpotTemp;
-        can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
+        // can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
 
         can_signal_dispatch["INV_PWM_Frequency"] = &MotorController::newPWMFrequency;
         can_signal_dispatch["INV_Inverter_State"] = &MotorController::newInverterState;
@@ -74,10 +74,10 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
   signals:
     // DRIVER
     void newMotorRPM(float rpm);
-    // void newMotorTemp(float temp);
+    void newMotorTemp(float temp);
     void newCoolantTemp(float temp);
-    // void new12VVoltage(float voltage);
-    // void newOilTemp(float temp);
+    void new12VVoltage(float voltage);
+    void newOilTemp(float temp);
     void newModuleATemp(float temp);
 
     // DEBUG
@@ -86,14 +86,14 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void newDCBusVoltage(float voltage);
     void newOutputVoltage(float voltage);
 
-    void newModuleATemp(float temp);
+    // void newModuleATemp(float temp);
     void newModuleBTemp(float temp);
     void newModuleCTemp(float temp);
     void newGateDriverBoardTemp(float temp);
     void newControlBoardTemp(float temp);
-    void newCoolantTemp(float temp);
+    // void newCoolantTemp(float temp);
     void newHotSpotTemp(float temp);
-    void newMotorTemp(float temp);
+    // void newMotorTemp(float temp);
 
     void newPWMFrequency(float state);
     void newInverterState(float state);
