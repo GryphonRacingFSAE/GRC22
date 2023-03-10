@@ -283,13 +283,6 @@ Item {
 
     Connections {
         target: EnergyMeter
-        
-        /*
-        function onNewTestValue(value) {
-            em_current.value = value
-            em_voltage.value = value
-        }
-        */
 
         function onNewCurrent(current) {em_current.value = current}
         function onNewVoltage(voltage) {em_voltage.value = voltage}
@@ -297,24 +290,6 @@ Item {
 
     Connections {
         target: MotorController
-
-        /*
-        function onNewTestValue(value) {
-            mc_dc_bus_current.value = value
-
-            mc_dc_bus_voltage.value = value
-            mc_output_voltage.value = value
-
-            mc_module_a_temp.value = value
-            mc_module_b_temp.value = value
-            mc_module_c_temp.value = value
-            mc_gate_driver_board_temp.value = value
-            mc_control_board_temp.value = value
-            mc_coolant_temp.value = value
-            mc_hot_spot_temp.value = value
-            mc_motor_temp.value = value
-        }
-        */
 
         function onNewDCBusCurrent(current) {mc_dc_bus_current.value = current}
         
@@ -324,9 +299,9 @@ Item {
         function onNewModuleATemp(temp) {mc_module_a_temp.value = temp}
         function onNewModuleBTemp(temp) {mc_module_b_temp.value = temp}
         function onNewModuleCTemp(temp) {mc_module_c_temp.value = temp}
-        function onNewGateDriverBoardTemp(temp) {mc_gate_driver_board_temp.value = value}
+        function onNewGateDriverBoardTemp(temp) {mc_gate_driver_board_temp.value = temp}
         function onNewControlBoardTemp(temp) {mc_control_board_temp.value = temp}
-        function onNewCoolentTemp(temp) {mc_coolant_temp.value = temp}
+        function onNewCoolantTemp(temp) {mc_coolant_temp.value = temp}
         function onNewHotSpotTemp(temp) {mc_hot_spot_temp.value = temp}
         function onNewMotorTemp(temp) {mc_motor_temp.value = temp}
     }

@@ -8,29 +8,21 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
   public:
     MotorController(const std::string& dbc_file_path = "20220510_Gen5_CAN_DB.dbc")
         : QObject(nullptr), DBCInterface(dbc_file_path) {
-        // DRIVER
-        can_signal_dispatch["INV_Motor_Speed"] = &MotorController::newMotorRPM;
-        can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
-        can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
-        can_signal_dispatch["INV_Analog_Input_1"] = &MotorController::new12VVoltage;
-        can_signal_dispatch["INV_Analog_Input_2"] = &MotorController::newOilTemp;
-        can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
-
-        // DEBUG
+        // DEBUG A
         can_signal_dispatch["INV_DC_Bus_Current"] = &MotorController::newDCBusCurrent;
 
         can_signal_dispatch["INV_DC_Bus_Voltage"] = &MotorController::newDCBusVoltage;
         can_signal_dispatch["INV_Output_Voltage"] = &MotorController::newOutputVoltage;
 
-        // can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
+        can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
         can_signal_dispatch["INV_Module_B_Temp"] = &MotorController::newModuleBTemp;
         can_signal_dispatch["INV_Module_C_Temp"] = &MotorController::newModuleCTemp;
         can_signal_dispatch["INV_Gate_Driver_Board_Temp"] =
             &MotorController::newGateDriverBoardTemp;
         can_signal_dispatch["INV_Control_Board_Temp"] = &MotorController::newControlBoardTemp;
-        // can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
+        can_signal_dispatch["INV_Coolant_Temp"] = &MotorController::newCoolantTemp;
         can_signal_dispatch["INV_Hot_Spot_Temp"] = &MotorController::newHotSpotTemp;
-        // can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
+        can_signal_dispatch["INV_Motor_Temp"] = &MotorController::newMotorTemp;
 
         can_signal_dispatch["INV_PWM_Frequency"] = &MotorController::newPWMFrequency;
         can_signal_dispatch["INV_Inverter_State"] = &MotorController::newInverterState;
@@ -47,6 +39,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_Limit_Coolant_Derating"] =
             &MotorController::newCoolantTempLimiting;
 
+        // DEBUG B
         can_signal_dispatch["INV_Analog_Input_1"] = &MotorController::newAnalogInput1;
         can_signal_dispatch["INV_Analog_Input_2"] = &MotorController::newAnalogInput2;
         can_signal_dispatch["INV_Analog_Input_3"] = &MotorController::newAnalogInput3;
@@ -59,6 +52,14 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_Torque_Feedback"] = &MotorController::newTorqueFeedback;
 
         can_signal_dispatch["INV_Motor_Speed"] = &MotorController::newMotorSpeed;
+
+        // DEBUG C
+        can_signal_dispatch["INV_Post_Fault_Hi"] = &MotorController::newPOSTFaultHigh;
+        can_signal_dispatch["INV_Post_Fault_Lo"] = &MotorController::newPOSTFaultLow;
+
+        // DEBUG D
+        can_signal_dispatch["INV_Run_Fault_Hi"] = &MotorController::newRUNFaultHigh;
+        can_signal_dispatch["INV_Run_Fault_Lo"] = &MotorController::newRUNFaultLow;
     }
 
     Q_INVOKABLE void clearFaultCodes() {
@@ -72,47 +73,38 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     }
 
   signals:
-    // DRIVER
-    void newMotorRPM(float rpm);
-    void newMotorTemp(float temp);
-    void newCoolantTemp(float temp);
-    void new12VVoltage(float voltage);
-    void newOilTemp(float temp);
-    void newModuleATemp(float temp);
-
-    // DEBUG
     void newDCBusCurrent(float current);
 
     void newDCBusVoltage(float voltage);
     void newOutputVoltage(float voltage);
 
-    // void newModuleATemp(float temp);
+    void newModuleATemp(float temp);
     void newModuleBTemp(float temp);
     void newModuleCTemp(float temp);
     void newGateDriverBoardTemp(float temp);
     void newControlBoardTemp(float temp);
-    // void newCoolantTemp(float temp);
+    void newCoolantTemp(float temp);
     void newHotSpotTemp(float temp);
-    // void newMotorTemp(float temp);
+    void newMotorTemp(float temp);
 
-    void newPWMFrequency(float state);
-    void newInverterState(float state);
-    void newInverterRunMode(float state);
-    void newInverterActiveDischargeState(float state);
-    void newInverterEnableLockout(float state);
-    void newBMSActive(float state);
-    void newBMSLimitingTorque(float state);
-    void newLimitMaxSpeed(float state);
-    void newLimitHotSpot(float state);
-    void newLowSpeedLimiting(float state);
-    void newCoolantTempLimiting(float state);
+    void newPWMFrequency(float internal_state);
+    void newInverterState(float internal_state);
+    void newInverterRunMode(float internal_state);
+    void newInverterActiveDischargeState(float internal_state);
+    void newInverterEnableLockout(float internal_state);
+    void newBMSActive(float internal_state);
+    void newBMSLimitingTorque(float internal_state);
+    void newLimitMaxSpeed(float internal_state);
+    void newLimitHotSpot(float internal_state);
+    void newLowSpeedLimiting(float internal_state);
+    void newCoolantTempLimiting(float internal_state);
 
-    void newAnalogInput1(float voltage);
-    void newAnalogInput2(float voltage);
-    void newAnalogInput3(float voltage);
-    void newAnalogInput4(float voltage);
-    void newAnalogInput5(float voltage);
-    void newAnalogInput6(float voltage);
+    void newAnalogInput1(float analog_voltage);
+    void newAnalogInput2(float analog_voltage);
+    void newAnalogInput3(float analog_voltage);
+    void newAnalogInput4(float analog_voltage);
+    void newAnalogInput5(float analog_voltage);
+    void newAnalogInput6(float analog_voltage);
 
     void newTorqueShudder(float torque);
     void newCommandedTorque(float torque);

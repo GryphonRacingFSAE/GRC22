@@ -3,15 +3,16 @@
 using namespace CAN;
 
 void EnergyMeter::generateValues() {
-    static float voltage = 620;
-    static float current = 0;
-    emit newCurrent(current += 3.8f);
-    emit newVoltage(voltage -= 2.7f);
+    static float voltage = 0.0f;
+    static float current = 0.0f;
 
-    if (voltage <= 480) {
-        voltage = 620;
+    emit newCurrent(current += 0.1f);
+    emit newVoltage(voltage += 0.1f);
+
+    if (voltage >= 100) {
+        voltage = 0.0f;
     }
-    if (current >= 200) {
-        current = 0;
+    if (current >= 100) {
+        current = 0.0f;
     }
 }

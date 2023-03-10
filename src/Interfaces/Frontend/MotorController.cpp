@@ -3,49 +3,104 @@
 using namespace CAN;
 
 void MotorController::generateValues() {
-    static float rpm = 0.0f;
-    static float oil_temp = -10;
-    static float coolant_temp = -14;
-    static float motor_temp = -13;
-    static float voltage = 8.00f;
-    emit newMotorRPM(rpm);
-    emit newCoolantTemp(coolant_temp);
-    emit newOilTemp(oil_temp);
-    emit newMotorTemp(motor_temp);
-    emit new12VVoltage(voltage);
+    static float current = 0.0f;
+    static float voltage = 0.0f;
+    static float temp = 0.0f;
+    static float internal_state = 0.0f;
+    static float analog_voltage = 0.0f;
+    static float torque = 0.0f;
+    static float speed = 0.0f;
+    static float post_fault = 0.0f;
+    static float run_fault = 0.0f;
 
-    rpm += 50.0f;
-    if (rpm >= 5000) {
-        rpm = 0.0f;
+    // DEBUG A
+    emit newDCBusCurrent(current);
+
+    emit newDCBusVoltage(voltage);
+    emit newOutputVoltage(voltage);
+
+    emit newModuleATemp(temp);
+    emit newModuleBTemp(temp);
+    emit newModuleCTemp(temp);
+    emit newGateDriverBoardTemp(temp);
+    emit newControlBoardTemp(temp);
+    emit newCoolantTemp(temp);
+    emit newHotSpotTemp(temp);
+    emit newMotorTemp(temp);
+
+    // DEBUG B
+    emit newPWMFrequency(internal_state);
+    emit newInverterState(internal_state);
+    emit newInverterRunMode(internal_state);
+    emit newInverterActiveDischargeState(internal_state);
+    emit newInverterEnableLockout(internal_state);
+    emit newBMSActive(internal_state);
+    emit newBMSLimitingTorque(internal_state);
+    emit newLimitMaxSpeed(internal_state);
+    emit newLimitHotSpot(internal_state);
+    emit newLowSpeedLimiting(internal_state);
+    emit newCoolantTempLimiting(internal_state);
+
+    emit newAnalogInput1(analog_voltage);
+    emit newAnalogInput2(analog_voltage);
+    emit newAnalogInput3(analog_voltage);
+    emit newAnalogInput4(analog_voltage);
+    emit newAnalogInput5(analog_voltage);
+    emit newAnalogInput6(analog_voltage);
+
+    emit newTorqueShudder(torque);
+    emit newCommandedTorque(torque);
+    emit newTorqueFeedback(torque);
+
+    emit newMotorSpeed(speed);
+
+    // DEBUG C
+    emit newPOSTFaultHigh(post_fault);
+    emit newPOSTFaultLow(post_fault);
+
+    // DEBUG D
+    emit newRUNFaultHigh(run_fault);
+    emit newRUNFaultLow(run_fault);
+
+    current += 0.1f;
+    voltage += 0.1f;
+    temp += 0.1f;
+    internal_state += 0.1f;
+    analog_voltage += 0.1f;
+    torque += 0.1f;
+    speed += 0.1f;
+
+    if (current >= 100) {
+        current = 0.0f;
     }
-    oil_temp += 2.3f;
-    coolant_temp += 1.7f;
-    motor_temp += 1.2f;
-    if (oil_temp >= 80) {
-        oil_temp = -10;
+    if (voltage >= 100) {
+        voltage = 0.0f;
     }
-    if (coolant_temp >= 70) {
-        coolant_temp = -10;
+    if (temp >= 100) {
+        temp = 0.0f;
     }
-    if (motor_temp >= 90) {
-        motor_temp = -10;
+    if (internal_state >= 100) {
+        internal_state = 0.0f;
     }
-    voltage += 0.15f;
-    if (voltage >= 14.5f) {
-        voltage = 8.00f;
+    if (analog_voltage >= 100) {
+        analog_voltage = 0.0f;
+    }
+    if (torque >= 100) {
+        torque = 0.0f;
+    }
+    if (speed >= 100) {
+        speed = 0.0f;
     }
 
-    // debug screen
-    static float test_value = 0.0f;
-    emit newTestValue(test_value += 1.0f);
-    if (test_value >= 100.0f) {
-        test_value = 0.0f;
-    }
-    static float test_fault = 0.0f;
-    emit newTestFault(test_fault);
-    if (test_fault == 0.0) {
-        test_fault = 1.0;
+    if (post_fault == 0) {
+        post_fault = 1.0f;
     } else {
-        test_fault = 0.0;
+        post_fault = 0.0f;
+    }
+
+    if (run_fault == 0) {
+        run_fault = 1.0f;
+    } else {
+        run_fault = 0.0f;
     }
 }

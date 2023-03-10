@@ -207,38 +207,41 @@ Item {
     Connections {
         target: MotorController
 
-        function onNewTestFault(value) {
-            over_current_fault.value = value
-            hardware_over_current_fault.value = value
-            current_sensor_fault.value = value
+        function onNewRUNFaultHigh(run_fault) { // TODO: sort high vs. low + decode input
+            over_current_fault.value = run_fault
+            hardware_over_current_fault.value = run_fault
+            current_sensor_fault.value = run_fault
 
-            over_voltage_fault.value = value
-            under_voltage_fault.value = value
-            gate_driver_over_voltage.value = value
-            hardware_dc_bus_over_voltage_fault.value = value
+            over_voltage_fault.value = run_fault
+            under_voltage_fault.value = run_fault
+            gate_driver_over_voltage.value = run_fault
+            hardware_dc_bus_over_voltage_fault.value = run_fault
 
-            inverter_over_temp_fault.value = value
-            motor_over_temp_fault.value = value
-            pcb_over_temp_fault.value = value
-            module_a_over_temp_fault.value = value
-            module_b_over_temp_fault.value = value
-            module_c_over_temp_fault.value = value
-            gate_drive_board_1_over_temp_fault.value = value
-            gate_drive_board_2_over_temp_fault.value = value
-            gate_drive_board_3_over_temp_fault.value = value
+            inverter_over_temp_fault.value = run_fault
+            motor_over_temp_fault.value = run_fault
+            pcb_over_temp_fault.value = run_fault
+            module_a_over_temp_fault.value = run_fault
+            module_b_over_temp_fault.value = run_fault
+            module_c_over_temp_fault.value = run_fault
+            gate_drive_board_1_over_temp_fault.value = run_fault
+            gate_drive_board_2_over_temp_fault.value = run_fault
+            gate_drive_board_3_over_temp_fault.value = run_fault
 
-            accelerator_input_shorted_fault.value = value
-            accelerator_input_open_fault.value = value
+            accelerator_input_shorted_fault.value = run_fault
+            accelerator_input_open_fault.value = run_fault
 
-            brake_input_shorted_fault.value = value
-            brake_input_open_fault.value = value
+            brake_input_shorted_fault.value = run_fault
+            brake_input_open_fault.value = run_fault
 
-            motor_over_speed_fault.value = value
-            direction_command_fault.value = value
-            inverter_response_time_out_fault.value = value
-            hardware_gate_desaturation_fault.value = value
-            can_command_message_lost_fault.value = value
-            resolver_not_connected.value = value
+            motor_over_speed_fault.value = run_fault
+            direction_command_fault.value = run_fault
+            inverter_response_time_out_fault.value = run_fault
+            hardware_gate_desaturation_fault.value = run_fault
+            can_command_message_lost_fault.value = run_fault
+            resolver_not_connected.value = run_fault
+        }
+
+        function onNewRUNFaultLow(run_fault) {
         }
     }
 }
