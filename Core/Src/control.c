@@ -47,8 +47,36 @@ void BSPC() {
 }
 
 // Ready to drive
+// Rules: EV.10.4.3 & EV.10.5
 void RTD() {
+	static int callCounts = 0;
 
+	if (callCounts * CTRL_PERIOD > 2000) {
+		HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 0);
+	}
+	if(osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
+		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
+			// If the RTD is in the invalid state,
+			if (APPS_Data.flags & APPS_RTD_INVALID){
+				// Check if the pedal position is <3% to put APPS back into a valid state (EV.10.4.3)				
+				if (APPS_Data.pedalPos < 3 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin) && Ctrl_Data.tractiveVoltage > RTD_TRACTIVE_VOLTAGE_ON && HAL_GPIO_ReadPin(GPIO_START_BTN_GPIO_Port, GPIO_START_BTN_Pin)) {
+					APPS_Data.flags &= ~APPS_RTD_INVALID; // Remove the invalid flag
+					HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 1);
+					callCounts = 0;
+				}				
+			} 
+			else if (Ctrl_Data.tractiveVoltage < RTD_TRACTIVE_VOLTAGE_OFF) {
+				APPS_Data.flags |= APPS_RTD_INVALID; // Consider APPS as invalid due to RTD
+			}
+			osMutexRelease(APPS_Data_MtxHandle);
+		} else {
+			myprintf("Missed osMutexAcquire(APPS_Data_MtxHandle): control.c:RTD\n");
+		}
+		osMutexRelease(Ctrl_Data_MtxHandle);
+	} else {
+		myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:RTD\n");
+	}
+	callCounts++;
 }
 
 // Motor & Motor controller cooling pump control
