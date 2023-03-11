@@ -196,14 +196,12 @@ Item {
     Connections {
         target: BMS
 
-        function onNewTestValue(value) {
-            bms_state_of_charge.value = value
-            bms_amphours.value = value
-            bms_resistance.value = value
-            bms_health.value = value
-            bms_total_pack_cycles.value = value
-            bms_pack_power_kw.value = value
-        }
+        function onNewStateOfCharge(value) {bms_state_of_charge.value = value}
+        function onNewAmphours(value) {bms_amphours.value = value}
+        function onNewResistance(value) {bms_resistance.value = value}
+        function onNewHealth(value) {bms_health.value = value}
+        function onNewTotalPackCycles(value) {bms_total_pack_cycles.value = value}
+        function onNewPackPowerKW(value) {bms_pack_power_kw.value = value}
     }
 
     Connections {

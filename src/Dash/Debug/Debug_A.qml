@@ -249,36 +249,34 @@ Item {
     Connections {
         target: BMS
 
-        function onNewTestValue(value) {
-            bms_avg_pack_current.value = value
-            bms_signed_current.value = value
-            bms_unsigned_current.value = value
-            bms_current_limit_status.value = value
-            bms_charge_current_limit_a.value = value
-            bms_charge_current_limit_kw.value = value
-            bms_discharge_current_limit_a.value = value
-            bms_discharge_current_limit_kw.value = value
+        function onNewAvgPackCurrent(current) {bms_avg_pack_current.value = current}
+        function onNewSignedCurrent(current) {bms_signed_current.value = current}
+        function onNewUnsignedCurrent(current) {bms_unsigned_current.value = current}
+        function onNewCurrentLimitStatus(current) {bms_current_limit_status.value = current}
+        function onNewChargeCurrentLimitA(current) {bms_charge_current_limit_a.value = current}
+        function onNewChargeCurrentLimitKW(current) {bms_charge_current_limit_kw.value = current}
+        function onNewDischargeCurrentLimitA(current) {bms_discharge_current_limit_a.value = current}
+        function onNewDischargeCurrentLimitKW(current) {bms_discharge_current_limit_kw.value = current}
 
-            bms_voltage.value = value
-            bms_open_voltage.value = value
-            bms_summed_voltage.value = value
-            bms_avg_cell_voltage.value = value
-            bms_low_cell_voltage.value = value
-            bms_low_cell_voltage_id.value = value
-            bms_high_cell_voltage.value = value
-            bms_high_cell_voltage_id.value = value
-            bms_avg_cell_open_voltage.value = value
-            bms_low_cell_open_voltage.value = value
-            bms_high_cell_open_voltage.value = value
-            bms_min_cell_voltage.value = value
-            bms_max_cell_voltage.value = value
-
-            bms_avg_temp.value = value
-            bms_lowest_temp.value = value
-            bms_highest_temp.value = value
-            bms_heatsink_temp.value = value
-            bms_hottest_thermistor_id.value = value
-        }
+        function onNewVoltage(voltage) {bms_voltage.value = voltage}
+        function onNewOpenVoltage(voltage) {bms_voltage.value = voltage}
+        function onNewSummedVoltage(voltage) {bms_voltage.value = voltage}
+        function onNewAvgCellVoltage(voltage) {bms_avg_cell_voltage.value = voltage}
+        function onNewLowCellVoltage(voltage) {bms_low_cell_voltage.value = voltage}
+        function onNewLowCellVoltageID(voltage) {bms_low_cell_voltage_id.value = voltage}
+        function onNewHighCellVoltage(voltage) {bms_high_cell_voltage.value = voltage}
+        function onNewHighCellVoltageID(voltage) {bms_high_cell_voltage_id.value = voltage}
+        function onNewAvgCellOpenVoltage(voltage) {bms_avg_cell_open_voltage.value = voltage}
+        function onNewLowCellOpenVoltage(voltage) {bms_low_cell_open_voltage.value = voltage}
+        function onNewHighCellOpenVoltage(voltage) {bms_high_cell_open_voltage.value = voltage}
+        function onNewMinCellVoltage(voltage) {bms_min_cell_voltage.value = voltage}
+        function onNewMaxCellVoltage(voltage) {bms_max_cell_voltage.value = voltage}
+    
+        function onNewAvgTemp(temp) {bms_avg_temp.value = temp}
+        function onNewLowestTemp(temp) {bms_lowest_temp.value = temp}
+        function onNewHighestTemp(temp) {bms_highest_temp.value = temp}
+        function onNewHeatsinkTemp(temp) {bms_heatsink_temp.value = temp}
+        function onNewHottestThermistorID(temp) {bms_hottest_thermistor_id.value = temp}
     }
 
     Connections {

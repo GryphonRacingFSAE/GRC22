@@ -3,34 +3,62 @@
 using namespace CAN;
 
 void BMS::generateValues() {
-    static float voltage = 620;
-    static float current = 0;
-    static float percent = 0;
-    static float temp = -15;
-    emit newAccumulatorOpenVoltage(voltage += 0.8f);
-    emit newAccumulatorSOC(percent += 0.7f);
-    emit newBMSTemp(temp += 0.9f);
-    emit newAccumulatorMaxTemp(temp += 1.3f);
-    emit newAccumulatorCurrent(current += 3.8f);
-    emit newAccumulatorInstVoltage(voltage -= 2.7f);
+    static float voltage = 0.0f;
+    static float current = 0.0f;
+    static float temp = 0.0f;
+    static float value = 0.0f;
 
-    if (temp >= 80) {
-        temp = -15;
-    }
-    if (percent >= 100) {
-        percent = 0;
-    }
-    if (voltage <= 480) {
-        voltage = 620;
-    }
-    if (current >= 200) {
-        current = 0;
-    }
+    emit newAvgPackCurrent(current);
+    emit newSignedCurrent(current);
+    emit newUnsignedCurrent(current);
+    emit newCurrentLimitStatus(current);
+    emit newChargeCurrentLimitA(current);
+    emit newChargeCurrentLimitKW(current);
+    emit newDischargeCurrentLimitA(current);
+    emit newDischargeCurrentLimitKW(current);
 
-    // debug screen
-    static float test_value = 0.0f;
-    emit newTestValue(test_value += 1.0f);
-    if (test_value >= 100.0f) {
-        test_value = 0.0f;
+    emit newVoltage(voltage);
+    emit newOpenVoltage(voltage);
+    emit newSummedVoltage(voltage);
+    emit newAvgCellVoltage(voltage);
+    emit newLowCellVoltage(voltage);
+    emit newLowCellVoltageID(voltage);
+    emit newHighCellVoltage(voltage);
+    emit newHighCellVoltageID(voltage);
+    emit newAvgCellOpenVoltage(voltage);
+    emit newLowCellOpenVoltage(voltage);
+    emit newHighCellOpenVoltage(voltage);
+    emit newMinCellVoltage(voltage);
+    emit newMaxCellVoltage(voltage);
+
+    emit newAvgTemp(temp);
+    emit newLowestTemp(temp);
+    emit newHighestTemp(temp);
+    emit newHeatsinkTemp(temp);
+    emit newHottestThermistorID(temp);
+
+    emit newStateOfCharge(value);
+    emit newAmphours(value);
+    emit newResistance(value);
+    emit newHealth(value);
+    emit newTotalPackCycles(value);
+    emit newPackPowerKW(value);
+
+    voltage += 0.1f;
+    current += 0.1f;
+    temp += 0.1f;
+    value += 0.1f;
+
+    if (voltage >= 100) {
+        voltage = 0.0f;
+    }
+    if (current >= 100) {
+        current = 0.0f;
+    }
+    if (temp >= 100) {
+        temp = 0.0f;
+    }
+    if (value >= 100) {
+        value = 0.0f;
     }
 }

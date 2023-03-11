@@ -152,23 +152,23 @@ Item {
 
     Connections {
         target: BMS
-        function onNewAccumulatorSOC(percent)
+        function onNewStateOfCharge(percent)
         {
             battery_bar.percent = percent
         }
-        function onNewBMSTemp(temp)
+        function onNewAvgTemp(temp)
         {
         }
-        function onNewAccumulatorMaxTemp(temp) {
+        function onNewHighestTemp(temp) {
             accumTempBox.value = temp
         }
-        function onNewAccumulatorCurrent(current)
+        function onNewAvgPackCurrent(current)
         {
         }
-        function onNewAccumulatorInstVoltage(voltage)
+        function onNewVoltage(voltage)
         {
         }
-        function onNewAccumulatorOpenVoltage(voltage)
+        function onNewOpenVoltage(voltage)
         {
         }
     }
