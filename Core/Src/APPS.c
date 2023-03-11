@@ -112,7 +112,7 @@ void startAPPSTask() {
 		txMsg.header.RTR = CAN_RTR_DATA;
 		txMsg.header.TransmitGlobalTime = DISABLE;
 
-		myprintf("APPS1:%d, APPS_POS:%d\n\r", apps1Avg, appsPos);
+		DEBUG_PRINT("APPS1:%d, APPS_POS:%d\n\r", apps1Avg, appsPos);
 
 
 		osMessageQueuePut(CAN1_QHandle, &txMsg, 0, 5);

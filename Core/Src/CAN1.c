@@ -82,7 +82,7 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 			Ctrl_Data.coolantTemp = *(int16_t*) (&INV_Coolant_Temp);
 			osMutexRelease(Ctrl_Data_MtxHandle);
 		} else {
-			myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
+			ERROR_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
 		}
 		break;
 	}
@@ -92,7 +92,7 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 			Ctrl_Data.tractiveVoltage = *(int16_t*) (&INV_DC_Bus_Voltage);
 			osMutexRelease(Ctrl_Data_MtxHandle);
 		} else {
-			myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
+			ERROR_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
 		}
 		break;
 	}
@@ -102,7 +102,7 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 			Ctrl_Data.motorSpeed = *(int16_t*) (&INV_Motor_Speed);
 			osMutexRelease(Ctrl_Data_MtxHandle);
 		} else {
-			myprintf("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
+			ERROR_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): CAN.c:canMsgHandler\n");
 		}
 		break;
 	}
@@ -119,7 +119,7 @@ Transaction_Data_Struct Transaction_Data = { {}, '\0', 0, 0, CAN_TRANSACTION_PAU
 
 void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 	if (msgHeader->DLC != 6) { // Transactions have a minimum length of 2
-		myprintf("Transaction DLC is invalid: %d\n", msgHeader->DLC);
+		WARNING_PRINT("Transaction DLC is invalid: %d\n", msgHeader->DLC);
 		return;
 	}
 
@@ -134,27 +134,27 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 			Transaction_Data.transactionInfo[3] = msgData[5];
 			Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
 		} else {
-			myprintf("Received transaction initiation, but transaction is already in progress, ignoring transactions - ERRORS WILL PROCCED\n");
+			ERROR_PRINT("Received transaction initiation, but transaction is already in progress, ignoring transactions - ERRORS WILL PROCCED\n");
 		}
 		osMutexRelease(Transaction_Data_MtxHandle);
 	} else {
-		myprintf("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:initiateTransaction\n");
+		ERROR_PRINT("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:initiateTransaction\n");
 	}
 }
 
 void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
 		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
-			myprintf("Received transaction packet, but transaction is paused, ignoring\n");
+			WARNING_PRINT("Received transaction packet, but transaction is paused, ignoring\n");
 		} else {
 			// Buffer overrun checks
 			if (Transaction_Data.currentTransactionSize + msgHeader->DLC > 255) {
 				// Buffer overrun
-				myprintf("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
+				ERROR_PRINT("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
 				Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
 			} else if (Transaction_Data.currentTransactionSize + msgHeader->DLC > Transaction_Data.transactionSize) {
 				// Too much data
-				myprintf("Too much data received for transaction: CAN.c:handleTransactionPacket\n");
+				ERROR_PRINT("Too much data received for transaction: CAN.c:handleTransactionPacket\n");
 				Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
 			} else {
 				for (uint32_t count = 0; count < msgHeader->DLC; count++) {
@@ -169,7 +169,7 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
 						uint8_t rowCount = Transaction_Data.transactionInfo[1];
 
 						if (columnCount != TORQUE_MAP_COLUMNS || rowCount != TORQUE_MAP_ROWS) {
-							myprintf("Torque map transaction has incorrect dimensions : (%dx%d)\n", columnCount, rowCount);
+							WARNING_PRINT("Torque map transaction has incorrect dimensions : (%dx%d)\n", columnCount, rowCount);
 							break;
 						}
 
@@ -200,7 +200,7 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
 						break;
 					}
 					default:
-						myprintf("Unknown transaction type\n");
+						WARNING_PRINT("Unknown transaction type\n");
 						break;
 					}
 				}
@@ -208,6 +208,6 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
 		}
 		osMutexRelease(Transaction_Data_MtxHandle);
 	} else {
-		myprintf("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:initiateTransaction\n");
+		ERROR_PRINT("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:initiateTransaction\n");
 	}
 }
