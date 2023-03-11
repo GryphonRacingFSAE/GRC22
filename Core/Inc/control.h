@@ -19,6 +19,10 @@
 #define RAD_FAN_COOLANT_TEMP_THRESHOLD 400
 // Turn on Accumulator fan if accumulator temp > 40c
 #define ACC_FAN_ACC_TEMP_THRESHOLD 400
+// Turn off flag when tractive voltage < 20
+#define RTD_TRACTIVE_VOLTAGE_OFF 200
+// Turn off flag when tractive voltage > 450
+#define RTD_TRACTIVE_VOLTAGE_ON 4500
 
 typedef struct {
 	uint32_t wheelSpeed[4];
