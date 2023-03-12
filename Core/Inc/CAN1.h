@@ -39,6 +39,9 @@ typedef struct {
 // LSB: ACK/NAK
 #define CAN_TRANSACTION_ACK 0x00
 #define CAN_TRANSACTION_NAK 0x01
+// IF SUCCESS
+// TODO: extra info for header ack/message ack, in progress/finished, waiting for more data, etc
+// IF ERROR
 // 2nd LSB: message or header invalid
 #define CAN_TRANSACTION_HEADER_INVALID 0x00
 #define CAN_TRANSACTION_MESSAGE_INVALID 0x02 
@@ -47,6 +50,8 @@ typedef struct {
 #define CAN_TRANSACTION_INTERNAL_ERROR (0x01 << 2)
 #define CAN_TRANSACTION_INVALID_PARAMS (0x02 << 2)
 #define CAN_TRANSACTION_UNKNOWN_TYPE (0x03 << 2)
+#define CAN_TRANSACTION_INACTIVE (0x04 << 2)
+#define CAN_TRANSACTION_BUFFER_OVERRUN (0x05 << 2)
 
 typedef struct {
     uint8_t id; // Unique ID of whichever device sent the current transaction header
@@ -57,8 +62,8 @@ typedef struct {
 typedef struct {
 	uint8_t buffer[255]; // Buffer size limited to size of uint8_t (255)
 	uint8_t flags;
-	uint32_t currentTransactionSize;
-    TransactionHeader transactionInfo;
+	uint32_t currentSize;
+    TransactionHeader header;
 } Transaction_Data_Struct;
 
 extern Transaction_Data_Struct Transaction_Data;
