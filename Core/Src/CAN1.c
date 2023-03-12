@@ -116,10 +116,10 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 	}
 }
 
-Transaction_Data_Struct Transaction_Data = { {}, '\0', 0, 0, CAN_TRANSACTION_PAUSED, {} };
+Transaction_Data_Struct Transaction_Data = { {}, CAN_TRANSACTION_PAUSED, 0, { 0, '\0', 0 }};
 
 void sendTransactionResponse(Transaction_Response_Struct* response) {
-    DEBUG_PRINT("Sending response for transaction with ID: %d", transactionHeader.id);
+    DEBUG_PRINT("Sending response for transaction with ID: %d", response->id);
     CANMsg response_packet = {
         .header = {
             .DLC = sizeof(response),
@@ -151,7 +151,7 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
         Transaction_Response_Struct nak_info = {
             .id = transactionHeader.id,
             .flags = CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
-        }
+        };
         sendTransactionResponse(&nak_info);
         return;
     }
@@ -166,7 +166,7 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
                 Transaction_Response_Struct nak_info = {
                     .id = transactionHeader.id,
                     .flags = CAN_TRANSACTION_INVALID_PARAMS | CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
-                }
+                };
                 sendTransactionResponse(&nak_info);
                 break;
             }
@@ -177,7 +177,7 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
             Transaction_Response_Struct nak_info = {
                 .id = transactionHeader.id,
                 .flags = CAN_TRANSACTION_UNKNOWN_TYPE | CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
-            }
+            };
             sendTransactionResponse(&nak_info);
             break;
         }
@@ -186,22 +186,22 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
     // IDEA: As this function is "serial" and won't be called in parallel, is there even a point in needing a mutex? 
 	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
 		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
-            Transaction_Data.currentTransactionSize = 0;
-            Transaction_Data.transactionInfo = transactionHeader;
+            Transaction_Data.currentSize = 0;
+            Transaction_Data.header = transactionHeader;
             Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
 
             DEBUG_PRINT("Sending ack for transaction with ID: %d", transactionHeader.id);
             Transaction_Response_Struct ack_info = {
                 .id = transactionHeader.id,
                 .flags = CAN_TRANSACTION_ACK
-            }
+            };
             sendTransactionResponse(&ack_info);
 		} else {
 			WARNING_PRINT("Received transaction initiation, but transaction is already in progress, sending nak for: %d\n", transactionHeader.id);
             Transaction_Response_Struct nak_info = {
                 .id = transactionHeader.id,
                 .flags = CAN_TRANSACTION_BUSY | CAN_TRANSACTION_NAK
-            }
+            };
             sendTransactionResponse(&nak_info);
 		}
 		osMutexRelease(Transaction_Data_MtxHandle);
@@ -211,7 +211,7 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
         Transaction_Response_Struct nak_info = {
             .id = transactionHeader.id,
             .flags = CAN_TRANSACTION_INTERNAL_ERROR | CAN_TRANSACTION_NAK
-        }
+        };
         sendTransactionResponse(&nak_info);
 	}
 }
@@ -224,9 +224,9 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
 		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
 			WARNING_PRINT("Received transaction packet, but transaction is paused, ignoring\n");
             Transaction_Response_Struct nak_info = {
-                .id = transactionHeader.id,
+                .id = Transaction_Data.header.id,
                 .flags = CAN_TRANSACTION_INACTIVE | CAN_TRANSACTION_MESSAGE_INVALID | CAN_TRANSACTION_NAK
-            }
+            };
             sendTransactionResponse(&nak_info);
 		} else if ( // Check if too much data is trying to be sent
             Transaction_Data.currentSize + msgHeader->DLC > 255 ||
@@ -234,9 +234,9 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
         ) { 
             ERROR_PRINT("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
             Transaction_Response_Struct nak_info = {
-                .id = transactionHeader.id,
+                .id = Transaction_Data.header.id,
                 .flags = CAN_TRANSACTION_BUFFER_OVERRUN | CAN_TRANSACTION_MESSAGE_INVALID | CAN_TRANSACTION_NAK
-            }
+            };
             sendTransactionResponse(&nak_info);
             Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
         } else {
@@ -247,13 +247,15 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
 
             // Final Packet Handling
             if (Transaction_Data.currentSize == Transaction_Data.header.size) {
-                switch (Transaction_Data.type) {
+                switch (Transaction_Data.header.type) {
                 case 'T': {
+                    uint8_t columnCount = Transaction_Data.header.params[0];
+                    uint8_t rowCount = Transaction_Data.header.params[1];
+                    uint8_t offset = Transaction_Data.header.params[2];
 
                     // This is the only spot where torque_maps are written to, we only need to protect the torque map that
                     // is being currently read from, if we are not writing to that or the selector, we don't need a mutex
                     // We need to convert our uint8_t buffer - uint8_t offset to our int16_t torque map values.
-                    uint8_t offset = Transaction_Data.header.params[2];
                     if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
                         // Edit map2
                         uint32_t index = 0;
@@ -282,11 +284,11 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
                         }
                         osMutexRelease(Torque_Map_MtxHandle);
                     }
-                    DEBUG_PRINT("Sending ack for torque map with ID: %d", transactionHeader.id);
+                    DEBUG_PRINT("Sending ack for torque map with ID: %d", Transaction_Data.header.id);
                     Transaction_Response_Struct ack_info = {
-                        .id = transactionHeader.id,
+                        .id = Transaction_Data.header.id,
                         .flags = CAN_TRANSACTION_ACK
-                    }
+                    };
                     sendTransactionResponse(&ack_info);
                     break;
                 }
