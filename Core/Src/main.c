@@ -135,14 +135,6 @@ const osMutexAttr_t APPS_Data_Mtx_attributes = {
   .cb_mem = &APPS_Data_MtxControlBlock,
   .cb_size = sizeof(APPS_Data_MtxControlBlock),
 };
-/* Definitions for Transaction_Data_Mtx */
-osMutexId_t Transaction_Data_MtxHandle;
-osStaticMutexDef_t Transaction_Data_MtxControlBlock;
-const osMutexAttr_t Transaction_Data_Mtx_attributes = {
-  .name = "Transaction_Data_Mtx",
-  .cb_mem = &Transaction_Data_MtxControlBlock,
-  .cb_size = sizeof(Transaction_Data_MtxControlBlock),
-};
 /* Definitions for Torque_Map_Mtx */
 osMutexId_t Torque_Map_MtxHandle;
 osStaticMutexDef_t Torque_Map_MtxControlBlock;
@@ -256,9 +248,6 @@ int main(void)
 
   /* creation of APPS_Data_Mtx */
   APPS_Data_MtxHandle = osMutexNew(&APPS_Data_Mtx_attributes);
-
-  /* creation of Transaction_Data_Mtx */
-  Transaction_Data_MtxHandle = osMutexNew(&Transaction_Data_Mtx_attributes);
 
   /* creation of Torque_Map_Mtx */
   Torque_Map_MtxHandle = osMutexNew(&Torque_Map_Mtx_attributes);

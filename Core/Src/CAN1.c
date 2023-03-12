@@ -145,9 +145,9 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
     // Transaction Header only contains uint8_t as effectively uint8_t[8]. So this should be a safe operation
     memcpy(&transactionHeader, msgData, sizeof(transactionHeader));
 
-    // Verify max size of transaction
-    if (transactionHeader.size > 255) {
-        WARNING_PRINT("Requested transaction size too large, sending nak for: %d\n", transactionHeader.id);
+    // Transaction can't have size 0
+    if (transactionHeader.size != 0) {
+        WARNING_PRINT("Transaction must have non-zero size, sending nak for: %d\n", transactionHeader.id);
         Transaction_Response_Struct nak_info = {
             .id = transactionHeader.id,
             .flags = CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
@@ -168,7 +168,7 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
                     .flags = CAN_TRANSACTION_INVALID_PARAMS | CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
                 };
                 sendTransactionResponse(&nak_info);
-                break;
+                return;
             }
             break;
         }
@@ -179,128 +179,124 @@ void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
                 .flags = CAN_TRANSACTION_UNKNOWN_TYPE | CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
             };
             sendTransactionResponse(&nak_info);
-            break;
+            return;
         }
     }
 
-    // IDEA: As this function is "serial" and won't be called in parallel, is there even a point in needing a mutex? 
-	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
-		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
-            Transaction_Data.currentSize = 0;
-            Transaction_Data.header = transactionHeader;
-            Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
-
-            DEBUG_PRINT("Sending ack for transaction with ID: %d", transactionHeader.id);
-            Transaction_Response_Struct ack_info = {
-                .id = transactionHeader.id,
-                .flags = CAN_TRANSACTION_ACK
-            };
-            sendTransactionResponse(&ack_info);
-		} else {
-			WARNING_PRINT("Received transaction initiation, but transaction is already in progress, sending nak for: %d\n", transactionHeader.id);
-            Transaction_Response_Struct nak_info = {
-                .id = transactionHeader.id,
-                .flags = CAN_TRANSACTION_BUSY | CAN_TRANSACTION_NAK
-            };
-            sendTransactionResponse(&nak_info);
-		}
-		osMutexRelease(Transaction_Data_MtxHandle);
-	} else {
-		ERROR_PRINT("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:initiateTransaction\n");
-        WARNING_PRINT("Received transaction initiation, but couldn't modify internal buffer, sending nak for: %d\n", transactionHeader.id);
+    if (!(Transaction_Data.flags & CAN_TRANSACTION_PAUSED)) {
+        WARNING_PRINT("Received transaction initiation, but transaction is already in progress, sending nak for: %d\n", transactionHeader.id);
         Transaction_Response_Struct nak_info = {
             .id = transactionHeader.id,
-            .flags = CAN_TRANSACTION_INTERNAL_ERROR | CAN_TRANSACTION_NAK
+            .flags = CAN_TRANSACTION_BUSY | CAN_TRANSACTION_NAK
         };
         sendTransactionResponse(&nak_info);
-	}
+        return;
+    }
+
+    // All checks were successful
+    Transaction_Data.currentSize = 0;
+    Transaction_Data.header = transactionHeader;
+    Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
+
+    DEBUG_PRINT("Sending ack for transaction with ID: %d", transactionHeader.id);
+    Transaction_Response_Struct ack_info = {
+        .id = transactionHeader.id,
+        .flags = CAN_TRANSACTION_ACK
+    };
+    sendTransactionResponse(&ack_info);
 }
 
 // FIXME: buffer underrun will leave our transaction handler in an invalid state, rejecting new transactions until it completes or is filled with invalid data.
 // IDEA: add timeout for packets, I.E. 500ms maximum
 void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
-    // IDEA: As this function is "serial" and won't be called in parallel, is there even a point in needing a mutex? 
-	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
-		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
-			WARNING_PRINT("Received transaction packet, but transaction is paused, ignoring\n");
-            Transaction_Response_Struct nak_info = {
-                .id = Transaction_Data.header.id,
-                .flags = CAN_TRANSACTION_INACTIVE | CAN_TRANSACTION_MESSAGE_INVALID | CAN_TRANSACTION_NAK
-            };
-            sendTransactionResponse(&nak_info);
-		} else if ( // Check if too much data is trying to be sent
-            Transaction_Data.currentSize + msgHeader->DLC > 255 ||
-            Transaction_Data.currentSize + msgHeader->DLC > Transaction_Data.header.size
-        ) { 
-            ERROR_PRINT("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
-            Transaction_Response_Struct nak_info = {
-                .id = Transaction_Data.header.id,
-                .flags = CAN_TRANSACTION_BUFFER_OVERRUN | CAN_TRANSACTION_MESSAGE_INVALID | CAN_TRANSACTION_NAK
-            };
-            sendTransactionResponse(&nak_info);
-            Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
-        } else {
-            for (uint32_t count = 0; count < msgHeader->DLC; count++) {
-                Transaction_Data.buffer[Transaction_Data.currentSize + count] = msgData[count];
-            }
-            Transaction_Data.currentSize += msgHeader->DLC;
+    if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
+        WARNING_PRINT("Received transaction packet, but transaction is paused, ignoring\n");
+        Transaction_Response_Struct nak_info = {
+            .id = Transaction_Data.header.id,
+            .flags = CAN_TRANSACTION_INACTIVE | CAN_TRANSACTION_MESSAGE_INVALID | CAN_TRANSACTION_NAK
+        };
+        sendTransactionResponse(&nak_info);
+        return;
+    }
+    
+    if ( // Check if too much data is trying to be sent
+        Transaction_Data.currentSize + msgHeader->DLC > 255 ||
+        Transaction_Data.currentSize + msgHeader->DLC > Transaction_Data.header.size
+    ) { 
+        ERROR_PRINT("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
+        Transaction_Response_Struct nak_info = {
+            .id = Transaction_Data.header.id,
+            .flags = CAN_TRANSACTION_BUFFER_OVERRUN | CAN_TRANSACTION_MESSAGE_INVALID | CAN_TRANSACTION_NAK
+        };
+        sendTransactionResponse(&nak_info);
+        Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
+        return;
+    }
 
-            // Final Packet Handling
-            if (Transaction_Data.currentSize == Transaction_Data.header.size) {
-                switch (Transaction_Data.header.type) {
-                case 'T': {
-                    uint8_t columnCount = Transaction_Data.header.params[0];
-                    uint8_t rowCount = Transaction_Data.header.params[1];
-                    uint8_t offset = Transaction_Data.header.params[2];
+    // Insert packet into buffer
+    memcpy(Transaction_Data.buffer + Transaction_Data.currentSize, msgData, msgHeader->DLC);
+    Transaction_Data.currentSize += msgHeader->DLC;
 
-                    // This is the only spot where torque_maps are written to, we only need to protect the torque map that
-                    // is being currently read from, if we are not writing to that or the selector, we don't need a mutex
-                    // We need to convert our uint8_t buffer - uint8_t offset to our int16_t torque map values.
-                    if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
-                        // Edit map2
-                        uint32_t index = 0;
-                        for (uint8_t row = 0; row < rowCount; row++){
-                            for (uint8_t column = 0; column < columnCount; column++, index++){
-                                Torque_Map_Data.map2.data[row][column] = (int16_t)Transaction_Data.buffer[index] - offset;
-                            }
-                        }
-                    } else {
-                        // Edit map1
-                        uint32_t index = 0;
-                        for (uint8_t row = 0; row < rowCount; row++){
-                            for (uint8_t column = 0; column < columnCount; column++, index++){
-                                Torque_Map_Data.map1.data[row][column] = (int16_t)Transaction_Data.buffer[index] - offset;
-                            }
-                        }
+    // Final Packet Handling
+    if (Transaction_Data.currentSize == Transaction_Data.header.size) {
+        switch (Transaction_Data.header.type) {
+        case 'T': {
+            uint8_t columnCount = Transaction_Data.header.params[0];
+            uint8_t rowCount = Transaction_Data.header.params[1];
+            uint8_t offset = Transaction_Data.header.params[2];
+
+            // This is the only spot where torque_maps are written to, we only need to protect the torque map that
+            // is being currently read from, if we are not writing to that or the selector, we don't need a mutex
+            // We need to convert our uint8_t buffer - uint8_t offset to our int16_t torque map values.
+            if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
+                // Edit map2
+                uint32_t index = 0;
+                for (uint8_t row = 0; row < rowCount; row++){
+                    for (uint8_t column = 0; column < columnCount; column++, index++){
+                        Torque_Map_Data.map2.data[row][column] = (int16_t)Transaction_Data.buffer[index] - offset;
                     }
-
-                    // As we are editing something that IS being read from, we now need the mutex
-                    if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
-                        // Swap which map is being used
-                        if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
-                            Torque_Map_Data.activeMap = &Torque_Map_Data.map2;
-                        } else {
-                            Torque_Map_Data.activeMap = &Torque_Map_Data.map1;
-                        }
-                        osMutexRelease(Torque_Map_MtxHandle);
-                    }
-                    DEBUG_PRINT("Sending ack for torque map with ID: %d", Transaction_Data.header.id);
-                    Transaction_Response_Struct ack_info = {
-                        .id = Transaction_Data.header.id,
-                        .flags = CAN_TRANSACTION_ACK
-                    };
-                    sendTransactionResponse(&ack_info);
-                    break;
                 }
-                default:
-                    // TODO: this is handled when the initial transaction request comes in
-                    CRITICAL_PRINT("Unknown transaction type in handleTransmissionPacket, should never be reached\n");
-                    break;
+            } else {
+                // Edit map1
+                uint32_t index = 0;
+                for (uint8_t row = 0; row < rowCount; row++){
+                    for (uint8_t column = 0; column < columnCount; column++, index++){
+                        Torque_Map_Data.map1.data[row][column] = (int16_t)Transaction_Data.buffer[index] - offset;
+                    }
                 }
             }
-		}
-		osMutexRelease(Transaction_Data_MtxHandle);
-	} else {
-		ERROR_PRINT("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:handleTransmissionPacket\n");
-	}
+
+            // As we are editing something that IS being read from, we now need the mutex
+            if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
+                // Swap which map is being used
+                if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
+                    Torque_Map_Data.activeMap = &Torque_Map_Data.map2;
+                } else {
+                    Torque_Map_Data.activeMap = &Torque_Map_Data.map1;
+                }
+                osMutexRelease(Torque_Map_MtxHandle);
+            } else {
+                ERROR_PRINT("Could not modify torque map, sending nak for: %d\n", Transaction_Data.header.id);
+                Transaction_Response_Struct nak_info = {
+                    .id = Transaction_Data.header.id,
+                    .flags = CAN_TRANSACTION_INTERNAL_ERROR | CAN_TRANSACTION_NAK
+                };
+                sendTransactionResponse(&nak_info);
+                return;
+            }
+
+            DEBUG_PRINT("Sending ack for torque map with ID: %d", Transaction_Data.header.id);
+            Transaction_Response_Struct ack_info = {
+                .id = Transaction_Data.header.id,
+                .flags = CAN_TRANSACTION_ACK
+            };
+            sendTransactionResponse(&ack_info);
+            break;
+        }
+        default:
+            // INFO: This is handled when the initial transaction request comes in
+            CRITICAL_PRINT("Unknown transaction type in handleTransmissionPacket, should never be reached\n");
+            break;
+        }
+    }
 }

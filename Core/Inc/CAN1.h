@@ -21,11 +21,6 @@ typedef struct {
 	uint8_t aData[8];
 } CANMsg;
 
-
-extern osMutexId_t Transaction_Data_MtxHandle;
-
-#define CAN_TRANSACTION_PAUSED 0x01
-
 // Incoming transactions should follow this format:
 typedef struct {
     uint8_t id; // unique ID coming from whichever device is sending this message (used for acks or naks)
@@ -59,6 +54,7 @@ typedef struct {
     uint8_t reserved[6]; // reserved for future use
 } Transaction_Response_Struct;
 
+#define CAN_TRANSACTION_PAUSED 0x01
 typedef struct {
 	uint8_t buffer[255]; // Buffer size limited to size of uint8_t (255)
 	uint8_t flags;
