@@ -54,3 +54,4 @@ dkms.conf
 
 #IDE folders
 .settings/
+.vscode/settings.json

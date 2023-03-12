@@ -35,6 +35,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	}
 }
 
+// INFO: Because we only have one task for receiving messages from CAN, all CAN inputs can be considered "serial"
 void startCANRxTask() {
 	CAN_RxHeaderTypeDef rxHeader;
 	uint8_t canData[8];
@@ -117,49 +118,101 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 
 Transaction_Data_Struct Transaction_Data = { {}, '\0', 0, 0, CAN_TRANSACTION_PAUSED, {} };
 
+void sendTransactionResponse(Transaction_Response_Struct* response) {
+    DEBUG_PRINT("Sending response for transaction with ID: %d", transactionHeader.id);
+    CANMsg response_packet = {
+        .header = {
+            .DLC = sizeof(response),
+            .StdId = 0x0D2
+        }
+    };
+    
+    // Transaction response only contains uint8_t as effectively uint8_t[8]. So this should be a safe operation
+    memcpy(&response_packet.aData, &response, sizeof(response));
+
+    osMessageQueuePut(CAN1_QHandle, &response_packet, 0, 5); // TODO: should send from whichever interface it was received on
+}
+
 void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
-	if (msgHeader->DLC != 8) { // Transactions have a minimum length of 2
+	if (msgHeader->DLC != sizeof(Transaction_Header_Struct)) { // Transactions have a required length of 8
+        // TODO: determine if we should even send a nak here...
+        // ???: If the CAN message isn't the correct size, can it even be considered a transmission request?
 		WARNING_PRINT("Transaction DLC is invalid: %d\n", msgHeader->DLC);
 		return;
 	}
 
+    Transaction_Header_Struct transactionHeader;
+    // Transaction Header only contains uint8_t as effectively uint8_t[8]. So this should be a safe operation
+    memcpy(&transactionHeader, msgData, sizeof(transactionHeader));
+
+    // Verify max size of transaction
+    if (transactionHeader.size > 255) {
+        WARNING_PRINT("Requested transaction size too large, sending nak for: %d\n", transactionHeader.id);
+        Transaction_Response_Struct nak_info = {
+            .id = transactionHeader.id,
+            .flags = CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
+        }
+        sendTransactionResponse(&nak_info);
+        return;
+    }
+
+    switch (transactionHeader.type) {
+        case 'T':  {
+            // Force the torque map to a specified size currently
+            uint8_t columnCount = transactionHeader.params[0];
+            uint8_t rowCount = transactionHeader.params[1];
+            if (columnCount != TORQUE_MAP_COLUMNS || rowCount != TORQUE_MAP_ROWS) {
+                WARNING_PRINT("Torque map transaction has incorrect dimensions: (%dx%d), sending nak for %d\n", columnCount, rowCount, transactionHeader.id);
+                Transaction_Response_Struct nak_info = {
+                    .id = transactionHeader.id,
+                    .flags = CAN_TRANSACTION_INVALID_PARAMS | CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
+                }
+                sendTransactionResponse(&nak_info);
+                break;
+            }
+            break;
+        }
+        default: {
+            ERROR_PRINT("Unknown transaction type, sending nak for: %d\n", transactionHeader.id);
+            Transaction_Response_Struct nak_info = {
+                .id = transactionHeader.id,
+                .flags = CAN_TRANSACTION_UNKNOWN_TYPE | CAN_TRANSACTION_HEADER_INVALID | CAN_TRANSACTION_NAK
+            }
+            sendTransactionResponse(&nak_info);
+            break;
+        }
+    }
+
+    // IDEA: As this function is "serial" and won't be called in parallel, is there even a point in needing a mutex? 
 	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
 		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
-            Transaction_Data.requestedTransactionSize = msgData[1];
-            if (Transaction_Data.requestedTransactionSize < 256) {
-                Transaction_Data.type = msgData[0];
-                switch (Transaction_Data.type) {
+            Transaction_Data.currentTransactionSize = 0;
+            Transaction_Data.transactionInfo = transactionHeader;
+            Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
 
-                }
-                Transaction_Data.currentTransactionSize = 0;
-                Transaction_Data.transactionInfo[0] = msgData[2];
-                Transaction_Data.transactionInfo[1] = msgData[3];
-                Transaction_Data.transactionInfo[2] = msgData[4];
-                Transaction_Data.transactionInfo[3] = msgData[5];
-                Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
-                
-                CANMsg ack_packet;
-                txMsg.aData[1] = apps1Avg >> 16 & 0xFFU;
-                ack_packet.aData[0] = apps1Avg >> 24 & 0xFFU;
-
-                txMsg.header.DLC = 4;
-                txMsg.header.StdId = 0x69U;
-                txMsg.header.ExtId = 0;
-                txMsg.header.IDE = CAN_ID_STD;
-                txMsg.header.RTR = CAN_RTR_DATA;
-                txMsg.header.TransmitGlobalTime = DISABLE;
-
-                DEBUG_PRINT("Sending :%d, APPS_POS:%d\n\r", apps1Avg, appsPos);
-                osMessageQueuePut(CAN1_QHandle, &txMsg, 0, 5);
-            } else {
-			    ERROR_PRINT("Received transaction initiation, but transaction is already in progress, ignoring transactions - ERRORS WILL PROCCED\n");
+            DEBUG_PRINT("Sending ack for transaction with ID: %d", transactionHeader.id);
+            Transaction_Response_Struct ack_info = {
+                .id = transactionHeader.id,
+                .flags = CAN_TRANSACTION_ACK
             }
+            sendTransactionResponse(&ack_info);
 		} else {
-			ERROR_PRINT("Received transaction initiation, but transaction is already in progress, ignoring transactions - ERRORS WILL PROCCED\n");
+			WARNING_PRINT("Received transaction initiation, but transaction is already in progress, sending nak for: %d\n", transactionHeader.id);
+            Transaction_Response_Struct nak_info = {
+                .id = transactionHeader.id,
+                .flags = CAN_TRANSACTION_BUSY | CAN_TRANSACTION_NAK
+            }
+            sendTransactionResponse(&nak_info);
 		}
 		osMutexRelease(Transaction_Data_MtxHandle);
 	} else {
 		ERROR_PRINT("Missed osMutexAcquire(Transaction_Data_MtxHandle): CAN.c:initiateTransaction\n");
+        WARNING_PRINT("Received transaction initiation, but couldn't modify internal buffer, sending nak for: %d\n", transactionHeader.id);
+        Transaction_Response_Struct nak_info = {
+            .id = transactionHeader.id,
+            .flags = CAN_TRANSACTION_INTERNAL_ERROR | CAN_TRANSACTION_NAK
+        }
+        sendTransactionResponse(&nak_info);
 	}
 }
 
@@ -183,13 +236,6 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
             if (Transaction_Data.currentTransactionSize == Transaction_Data.requestedTransactionSize) {
                 switch (Transaction_Data.type) {
                 case 'T': {
-                    // Force the torque map to a specified size currently
-                    uint8_t columnCount = Transaction_Data.transactionInfo[0];
-                    uint8_t rowCount = Transaction_Data.transactionInfo[1];
-                    if (columnCount != TORQUE_MAP_COLUMNS || rowCount != TORQUE_MAP_ROWS) {
-                        WARNING_PRINT("Torque map transaction has incorrect dimensions : (%dx%d)\n", columnCount, rowCount);
-                        break;
-                    }
 
                     uint8_t offset = &Transaction_Data.transactionInfo[2];
 

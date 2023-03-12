@@ -32,7 +32,7 @@ typedef struct {
     uint8_t type; // ascii encoded type i.e. T for incoming Torque map
     uint8_t size; // size of incoming payload
     uint8_t reserved; // reserved for future use
-    uint8_t type_specific_data[4]; // four bytes of type specific data
+    uint8_t params[4]; // type specific data
 } Transaction_Header_Struct;
 
 // Format for ack/nak
@@ -42,6 +42,11 @@ typedef struct {
 // 2nd LSB: message or header invalid
 #define CAN_TRANSACTION_HEADER_INVALID 0x00
 #define CAN_TRANSACTION_MESSAGE_INVALID 0x02 
+// Bits 3-8: Error specifics
+#define CAN_TRANSACTION_BUSY (0x00 << 2)
+#define CAN_TRANSACTION_INTERNAL_ERROR (0x01 << 2)
+#define CAN_TRANSACTION_INVALID_PARAMS (0x02 << 2)
+#define CAN_TRANSACTION_UNKNOWN_TYPE (0x03 << 2)
 
 typedef struct {
     uint8_t id; // Unique ID of whichever device sent the current transaction header
