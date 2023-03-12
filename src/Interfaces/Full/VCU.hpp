@@ -167,11 +167,11 @@ class VCU : public QObject, public CAN::Interface {
     int m_profile_id;
 
   public:
-    static constexpr int8_t torque_map_offset = 128 - 25;
-    static constexpr int torque_map_max =
-        std::numeric_limits<int8_t>::max() + torque_map_offset; // Estimated is around -22Nm
-    static constexpr int torque_map_min =
-        std::numeric_limits<int8_t>::min() + torque_map_offset; // Estimated is around +230Nm
+    static constexpr uint8_t torque_map_offset = 22; // -22 is target minimum
+    static constexpr int torque_map_max = // Estimated is around -22Nm
+        std::numeric_limits<uint8_t>::max() - (int)torque_map_offset; // Cast is required for integer promotion
+    static constexpr int torque_map_min = // Estimated is around +230Nm
+        std::numeric_limits<uint8_t>::min() - (int)torque_map_offset; // Cast is required for integer promotion
     static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {{
         0x0D0,
