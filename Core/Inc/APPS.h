@@ -36,8 +36,7 @@ extern osMutexId_t Torque_Map_MtxHandle;
 #define TORQUE_MAP_COLUMNS 14
 
 typedef struct {
-	int8_t data[TORQUE_MAP_ROWS][TORQUE_MAP_COLUMNS];
-	int8_t offset;
+	int16_t data[TORQUE_MAP_ROWS][TORQUE_MAP_COLUMNS];
 } Individual_Torque_Map_Struct;
 
 typedef struct {

@@ -18,7 +18,6 @@ extern osMessageQueueId_t CAN1_QHandle;
 
 typedef struct {
 	CAN_TxHeaderTypeDef header;
-
 	uint8_t aData[8];
 } CANMsg;
 
@@ -27,13 +26,34 @@ extern osMutexId_t Transaction_Data_MtxHandle;
 
 #define CAN_TRANSACTION_PAUSED 0x01
 
+// Incoming transactions should follow this format:
 typedef struct {
-	uint8_t buffer[256];
-	uint8_t type;
-	uint8_t transactionSize;
-	uint8_t currentTransactionSize;
+    uint8_t id; // unique ID coming from whichever device is sending this message (used for acks or naks)
+    uint8_t type; // ascii encoded type i.e. T for incoming Torque map
+    uint8_t size; // size of incoming payload
+    uint8_t reserved; // reserved for future use
+    uint8_t type_specific_data[4]; // four bytes of type specific data
+} Transaction_Header_Struct;
+
+// Format for ack/nak
+// LSB: ACK/NAK
+#define CAN_TRANSACTION_ACK 0x00
+#define CAN_TRANSACTION_NAK 0x01
+// 2nd LSB: message or header invalid
+#define CAN_TRANSACTION_HEADER_INVALID 0x00
+#define CAN_TRANSACTION_MESSAGE_INVALID 0x02 
+
+typedef struct {
+    uint8_t id; // Unique ID of whichever device sent the current transaction header
+    uint8_t flags; // Flags - if non-zero, header or message was invalid
+    uint8_t reserved[6]; // reserved for future use
+} Transaction_Response_Struct;
+
+typedef struct {
+	uint8_t buffer[255]; // Buffer size limited to size of uint8_t (255)
 	uint8_t flags;
-	uint8_t transactionInfo[4];
+	uint32_t currentTransactionSize;
+    TransactionHeader transactionInfo;
 } Transaction_Data_Struct;
 
 extern Transaction_Data_Struct Transaction_Data;

@@ -118,21 +118,42 @@ void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
 Transaction_Data_Struct Transaction_Data = { {}, '\0', 0, 0, CAN_TRANSACTION_PAUSED, {} };
 
 void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
-	if (msgHeader->DLC != 6) { // Transactions have a minimum length of 2
+	if (msgHeader->DLC != 8) { // Transactions have a minimum length of 2
 		WARNING_PRINT("Transaction DLC is invalid: %d\n", msgHeader->DLC);
 		return;
 	}
 
 	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
 		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
-			Transaction_Data.type = msgData[0];
-			Transaction_Data.transactionSize = msgData[1];
-			Transaction_Data.currentTransactionSize = 0;
-			Transaction_Data.transactionInfo[0] = msgData[2];
-			Transaction_Data.transactionInfo[1] = msgData[3];
-			Transaction_Data.transactionInfo[2] = msgData[4];
-			Transaction_Data.transactionInfo[3] = msgData[5];
-			Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
+            Transaction_Data.requestedTransactionSize = msgData[1];
+            if (Transaction_Data.requestedTransactionSize < 256) {
+                Transaction_Data.type = msgData[0];
+                switch (Transaction_Data.type) {
+
+                }
+                Transaction_Data.currentTransactionSize = 0;
+                Transaction_Data.transactionInfo[0] = msgData[2];
+                Transaction_Data.transactionInfo[1] = msgData[3];
+                Transaction_Data.transactionInfo[2] = msgData[4];
+                Transaction_Data.transactionInfo[3] = msgData[5];
+                Transaction_Data.flags &= ~CAN_TRANSACTION_PAUSED; // Unpause transaction
+                
+                CANMsg ack_packet;
+                txMsg.aData[1] = apps1Avg >> 16 & 0xFFU;
+                ack_packet.aData[0] = apps1Avg >> 24 & 0xFFU;
+
+                txMsg.header.DLC = 4;
+                txMsg.header.StdId = 0x69U;
+                txMsg.header.ExtId = 0;
+                txMsg.header.IDE = CAN_ID_STD;
+                txMsg.header.RTR = CAN_RTR_DATA;
+                txMsg.header.TransmitGlobalTime = DISABLE;
+
+                DEBUG_PRINT("Sending :%d, APPS_POS:%d\n\r", apps1Avg, appsPos);
+                osMessageQueuePut(CAN1_QHandle, &txMsg, 0, 5);
+            } else {
+			    ERROR_PRINT("Received transaction initiation, but transaction is already in progress, ignoring transactions - ERRORS WILL PROCCED\n");
+            }
 		} else {
 			ERROR_PRINT("Received transaction initiation, but transaction is already in progress, ignoring transactions - ERRORS WILL PROCCED\n");
 		}
@@ -146,65 +167,70 @@ void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) 
 	if (osMutexAcquire(Transaction_Data_MtxHandle, osWaitForever) == osOK) {
 		if (Transaction_Data.flags & CAN_TRANSACTION_PAUSED) {
 			WARNING_PRINT("Received transaction packet, but transaction is paused, ignoring\n");
-		} else {
-			// Buffer overrun checks
-			if (Transaction_Data.currentTransactionSize + msgHeader->DLC > 255) {
-				// Buffer overrun
-				ERROR_PRINT("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
-				Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
-			} else if (Transaction_Data.currentTransactionSize + msgHeader->DLC > Transaction_Data.transactionSize) {
-				// Too much data
-				ERROR_PRINT("Too much data received for transaction: CAN.c:handleTransactionPacket\n");
-				Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
-			} else {
-				for (uint32_t count = 0; count < msgHeader->DLC; count++) {
-					Transaction_Data.buffer[Transaction_Data.currentTransactionSize + count] = msgData[count];
-				}
-				Transaction_Data.currentTransactionSize += msgHeader->DLC;
+		} else if (Transaction_Data.currentTransactionSize + msgHeader->DLC > 255) { // Buffer overrun checks
+            // Buffer overrun
+            ERROR_PRINT("Attempted buffer overrun: CAN.c:handleTransactionPacket\n");
+            Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
+        } else if (Transaction_Data.currentTransactionSize + msgHeader->DLC > Transaction_Data.requestedTransactionSize) { // Transmitter has sent too much data
+            ERROR_PRINT("Too much data received for transaction: CAN.c:handleTransactionPacket\n");
+            Transaction_Data.flags |= CAN_TRANSACTION_PAUSED; // Pause transaction
+        } else {
+            for (uint32_t count = 0; count < msgHeader->DLC; count++) {
+                Transaction_Data.buffer[Transaction_Data.currentTransactionSize + count] = msgData[count];
+            }
+            Transaction_Data.currentTransactionSize += msgHeader->DLC;
 
-				if (Transaction_Data.currentTransactionSize == Transaction_Data.transactionSize) {
-					switch (Transaction_Data.type) {
-					case 'T': {
-						uint8_t columnCount = Transaction_Data.transactionInfo[0];
-						uint8_t rowCount = Transaction_Data.transactionInfo[1];
+            if (Transaction_Data.currentTransactionSize == Transaction_Data.requestedTransactionSize) {
+                switch (Transaction_Data.type) {
+                case 'T': {
+                    // Force the torque map to a specified size currently
+                    uint8_t columnCount = Transaction_Data.transactionInfo[0];
+                    uint8_t rowCount = Transaction_Data.transactionInfo[1];
+                    if (columnCount != TORQUE_MAP_COLUMNS || rowCount != TORQUE_MAP_ROWS) {
+                        WARNING_PRINT("Torque map transaction has incorrect dimensions : (%dx%d)\n", columnCount, rowCount);
+                        break;
+                    }
 
-						if (columnCount != TORQUE_MAP_COLUMNS || rowCount != TORQUE_MAP_ROWS) {
-							WARNING_PRINT("Torque map transaction has incorrect dimensions : (%dx%d)\n", columnCount, rowCount);
-							break;
-						}
+                    uint8_t offset = &Transaction_Data.transactionInfo[2];
 
-						int8_t offset = *(int8_t*) &Transaction_Data.transactionInfo[2];
+                    // This is the only spot where torque_maps are written to, we only need to protect the torque map that
+                    // is being currently read from, if we are not writing to that or the selector, we don't need a mutex
+                    // We need to convert our uint8_t buffer, + int8_t offset to our int16_t torque map values.
+                    if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
+                        // Edit map2
+                        uint32_t index = 0;
+                        for (uint8_t row = 0; row < rowCount; row++){
+                            for (uint8_t column = 0; column < columnCount; column++, index++){
+                                Torque_Map_Data.map2.data[row][column] = (int16_t)Transaction_Data.buffer[index] - offset;
+                            }
+                        }
+                    } else {
+                        // Edit map1
+                        uint32_t index = 0;
+                        for (uint8_t row = 0; row < rowCount; row++){
+                            for (uint8_t column = 0; column < columnCount; column++, index++){
+                                Torque_Map_Data.map1.data[row][column] = (int16_t)Transaction_Data.buffer[index] - offset;
+                            }
+                        }
+                    }
 
-						// This is the only spot where torque_maps are written to, we only need to protect the torque map that
-						// is being currently read from, if we are not writing to that or the selector, we don't need a mutex
-						if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
-							// Edit map2
-							Torque_Map_Data.map2.offset = offset;
-							memcpy(Torque_Map_Data.map2.data, Transaction_Data.buffer, Transaction_Data.transactionSize);
-						} else {
-							// Edit map1
-							Torque_Map_Data.map1.offset = offset;
-							memcpy(Torque_Map_Data.map1.data, Transaction_Data.buffer, Transaction_Data.transactionSize);
-						}
-
-						// As we are editing something that IS being read from, we now need the mutex
-						if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
-							// Swap which map is being used
-							if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
-								Torque_Map_Data.activeMap = &Torque_Map_Data.map2;
-							} else {
-								Torque_Map_Data.activeMap = &Torque_Map_Data.map1;
-							}
-							osMutexRelease(Torque_Map_MtxHandle);
-						}
-						break;
-					}
-					default:
-						WARNING_PRINT("Unknown transaction type\n");
-						break;
-					}
-				}
-			}
+                    // As we are editing something that IS being read from, we now need the mutex
+                    if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
+                        // Swap which map is being used
+                        if (Torque_Map_Data.activeMap != &Torque_Map_Data.map1) {
+                            Torque_Map_Data.activeMap = &Torque_Map_Data.map2;
+                        } else {
+                            Torque_Map_Data.activeMap = &Torque_Map_Data.map1;
+                        }
+                        osMutexRelease(Torque_Map_MtxHandle);
+                    }
+                    break;
+                }
+                default:
+                    WARNING_PRINT("Unknown transaction type\n");
+                    break;
+                }
+            }
 		}
 		osMutexRelease(Transaction_Data_MtxHandle);
 	} else {

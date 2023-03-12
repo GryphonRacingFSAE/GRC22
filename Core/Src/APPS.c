@@ -17,7 +17,7 @@
 
 
 APPS_Data_Struct APPS_Data;
-Torque_Map_Struct Torque_Map_Data = { { {}, 0 }, { {}, 0 }, &Torque_Map_Data.map1 };
+Torque_Map_Struct Torque_Map_Data = { { {} }, { {} }, &Torque_Map_Data.map1 };
 
 //Buffer from DMA
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
