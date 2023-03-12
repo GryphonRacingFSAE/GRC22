@@ -63,7 +63,7 @@ typedef struct {
 	uint8_t buffer[255]; // Buffer size limited to size of uint8_t (255)
 	uint8_t flags;
 	uint32_t currentSize;
-    TransactionHeader header;
+    Transaction_Header_Struct header;
 } Transaction_Data_Struct;
 
 extern Transaction_Data_Struct Transaction_Data;
