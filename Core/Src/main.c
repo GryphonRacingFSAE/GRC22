@@ -108,6 +108,13 @@ const osThreadAttr_t ControlTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for CAN2TxTask */
+osThreadId_t CAN2TxTaskHandle;
+const osThreadAttr_t CAN2TxTask_attributes = {
+  .name = "CAN2TxTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh1,
+};
 /* Definitions for CAN1_Q */
 osMessageQueueId_t CAN1_QHandle;
 uint8_t CAN1_QBuffer[ 16 * sizeof( CANMsg ) ];
@@ -118,6 +125,17 @@ const osMessageQueueAttr_t CAN1_Q_attributes = {
   .cb_size = sizeof(CAN1_QControlBlock),
   .mq_mem = &CAN1_QBuffer,
   .mq_size = sizeof(CAN1_QBuffer)
+};
+/* Definitions for CAN2_Q */
+osMessageQueueId_t CAN2_QHandle;
+uint8_t CAN2_QBuffer[ 16 * sizeof( CANMsg ) ];
+osStaticMessageQDef_t CAN2_QControlBlock;
+const osMessageQueueAttr_t CAN2_Q_attributes = {
+  .name = "CAN2_Q",
+  .cb_mem = &CAN2_QControlBlock,
+  .cb_size = sizeof(CAN2_QControlBlock),
+  .mq_mem = &CAN2_QBuffer,
+  .mq_size = sizeof(CAN2_QBuffer)
 };
 /* Definitions for Ctrl_Data_Mtx */
 osMutexId_t Ctrl_Data_MtxHandle;
@@ -180,6 +198,7 @@ extern void startCAN1TxTask(void *argument);
 extern void startAPPSTask(void *argument);
 extern void startCANRxTask(void *argument);
 extern void startControlTask(void *argument);
+extern void startCAN2TxTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -272,6 +291,9 @@ int main(void)
   /* creation of CAN1_Q */
   CAN1_QHandle = osMessageQueueNew (16, sizeof(CANMsg), &CAN1_Q_attributes);
 
+  /* creation of CAN2_Q */
+  CAN2_QHandle = osMessageQueueNew (16, sizeof(CANMsg), &CAN2_Q_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -291,6 +313,9 @@ int main(void)
 
   /* creation of ControlTask */
   ControlTaskHandle = osThreadNew(startControlTask, NULL, &ControlTask_attributes);
+
+  /* creation of CAN2TxTask */
+  CAN2TxTaskHandle = osThreadNew(startCAN2TxTask, NULL, &CAN2TxTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

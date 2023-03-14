@@ -12,6 +12,7 @@
 #include "cmsis_os.h"
 
 extern osMessageQueueId_t CAN1_QHandle;
+extern osMessageQueueId_t CAN2_QHandle;
 
 #define CAN1_FLAG 0x00000001U
 #define CAN2_FLAG 0x00000002U

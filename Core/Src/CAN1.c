@@ -21,7 +21,21 @@ void startCAN1TxTask() {
 		// Grab CAN message from CAN1 queue
 		if (osMessageQueueGet(CAN1_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
 			// Send out TX message on CAN
+			DEBUG_PRINT("CAN1 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
 			HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, NULL);
+		}
+	}
+}
+
+void startCAN2TxTask() {
+	CANMsg txMsg;
+
+	while (1) {
+		// Grab CAN message from CAN1 queue
+		if (osMessageQueueGet(CAN2_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
+			// Send out TX message on CAN
+			DEBUG_PRINT("CAN2 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
+			HAL_CAN_AddTxMessage(&hcan2, &(txMsg.header), txMsg.aData, NULL);
 		}
 	}
 }
@@ -74,6 +88,7 @@ void startCANRxTask() {
 }
 
 void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]) {
+	DEBUG_PRINT("CAN receiving message: %d or %d\n", msgHeader->StdId, msgHeader->ExtId);
 	switch (msgHeader->StdId) {
 	case 0x0A2: { //INV_Hot_Spot_Temp, INV_Coolant_Temp
 		if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
