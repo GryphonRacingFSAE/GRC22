@@ -106,11 +106,8 @@ void startAPPSTask() {
 
 		txMsg.header.DLC = 4;
 		txMsg.header.StdId = 0x69U;
-
-		txMsg.header.ExtId = 0;
-		txMsg.header.IDE = 0;
+		txMsg.header.IDE = CAN_ID_STD;
 		txMsg.header.RTR = CAN_RTR_DATA;
-		txMsg.header.TransmitGlobalTime = DISABLE;
 
 		DEBUG_PRINT("APPS1:%d, APPS_POS:%d\r\n", apps1Avg, appsPos);
 

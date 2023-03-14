@@ -21,8 +21,11 @@ void startCAN1TxTask() {
 		// Grab CAN message from CAN1 queue
 		if (osMessageQueueGet(CAN1_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
 			// Send out TX message on CAN
+			uint32_t mailbox_location = 0;
 			DEBUG_PRINT("CAN1 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
-			HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, NULL);
+			if (HAL_CAN_AddTxMessage(&hcan1, &(txMsg.header), txMsg.aData, &mailbox_location) != HAL_OK) {
+				ERROR_PRINT("Could not transmit on CAN1!\r\n");
+			}
 		}
 	}
 }
@@ -31,58 +34,36 @@ void startCAN2TxTask() {
 	CANMsg txMsg;
 
 	while (1) {
-		// Grab CAN message from CAN1 queue
+		// Grab CAN message from CAN2 queue
 		if (osMessageQueueGet(CAN2_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
 			// Send out TX message on CAN
 			DEBUG_PRINT("CAN2 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
-			HAL_CAN_AddTxMessage(&hcan2, &(txMsg.header), txMsg.aData, NULL);
+			uint32_t mailbox_location = 0;
+			if (HAL_CAN_AddTxMessage(&hcan2, &(txMsg.header), txMsg.aData, &mailbox_location) != HAL_OK) {
+				ERROR_PRINT("Could not transmit on CAN2!\r\n");
+			}
 		}
 	}
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	// Set flag to determine where message was received from
-	if (hcan == &hcan1) {
-		osThreadFlagsSet(&CANRxTaskHandle, CAN1_FLAG);
-	} else {
-		osThreadFlagsSet(&CANRxTaskHandle, CAN2_FLAG);
-	}
+	CANMsg rxMsg;
+	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxMsg.header, rxMsg.aData);
+	osMessageQueuePut(CANRX_QHandle, &rxMsg, 0, 5);
+	DEBUG_PRINT("CAN received message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
 }
 
 // INFO: Because we only have one task for receiving messages from CAN, all CAN inputs can be considered "serial"
 void startCANRxTask() {
-	CAN_RxHeaderTypeDef rxHeader;
-	uint8_t canData[8];
-	uint32_t flagsSet = 0;
+	CANMsg rxMsg;
 
 	while (1) {
-		// Wait for a message to be received on a CAN interface
-		flagsSet = osThreadFlagsWait(CAN1_FLAG | CAN2_FLAG,
-		osFlagsWaitAny | osFlagsNoClear, osWaitForever);
-
-		if (flagsSet & CAN1_FLAG) {
-			osThreadFlagsClear(CAN1_FLAG);
-
-			// Receive message from CAN1's FIFO buffer, and forward to the message handler
-			HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rxHeader, canData);
-			canMsgHandler(&rxHeader, canData);
-
-			// If elements still exist in the buffer, set the flag again
-			if (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) > 0) {
-				osThreadFlagsSet(CANRxTaskHandle, CAN1_FLAG);
-			}
-
-		} else if (flagsSet & CAN2_FLAG) {
-			osThreadFlagsClear(CAN2_FLAG);
-
-			// Receive message from CAN2's FIFO buffer, and forward to the message handler
-			HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &rxHeader, canData);
-			canMsgHandler(&rxHeader, canData);
-
-			// If elements still exist in the buffer, set the flag again
-			if (HAL_CAN_GetRxFifoFillLevel(&hcan2, CAN_RX_FIFO0) > 0) {
-				osThreadFlagsSet(CANRxTaskHandle, CAN2_FLAG);
-			}
+		// Grab CAN message from RX queue
+		if (osMessageQueueGet(CANRX_QHandle, &rxMsg, NULL, osWaitForever) == osOK) {
+			// Send out TX message on CAN
+			DEBUG_PRINT("CAN2 sending message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
+			canMsgHandler(&rxMsg.header, rxMsg.aData);
 		}
 	}
 }

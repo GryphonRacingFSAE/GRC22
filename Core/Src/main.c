@@ -137,6 +137,17 @@ const osMessageQueueAttr_t CAN2_Q_attributes = {
   .mq_mem = &CAN2_QBuffer,
   .mq_size = sizeof(CAN2_QBuffer)
 };
+/* Definitions for CANRX_Q */
+osMessageQueueId_t CANRX_QHandle;
+uint8_t CANRX_QBuffer[ 32 * sizeof( CANMsg ) ];
+osStaticMessageQDef_t CANRX_QControlBlock;
+const osMessageQueueAttr_t CANRX_Q_attributes = {
+  .name = "CANRX_Q",
+  .cb_mem = &CANRX_QControlBlock,
+  .cb_size = sizeof(CANRX_QControlBlock),
+  .mq_mem = &CANRX_QBuffer,
+  .mq_size = sizeof(CANRX_QBuffer)
+};
 /* Definitions for Ctrl_Data_Mtx */
 osMutexId_t Ctrl_Data_MtxHandle;
 osStaticMutexDef_t Ctrl_Data_MtxControlBlock;
@@ -294,6 +305,9 @@ int main(void)
   /* creation of CAN2_Q */
   CAN2_QHandle = osMessageQueueNew (16, sizeof(CANMsg), &CAN2_Q_attributes);
 
+  /* creation of CANRX_Q */
+  CANRX_QHandle = osMessageQueueNew (32, sizeof(CANMsg), &CANRX_Q_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -368,18 +382,11 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 96;
+  RCC_OscInitStruct.PLL.PLLN = 144;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 6;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Activate the Over-Drive mode
-  */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
@@ -389,11 +396,11 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -583,7 +590,7 @@ static void MX_CAN1_Init(void)
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
   hcan1.Init.Prescaler = 32;
-  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan1.Init.TimeSeg1 = CAN_BS1_1TQ;
   hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
@@ -619,11 +626,11 @@ static void MX_CAN2_Init(void)
 
   /* USER CODE END CAN2_Init 1 */
   hcan2.Instance = CAN2;
-  hcan2.Init.Prescaler = 32;
-  hcan2.Init.Mode = CAN_MODE_NORMAL;
+  hcan2.Init.Prescaler = 4;
+  hcan2.Init.Mode = CAN_MODE_LOOPBACK;
   hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan2.Init.TimeSeg1 = CAN_BS1_1TQ;
-  hcan2.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan2.Init.TimeSeg1 = CAN_BS1_15TQ;
+  hcan2.Init.TimeSeg2 = CAN_BS2_2TQ;
   hcan2.Init.TimeTriggeredMode = DISABLE;
   hcan2.Init.AutoBusOff = DISABLE;
   hcan2.Init.AutoWakeUp = DISABLE;
@@ -635,6 +642,24 @@ static void MX_CAN2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN2_Init 2 */
+
+  // Set up and configure CAN2 filter
+  CAN_FilterTypeDef canfilterconfig;
+  canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
+  canfilterconfig.FilterBank = 10;  // anything between 0 to SlaveStartFilterBank
+  canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+  canfilterconfig.FilterIdHigh = 0x0000;
+  canfilterconfig.FilterIdLow = 0x0000;
+  canfilterconfig.FilterMaskIdHigh = 0x0000;
+  canfilterconfig.FilterMaskIdLow = 0x0000;
+  canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  canfilterconfig.SlaveStartFilterBank = 0;  // 13 to 27 are assigned to slave CAN (CAN 2) OR 0 to 12 are assgned to CAN1
+  HAL_CAN_ConfigFilter(&hcan2, &canfilterconfig);
+
+  // Activate Notifications and start up CAN interface...
+  HAL_CAN_Start(&hcan2);
+  HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
 
   /* USER CODE END CAN2_Init 2 */
 
@@ -656,7 +681,7 @@ static void MX_I2C1_SMBUS_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hsmbus1.Instance = I2C1;
-  hsmbus1.Init.Timing = 0x20303E5D;
+  hsmbus1.Init.Timing = 0x00808CD2;
   hsmbus1.Init.AnalogFilter = SMBUS_ANALOGFILTER_ENABLE;
   hsmbus1.Init.OwnAddress1 = 2;
   hsmbus1.Init.AddressingMode = SMBUS_ADDRESSINGMODE_7BIT;
@@ -667,7 +692,7 @@ static void MX_I2C1_SMBUS_Init(void)
   hsmbus1.Init.NoStretchMode = SMBUS_NOSTRETCH_DISABLE;
   hsmbus1.Init.PacketErrorCheckMode = SMBUS_PEC_DISABLE;
   hsmbus1.Init.PeripheralMode = SMBUS_PERIPHERAL_MODE_SMBUS_SLAVE;
-  hsmbus1.Init.SMBusTimeout = 0x00008249;
+  hsmbus1.Init.SMBusTimeout = 0x000081B7;
   if (HAL_SMBUS_Init(&hsmbus1) != HAL_OK)
   {
     Error_Handler();
@@ -694,7 +719,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x20303E5D;
+  hi2c2.Init.Timing = 0x00808CD2;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
