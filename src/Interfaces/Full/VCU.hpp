@@ -101,9 +101,11 @@ class VCU : public QObject, public CAN::Interface {
 
         // Headers must be 6 bytes long
         // Data for 2D arrays should be sent in Row Major Order
-        auto header = std::array<uint8_t, 6>{
+        auto header = std::array<uint8_t, 8>{
+            0x00, // Dash is ID: 0
             'T',                           // Initiate upload transaction for (T)orque map
             num_of_torque_map_data_points, // Size of transaction in bytes
+            0, // reserved
             // The last 6 bytes is reserved for data specific to the transaction
             speed_division_count,   // Count of data points on speed axis (X axis or number of
                                     // columns)
