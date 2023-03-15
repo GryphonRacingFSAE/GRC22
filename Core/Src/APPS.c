@@ -8,7 +8,6 @@
 #include "APPS.h"
 #include "utils.h"
 #include "CAN1.h"
-#include "torqueTable.h"
 #include <string.h>
 
 #define AVG_WINDOW			3
@@ -16,50 +15,38 @@
 #define APPS1_MAX			1230
 #define APPS_DIFF_THRESH	90
 
-
-//Rows (pedal percent): 0   10	 20 	30 	    40 	    50 	    60 	    70 	 	80 		90 		100
-//Columns RPM		    0	454	 909	1363	1817	2271	2726	3180	3634	4089	4543	4997	5452	5906
-int torqueTable[11][14] = {
-	{-6,  -21,     29,  -28   -27,  -25,  -22,  -26,  -27,  -23,  -21,  -17,  -19,  -19},
-	{12,   -5,    -15,  -14,  -11,   -8,   -7,   -8,   -6,   -8,   -7,   -5,   -4,   -4},
-	{27,   15,      5,   7,     5,    5,    5,    5,    5,    4,    5,    5,    5,    5},
-	{45,   38,     27,  24,    24,   23,   22,   21,   24,   23,   20,   18,   13,   13},
-	{68,   57,     50,  50,    48,   51,   49,   50,   42,   47,   42,   46,   42,   42},
-	{84,   78,     73,  74,    73,   73,   70,   65,   63,   71,   62,   55,   57,   57},
-	{97,   101,    95,  94,    98,   96,   99,   91,   92,   86,   81,   76,   71,   71},
-	{110,  110,   109,  112,  108,  111,  110,  108,  106,  101,   89,   81,   72,   72},
-	{118,  118,   117,  125,  122,  126,  119,  116,  113,  106,   89,   89,   76,   76},
-	{127,  126,   126,  129,  127,  129,  124,  122,  116,  107,  106,   89,   80,   80},
-	{130,  131,   131,  130,  131,  131,  131,  131,  121,  110,   98,   87,   78,   78}
-};
-
-// Loopup table for the torqueTable array
-int rpms [14][2] = {
-	{0, 454},
-	{1, 909},
-	{2, 1363},
-	{3, 1817},
-	{4, 2271},
-	{5, 2726},
-	{6, 3180},
-	{7, 3634},
-	{8, 4088},
-	{9, 4543},
-	{10, 4997},
-	{11, 5452},
-	{12, 5906},
-	{13, 6360}
-};
-
-
-float interpolate(float a1, float b1, float a2, float b2, float x)
-{
+int16_t interpolate(int16_t xdiff, int16_t ydiff, int16_t yoffset, int16_t xoffset_from_x1) {
 	// Interpolation formula: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
-	return b1 + (x - a1) * (b2 - b1) / (a2 - a1);
+	return yoffset + xoffset_from_x1 * ydiff / xdiff;
 }
 
 APPS_Data_Struct APPS_Data;
-Torque_Map_Struct Torque_Map_Data = { { {} }, { {} }, &Torque_Map_Data.map1 };
+// Columns are RPM in increments of 500 (0-6500), Rows are pedal percent in increments of 10% (0-100%)
+Torque_Map_Struct Torque_Map_Data = { { {
+    { -6, -20, -22, -22, -22, -22, -22, -22, -22, -22, -21, -17, -19, -22 },
+    { 12, -5, -15, -14, -11, -8, -7, -8, -6, -8, -7, -4, -12, -20 },
+    { 27, 15, 5, 7, 5, 5, 5, 5, 5, 4, 5, 5, -6, -18 },
+    { 44, 37, 26, 23, 24, 23, 22, 21, 24, 23, 20, 18, 1, -16 },
+    { 67, 57, 49, 49, 48, 51, 48, 50, 42, 47, 41, 46, 16, -14 },
+    { 83, 78, 72, 73, 72, 72, 69, 64, 63, 70, 62, 55, 21, -12 },
+    { 96, 100, 94, 93, 97, 95, 98, 90, 91, 85, 80, 75, 33, -10 },
+    { 109, 109, 108, 111, 107, 110, 109, 107, 105, 100, 88, 80, 36, -8 },
+    { 117, 116, 116, 123, 121, 125, 118, 115, 111, 105, 88, 88, 41, -6 },
+    { 126, 125, 124, 127, 126, 127, 123, 120, 115, 106, 104, 88, 42, -4 },
+    { 129, 130, 130, 129, 129, 130, 130, 130, 120, 108, 97, 86, 42, -2 }
+} }, { {
+    {-6, -20, -22, -22, -22, -22, -22, -22, -22, -22, -21, -17, -19, -22},
+    {12, -5, -15, -14, -11, -8, -7, -8, -6, -8, -7, -4, -11, -17},
+    {27, 15, 5, 7, 5, 5, 5, 5, 5, 4, 5, 5, -3, -12},
+    {44, 37, 26, 23, 24, 23, 22, 21, 24, 23, 20, 18, 5, -7},
+    {67, 57, 49, 49, 48, 51, 48, 50, 42, 47, 41, 46, 22, -2},
+    {83, 78, 72, 73, 72, 72, 69, 64, 63, 70, 62, 55, 27, 0},
+    {96, 100, 94, 93, 97, 95, 98, 90, 91, 85, 80, 75, 38, 0},
+    {109, 109, 108, 111, 107, 110, 109, 107, 105, 100, 88, 80, 40, 0},
+    {117, 116, 116, 123, 121, 125, 118, 115, 111, 105, 88, 88, 44, 0},
+    {126, 125, 124, 127, 126, 127, 123, 120, 115, 106, 104, 88, 44, 0},
+    {129, 130, 130, 129, 129, 130, 130, 130, 120, 108, 97, 86, 43, 0}
+} }, &Torque_Map_Data.map1 };
 
 //Buffer from DMA
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
@@ -72,7 +59,6 @@ void startAPPSTask() {
 
 	int32_t appsPos = 0;
 
-	CANMsg txMsg;
 
 	//circular buffers for moving average
 	uint32_t apps1PrevMesurments[AVG_WINDOW];
@@ -131,80 +117,91 @@ void startAPPSTask() {
 
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
 			APPS_Data.pedalPos = appsPos;
-
 			osMutexRelease(APPS_Data_MtxHandle);
-		}
-
-		//Pedal Mapping
-		int pedalPercent = 0; //X value
-		int rpmNumber = 0; //Y value
-
-		// Using the lookup table to find the column number
-		int rpmId = 0;
-		for (int i = 0; i < 14; i++) {
-			if (rpmNumber < torqueTable[i][2]) {
-				rpmId = i;
-				break;
-			}
-		}
-
-		int torque;
-		//Find the four points around the two values
-		int pedalPercentOnesColumn = pedalPercent % 10;	//Get the ones column from the pedal percent *** This assumes the percent is a whole number ***
-		int lowerBoundPedal = pedalPercent - pedalPercentOnesColumn; // This finds the table index value lower than
-		int upperBoundPedal = lowerBoundPedal + 10;	// This gets the upper bound of the pedal percent
-		// float pedalPercentOnesColumnAsPercent = (float)pedalPercentOnesColumn * 0.01;
-
-		// float yDiff = (float)(torqueTable[rpmId][1] % 454) * 0.01;
-		int lowerBoundRPM = torqueTable[rpmId][1];	//Find the rpm value lower than it
-		int upperBoundRPM = lowerBoundRPM + 454;	//Find the rpm value higher than it
-
-		// If it's not at its max x or y
-		if (pedalPercent != 120 && rpmId != 12) {
-			float x1Interpolation = interpolate((float)lowerBoundPedal, (float)lowerBoundRPM, (float)lowerBoundPedal, (float)upperBoundPedal, (float)pedalPercent);
-			float x2Interpolation = interpolate((float)upperBoundPedal, (float)lowerBoundRPM, (float)upperBoundPedal, (float)upperBoundPedal, (float)pedalPercent);
-
-			// x1Interpolation *= pedalPercentOnesColumnAsPercent;
-			// x2Interpolation *= pedalPercentOnesColumnAsPercent;
-
-			torque = interpolate(x1Interpolation, lowerBoundRPM, x2Interpolation, upperBoundRPM, (float)rpmNumber);
-
-		// If it's at its max x but not max y
-		} else if (pedalPercentWholeNumber == 100 && rpmId != 14) {
-			torque = interpolate((float)lowerBoundPedal, (float)lowerBoundRPM, (float)lowerBoundPedal, (float)upperBoundPedal, (float)pedalPercent);
-
-		// If it's at its max y but not max x
-		} else if (pedalPercentWholeNumber != 100 && rpmId == 14) {
-			torque = interpolate((float)lowerBoundRPM, (float)lowerBoundPedal, (float)upperBoundRPM, (float)lowerBoundPedal, (float)rpmNumber);
-			// float xInterpolation = interpolate((float)(torqueTable[lowerBound][rpmId]), (float)(torqueTable[upperBound][rpmId]));
-			// torque = xInterpolation * pedalPercentOnesColumnAsPercent;
-
-		// If it's at its max x and y
 		} else {
-			torque = torqueTable[pedalPercentWholeNumber][rpmId];
+			CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
 		}
 
-		//Formatting sample can message
-		//TODO format can message as motor controller torque command
+		int32_t pedalPercent = MIN(appsPos, 99); // NOTE: Cap values at slightly less then our max % for easier math
+		int32_t rpm = 0;
+
+		if(osMutexAcquire(Ctrl_Data_MtxHandle, osWaitForever) == osOK) {
+			rpm = MIN(Ctrl_Data.motorSpeed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
+			osMutexRelease(Ctrl_Data_MtxHandle);
+		} else {
+			CRITICAL_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): APPS.c:startAPPSTask\n");
+		}
 
 
-		txMsg.aData[3] = apps1Avg & 0xFFU;
-		txMsg.aData[2] = apps1Avg >> 8 & 0xFFU;
-		txMsg.aData[1] = apps1Avg >> 16 & 0xFFU;
-		txMsg.aData[0] = apps1Avg >> 24 & 0xFFU;
+		// Integer division - rounds down (use this to our advantage)
+		int32_t pedalOffset = pedalPercent % 10;
+		int32_t pedalLowIndex = pedalPercent / 10;
+		int32_t pedalHighIndex = pedalLowIndex + 1;
+		int32_t rpmOffset = rpm % 500;
+		int32_t rpmLowIndex = rpm / 500;
+		int32_t rpmHighIndex = rpmLowIndex + 1;
+		if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
+			int16_t requestedTorque = 0;
+			int16_t** torque_map = Torque_Map_Data.activeMap->data;
 
-		txMsg.header.DLC = 4;
-		txMsg.header.StdId = 0x69U;
-		txMsg.header.IDE = CAN_ID_STD;
-		txMsg.header.RTR = CAN_RTR_DATA;
+			// NOTE: because we capped our values, both lower indexes will never read the maximum index
+			// this always leaves one column left for the high index.
+
+			int16_t torque_pedallow_rpmlow = torque_map[pedalLowIndex][rpmLowIndex];
+			int16_t torque_pedallow_rpmhigh = torque_map[pedalLowIndex][rpmHighIndex];
+			int16_t torque_pedalhigh_rpmlow = torque_map[pedalHighIndex][rpmLowIndex];
+			int16_t torque_pedalhigh_rpmhigh = torque_map[pedalHighIndex][rpmHighIndex];
+
+			// Interpolating across rpm values
+			int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
+			int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
+			requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
+
+			osMutexRelease(Torque_Map_MtxHandle);
+
+			requestTorque(requestedTorque);
+		} else {
+			CRITICAL_PRINT("Missed osMutexAcquire(Torque_Map_MtxHandle): APPS.c:startAPPSTask\n");
+		}
 
 		DEBUG_PRINT("APPS1:%d, APPS_POS:%d\r\n", apps1Avg, appsPos);
 
-
-		osMessageQueuePut(CAN2_QHandle, &txMsg, 0, 5);
-
-
-		tick+= APPS_PERIOD;
-		osDelayUntil(tick);
+		osDelayUntil(tick += APPS_PERIOD);
 	}
+}
+
+void requestTorque(int16_t requestedTorque) {
+	DEBUG_PRINT("Requesting: %dN.m\r\n", requestedTorque);
+	uint16_t bitwiseRequestedTorque = *(uint16_t*)&requestedTorque;
+
+	// Format is defined in CM200DZ CAN protocol V6.1 section 2.2
+	CANMsg txMsg;
+	txMsg.header.IDE = CAN_ID_STD;
+	txMsg.header.RTR = CAN_RTR_DATA;
+	txMsg.header.StdId = 0x0C0;
+	txMsg.header.DLC = 8;
+
+	// Bytes 0 & 1 is the requested torque
+	txMsg.aData[0] = bitwiseRequestedTorque & 0xFF;
+	txMsg.aData[1] = bitwiseRequestedTorque >> 8;
+
+	// Bytes 2 & 3 is the requested RPM (if not in torque mode)
+	txMsg.aData[2] = 0;
+	txMsg.aData[3] = 0;
+
+	// Byte 4 is Forward/Reverse
+	txMsg.aData[4] = 1; // 1 is Forward
+
+	// Byte 5 is Configuration
+	txMsg.aData[5] = 0;
+		// | 0x1 // Inverter Enable
+		// | 0x2 // Inverter Discharge
+		// | 0x4 // Speed Mode override
+
+	// Byte 6 & 7 sets torque limits
+	txMsg.aData[6] = 0;
+	txMsg.aData[7] = 0;
+
+	// Send over CAN2
+	osMessageQueuePut(CAN2_QHandle, &txMsg, 0, 5);
 }

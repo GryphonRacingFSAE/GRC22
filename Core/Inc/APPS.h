@@ -29,6 +29,7 @@ typedef struct {
 extern APPS_Data_Struct APPS_Data;
 
 void startAPPSTask();
+void requestTorque(int16_t requestedTorque);
 
 extern osMutexId_t Torque_Map_MtxHandle;
 
