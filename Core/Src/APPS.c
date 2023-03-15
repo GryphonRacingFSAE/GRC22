@@ -30,7 +30,7 @@ void startAPPSTask() {
 
 	int32_t appsPos = 0;
 
-	CANMsg txMsg;
+	CANTXMsg txMsg;
 
 	//circular buffers for moving average
 	uint32_t apps1PrevMesurments[AVG_WINDOW];
@@ -99,10 +99,10 @@ void startAPPSTask() {
 		//TODO format can message as motor controller torque command
 
 
-		txMsg.aData[3] = apps1Avg & 0xFFU;
-		txMsg.aData[2] = apps1Avg >> 8 & 0xFFU;
-		txMsg.aData[1] = apps1Avg >> 16 & 0xFFU;
-		txMsg.aData[0] = apps1Avg >> 24 & 0xFFU;
+		txMsg.data[3] = apps1Avg & 0xFFU;
+		txMsg.data[2] = apps1Avg >> 8 & 0xFFU;
+		txMsg.data[1] = apps1Avg >> 16 & 0xFFU;
+		txMsg.data[0] = apps1Avg >> 24 & 0xFFU;
 
 		txMsg.header.DLC = 4;
 		txMsg.header.StdId = 0x69U;

@@ -117,7 +117,7 @@ const osThreadAttr_t CAN2TxTask_attributes = {
 };
 /* Definitions for CAN1_Q */
 osMessageQueueId_t CAN1_QHandle;
-uint8_t CAN1_QBuffer[ 16 * sizeof( CANMsg ) ];
+uint8_t CAN1_QBuffer[ 16 * sizeof( CANTXMsg ) ];
 osStaticMessageQDef_t CAN1_QControlBlock;
 const osMessageQueueAttr_t CAN1_Q_attributes = {
   .name = "CAN1_Q",
@@ -128,7 +128,7 @@ const osMessageQueueAttr_t CAN1_Q_attributes = {
 };
 /* Definitions for CAN2_Q */
 osMessageQueueId_t CAN2_QHandle;
-uint8_t CAN2_QBuffer[ 16 * sizeof( CANMsg ) ];
+uint8_t CAN2_QBuffer[ 16 * sizeof( CANTXMsg ) ];
 osStaticMessageQDef_t CAN2_QControlBlock;
 const osMessageQueueAttr_t CAN2_Q_attributes = {
   .name = "CAN2_Q",
@@ -139,7 +139,7 @@ const osMessageQueueAttr_t CAN2_Q_attributes = {
 };
 /* Definitions for CANRX_Q */
 osMessageQueueId_t CANRX_QHandle;
-uint8_t CANRX_QBuffer[ 32 * sizeof( CANMsg ) ];
+uint8_t CANRX_QBuffer[ 32 * sizeof( CANRXMsg ) ];
 osStaticMessageQDef_t CANRX_QControlBlock;
 const osMessageQueueAttr_t CANRX_Q_attributes = {
   .name = "CANRX_Q",
@@ -300,13 +300,13 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of CAN1_Q */
-  CAN1_QHandle = osMessageQueueNew (16, sizeof(CANMsg), &CAN1_Q_attributes);
+  CAN1_QHandle = osMessageQueueNew (16, sizeof(CANTXMsg), &CAN1_Q_attributes);
 
   /* creation of CAN2_Q */
-  CAN2_QHandle = osMessageQueueNew (16, sizeof(CANMsg), &CAN2_Q_attributes);
+  CAN2_QHandle = osMessageQueueNew (16, sizeof(CANTXMsg), &CAN2_Q_attributes);
 
   /* creation of CANRX_Q */
-  CANRX_QHandle = osMessageQueueNew (32, sizeof(CANMsg), &CANRX_Q_attributes);
+  CANRX_QHandle = osMessageQueueNew (32, sizeof(CANRXMsg), &CANRX_Q_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */

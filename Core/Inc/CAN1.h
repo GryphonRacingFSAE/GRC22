@@ -20,8 +20,13 @@ extern osMessageQueueId_t CANRX_QHandle;
 
 typedef struct {
 	CAN_TxHeaderTypeDef header;
-	uint8_t aData[8];
-} CANMsg;
+	uint8_t data[8];
+} CANTXMsg;
+
+typedef struct {
+	CAN_RxHeaderTypeDef header;
+	uint8_t data[8];
+} CANRXMsg;
 
 // Incoming transactions should follow this format:
 typedef struct {
