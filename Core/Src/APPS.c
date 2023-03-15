@@ -59,7 +59,6 @@ void startAPPSTask() {
 
 	int32_t appsPos = 0;
 
-
 	//circular buffers for moving average
 	uint32_t apps1PrevMesurments[AVG_WINDOW];
 	uint32_t apps2PrevMesurments[AVG_WINDOW];
@@ -175,32 +174,32 @@ void requestTorque(int16_t requestedTorque) {
 	uint16_t bitwiseRequestedTorque = *(uint16_t*)&requestedTorque;
 
 	// Format is defined in CM200DZ CAN protocol V6.1 section 2.2
-	CANMsg txMsg;
+	CANTXMsg txMsg;
 	txMsg.header.IDE = CAN_ID_STD;
 	txMsg.header.RTR = CAN_RTR_DATA;
 	txMsg.header.StdId = 0x0C0;
 	txMsg.header.DLC = 8;
 
 	// Bytes 0 & 1 is the requested torque
-	txMsg.aData[0] = bitwiseRequestedTorque & 0xFF;
-	txMsg.aData[1] = bitwiseRequestedTorque >> 8;
+	txMsg.data[0] = bitwiseRequestedTorque & 0xFF;
+	txMsg.data[1] = bitwiseRequestedTorque >> 8;
 
 	// Bytes 2 & 3 is the requested RPM (if not in torque mode)
-	txMsg.aData[2] = 0;
-	txMsg.aData[3] = 0;
+	txMsg.data[2] = 0;
+	txMsg.data[3] = 0;
 
 	// Byte 4 is Forward/Reverse
-	txMsg.aData[4] = 1; // 1 is Forward
+	txMsg.data[4] = 1; // 1 is Forward
 
 	// Byte 5 is Configuration
-	txMsg.aData[5] = 0;
+	txMsg.data[5] = 0;
 		// | 0x1 // Inverter Enable
 		// | 0x2 // Inverter Discharge
 		// | 0x4 // Speed Mode override
 
 	// Byte 6 & 7 sets torque limits
-	txMsg.aData[6] = 0;
-	txMsg.aData[7] = 0;
+	txMsg.data[6] = 0;
+	txMsg.data[7] = 0;
 
 	// Send over CAN2
 	osMessageQueuePut(CAN2_QHandle, &txMsg, 0, 5);
