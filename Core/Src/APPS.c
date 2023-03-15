@@ -8,6 +8,7 @@
 #include "APPS.h"
 #include "utils.h"
 #include "CAN1.h"
+#include "control.h"
 #include <string.h>
 
 #define AVG_WINDOW			3
