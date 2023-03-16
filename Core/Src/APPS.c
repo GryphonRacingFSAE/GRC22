@@ -153,7 +153,7 @@ void startAPPSTask() {
 			int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
 			int16_t requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
 
-			requestTorque(requestedTorque);
+			requestTorque(requestedTorque * 10); // Transmitting scales by 10 due to Limits of motor controller
 		} else {
 			CRITICAL_PRINT("Missed osMutexAcquire(Torque_Map_MtxHandle): APPS.c:startAPPSTask\n");
 		}
