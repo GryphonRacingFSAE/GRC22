@@ -9,7 +9,7 @@ Rectangle {
 
     readonly property int rows: 11
     readonly property int columns: 14
-    readonly property int boxSize: 40
+    readonly property int boxSize: 35
 
     property int selectedRow: 0
     property int selectedColumn: 0
@@ -72,22 +72,9 @@ Rectangle {
         VCU.sendTorqueMap(torque_map);
     }
 
-    RowLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        Label {
-            text: repeater.itemAt(selectedIndex)?.torque ?? "Null"
-            color: "white"
-            font.pixelSize: 18
-        }
-        Label {
-            Layout.alignment: Qt.AlignHCenter
-            text: `Profile #${VCU.profileId}`
-            color: "white"
-            font.pixelSize: 18
-        }
-    }
     Rectangle {
+        id: box_matrix
+
         color: "white"
         anchors.centerIn: parent
         width: root.columns * boxSize
@@ -114,6 +101,17 @@ Rectangle {
                         width: isSelected ? 3 : 0
                     }
 
+                    Text {
+                        width: parent.width
+                        height: parent.height
+
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+
+                        text: repeater.itemAt(index).torque ?? "NULL"
+                        font.pointSize: 10
+                    }
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     color: {
@@ -126,5 +124,113 @@ Rectangle {
                 }
             }
         }
+    }
+
+    // motor speed axis
+    Row {
+        width: box_matrix.width
+        bottomPadding: 2
+
+        anchors {
+            bottom: box_matrix.top
+            horizontalCenter: box_matrix.horizontalCenter
+        }
+
+        Repeater {
+            model: 6500/500 + 1
+
+            Text {
+                required property int index
+
+                width: parent.width/14
+                horizontalAlignment: Text.AlignHCenter
+
+                text: (index * 500) + ""
+                color: "white"
+            }
+        }
+    }
+
+    // pedal travel axis
+    Column {
+        height: box_matrix.height
+        rightPadding: 6
+
+        anchors {
+            right: box_matrix.left
+            verticalCenter: box_matrix.verticalCenter
+        }
+
+        Repeater {
+            model: 100/10 + 1
+
+            Text {
+                required property int index
+
+                width: 20
+                height: parent.height/11
+                horizontalAlignment: Text.AlignRight
+                verticalAlignment: Text.AlignVCenter
+
+                text: (index*10) + ""
+                color: "white"
+            }
+        }
+    }
+
+    // motor speed label
+    Text {
+        width: box_matrix.width
+        height: 46
+
+        anchors {
+            bottom: box_matrix.top
+            horizontalCenter: box_matrix.horizontalCenter
+        }
+
+        horizontalAlignment: Text.AlignHCenter
+
+        text: "Motor Speed  [RPM]"
+        font.pixelSize: 16
+        font.bold: true
+        color: "white"
+    }
+
+    // pedal travel label
+    Text {
+        height: box_matrix.height
+
+        anchors {
+            right: box_matrix.left
+            verticalCenter: box_matrix.verticalCenter
+        }
+
+        verticalAlignment: Text.AlignVCenter
+
+        text: "Pedal Travel  [%]"
+        font.pixelSize: 16
+        font.bold: true
+        color: "white"
+
+        rotation: -90
+        transform: Translate {x: 26}
+    }
+
+    // profile indicators
+    Text {
+        width: parent.width
+
+        anchors {
+            top: box_matrix.bottom
+            bottom: parent.bottom
+        }
+
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+
+        text: "Profile: #" + `${VCU.profileId}`
+        color: "white"
+        font.pixelSize: 24
+        font.bold: true
     }
 }
