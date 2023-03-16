@@ -125,9 +125,9 @@ Item {
 
     Connections {
         target: MotorController
-        function onNewMotorRPM(rpm) {
+        function onNewMotorSpeed(speed) {
             let gear_ratio = 1/3.48; // 3.48:1 gear ratio
-            let wheel_rpm = rpm * gear_ratio;
+            let wheel_rpm = speed * gear_ratio;
             let wheel_diameter_inch = 16; // 16" OD
             let wheel_circumfrence_m = wheel_diameter_inch * 0.0254 * 3.14; // inch -> m = inch * 0.0254
             let wheel_surface_speed_mpm = wheel_circumfrence_m * wheel_rpm;
@@ -135,40 +135,40 @@ Item {
 
             speedValue.text = `${wheel_surface_speed_kmph.toFixed(0)}`
         }
-        function onNewCoolantTemp(coolant_temp)
+        function onNewCoolantTemp(temp)
         {
-            coolantTempBox.value = coolant_temp
+            coolantTempBox.value = temp
         }
-        function onNewOilTemp(oil_temp) {
-            oilTempBox.value = oil_temp
+        function onNewAnalogInput2(temp) { // oil temp
+            oilTempBox.value = temp
         }
         function onNewMotorTemp(temp) {
             motorTempBox.value = temp
         }
-        function onNew12VVoltage(voltage)
+        function onNewAnalogInput1(voltage) // 12V voltage
         {
         }
     }
 
     Connections {
         target: BMS
-        function onNewAccumulatorSOC(percent)
+        function onNewStateOfCharge(percent)
         {
             battery_bar.percent = percent
         }
-        function onNewBMSTemp(temp)
+        function onNewAvgTemp(temp)
         {
         }
-        function onNewAccumulatorMaxTemp(temp) {
+        function onNewHighestTemp(temp) {
             accumTempBox.value = temp
         }
-        function onNewAccumulatorCurrent(current)
+        function onNewAvgPackCurrent(current)
         {
         }
-        function onNewAccumulatorInstVoltage(voltage)
+        function onNewVoltage(voltage)
         {
         }
-        function onNewAccumulatorOpenVoltage(voltage)
+        function onNewOpenVoltage(voltage)
         {
         }
     }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import CAN.MotorController
 
 ApplicationWindow {
     id: application_window
@@ -20,12 +21,28 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
-    readonly property var display_sources: ["Drive/Drive.qml", "Debug/Debug.qml", "Tuning/Tuning.qml"];
+    readonly property var display_sources: ["Drive/Drive.qml", "Debug/Debug_A.qml", "Debug/Debug_B.qml", "Debug/Debug_C.qml", "Debug/Debug_D.qml", "Tuning/Tuning.qml"];
     property int selected_display: 0;
-    MouseArea {
+
+    Item {
         anchors.fill: parent
-        onClicked: () => {
-            active_dash.source = display_sources[++selected_display % display_sources.length];
+        focus: true
+
+        Keys.onLeftPressed: {
+            if (--selected_display < 0) {
+                selected_display = display_sources.length - 1;
+            }
+            active_dash.source = display_sources[selected_display];
+        }
+        Keys.onRightPressed: {
+            if (++selected_display > display_sources.length - 1) {
+                selected_display = 0;
+            }
+            active_dash.source = display_sources[selected_display];
+        }
+        Keys.onDeletePressed: {
+            MotorController.clearFaultCodes();
+            console.log("Fault codes cleared");
         }
     }
 }
