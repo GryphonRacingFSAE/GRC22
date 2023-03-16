@@ -1,11 +1,24 @@
 add_executable(GryphonDash main.cpp qml.qrc)
-add_executable(GryphonDash2019 Dash2019.cpp qml.qrc)
+add_executable(GryphonDashDemo Dash2019.cpp qml.qrc)
 set_target_properties(GryphonDash PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
-set_target_properties(GryphonDash2019 PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
+set_target_properties(GryphonDashDemo PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
 target_compile_definitions(GryphonDash PRIVATE ROOT_SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_definitions(GryphonDash2019 PRIVATE ROOT_SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(GryphonDashDemo PRIVATE ROOT_SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(GryphonDash PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
-target_link_libraries(GryphonDash2019 PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
+target_link_libraries(GryphonDashDemo PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
+
+add_custom_command(
+    TARGET GryphonDashDemo PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/DBCs
+        $<TARGET_FILE_DIR:GryphonDashDemo>/DBCs
+)
+add_custom_command(
+    TARGET GryphonDashDemo PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps
+        $<TARGET_FILE_DIR:GryphonDashDemo>/TorqueMaps
+)
 
 add_custom_command(
     TARGET GryphonDash PRE_BUILD
@@ -20,7 +33,6 @@ add_custom_command(
         $<TARGET_FILE_DIR:GryphonDash>/TorqueMaps
 )
 
-# TODO: Add the deployment for linux
 if(WIN32)
     set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
     set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
@@ -60,10 +72,7 @@ elseif(UNIX AND NOT APPLE)
     else()
         message(STATUS "No deployment for Linux, must use VirtualRunEnv")
         set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
-        set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
-        file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
-        file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash>)
-        file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash2019>)
+        set_target_properties(GryphonDashDemo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/demo/$<0:>)
     endif()
 elseif(APPLE)
     message(STATUS "No deployment for Apple, implement.")

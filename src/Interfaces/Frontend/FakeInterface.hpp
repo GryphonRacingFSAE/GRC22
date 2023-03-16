@@ -3,7 +3,7 @@
 #include <atomic>
 #include <thread>
 
-namespace CAN {
+namespace fake {
 
 class FakeInterface {
   public:
@@ -22,6 +22,9 @@ class FakeInterface {
   private:
     std::thread m_reading_thread;
     std::atomic<bool> m_should_exit = false;
+
+  protected:
+    std::chrono::duration delay = std::chrono::milliseconds(100);
 };
 
 } // namespace CAN

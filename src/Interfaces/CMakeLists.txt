@@ -10,9 +10,10 @@ if (${BUILD_BACKEND})
         Full/AN400ECU.hpp
         Full/VCU.hpp
         Full/BMS.hpp
+        Demo/MotorController.hpp
     )
     target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Full)
-    target_link_libraries(CANInterfaces PUBLIC CANLib dbcppp::dbcppp)
+    target_link_libraries(CANInterfaces PUBLIC )
 else()
     target_sources(CANInterfaces PUBLIC
         Frontend/FakeInterface.hpp
@@ -30,6 +31,5 @@ else()
     target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Frontend)
 endif()
 set_target_properties(CANInterfaces PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
-set_target_properties(CANInterfaces PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<0:>)
 target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(CANInterfaces PUBLIC qt::qt fmt::fmt rapidcsv::rapidcsv)
+target_link_libraries(CANInterfaces PUBLIC qt::qt fmt::fmt rapidcsv::rapidcsv CANLib dbcppp::dbcppp)
