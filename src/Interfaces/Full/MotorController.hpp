@@ -14,10 +14,11 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_Analog_Input_1"] = &MotorController::new12VVoltage;
         can_signal_dispatch["INV_Analog_Input_2"] = &MotorController::newOilTemp;
         can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
+        can_signal_dispatch["VCU_INV_Torque_Command"] = &MotorController::newRequestedTorque;
     }
 
     Q_INVOKABLE void clearFaultCodes() {
-        // CM200 CAN Protocol V5.9 Section 2.3.1 and 2.3.3 (Address 20 or 0x14)
+        // CM200DZ CAN Protocol V5.9 Section 2.3.1 and 2.3.3 (Address 20 or 0x14)
         RetCode ans = CAN::Interface::write(
             0x0C1, std::array<uint8_t, 8>{0x00, 0x14, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00});
 
@@ -33,18 +34,16 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void new12VVoltage(float voltage);
     void newOilTemp(float temp);
     void newModuleATemp(float temp);
+    void newRequestedTorque(float torque);
 
   public:
-    static constexpr size_t num_of_filters = 2;
+    static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {
         {
             0x0A0,
-            0x7F0 // Grab all messages from 0xA0 to 0xAF
-        },
-        {
-            0x0B0,
-            0x7FF // Grab all messages from 0xB0
-        }};
+            0x0CF // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
+        }
+    };
 
     static constexpr uint32_t timeout_ms = 500;
 };
