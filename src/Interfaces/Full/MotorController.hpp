@@ -111,6 +111,10 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void newTorqueFeedback(float torque);
 
     void newMotorSpeed(float speed);
+    void newPOSTFaultHigh(float fault);
+    void newPOSTFaultLow(float fault);
+    void newRUNFaultHigh(float fault);
+    void newRUNFaultLow(float fault);
 
   public:
     static constexpr size_t num_of_filters = 2;
