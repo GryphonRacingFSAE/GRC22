@@ -14,6 +14,8 @@
         <file>Debug/DataBox.qml</file>
         <file>Debug/SectionHeader.qml</file>
 
+        <file>Debug/Test.qml</file>
+
         <file>Tuning/Tuning.qml</file>
     </qresource>
 

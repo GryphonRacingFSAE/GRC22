@@ -178,19 +178,6 @@ Item {
             top: parent.top
             left: section_B.right
         }
-
-        Column {
-            width: parent.width - 32
-            height: parent.height
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            // SectionHeader {
-            //     title: "HEADER"
-            // }
-            // DataBox {
-            //     title: "DATA BOX"
-            // }
-        }
     }
 
     Connections {

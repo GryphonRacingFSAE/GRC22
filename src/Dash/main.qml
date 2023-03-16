@@ -21,7 +21,7 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
-    readonly property var display_sources: ["Drive/Drive.qml", "Debug/Debug_A.qml", "Debug/Debug_B.qml", "Debug/Debug_C.qml", "Debug/Debug_D.qml", "Tuning/Tuning.qml"];
+    readonly property var display_sources: ["Debug/Test.qml", "Drive/Drive.qml", "Debug/Debug_A.qml", "Debug/Debug_B.qml", "Debug/Debug_C.qml", "Debug/Debug_D.qml", "Tuning/Tuning.qml"];
     property int selected_display: 0;
 
     Item {
