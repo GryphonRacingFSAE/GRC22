@@ -23,7 +23,7 @@ int16_t interpolate(int16_t xdiff, int16_t ydiff, int16_t yoffset, int16_t xoffs
 
 APPS_Data_Struct APPS_Data;
 // Columns are RPM in increments of 500 (0-6500), Rows are pedal percent in increments of 10% (0-100%)
-Torque_Map_Struct Torque_Map_Data = { { {
+Torque_Map_Struct Torque_Map_Data = { {
     { -6, -20, -22, -22, -22, -22, -22, -22, -22, -22, -21, -17, -19, -22 },
     { 12, -5, -15, -14, -11, -8, -7, -8, -6, -8, -7, -4, -12, -20 },
     { 27, 15, 5, 7, 5, 5, 5, 5, 5, 4, 5, 5, -6, -18 },
@@ -35,7 +35,7 @@ Torque_Map_Struct Torque_Map_Data = { { {
     { 117, 116, 116, 123, 121, 125, 118, 115, 111, 105, 88, 88, 41, -6 },
     { 126, 125, 124, 127, 126, 127, 123, 120, 115, 106, 104, 88, 42, -4 },
     { 129, 130, 130, 129, 129, 130, 130, 130, 120, 108, 97, 86, 42, -2 }
-} }, { {
+}, {
     {-6, -20, -22, -22, -22, -22, -22, -22, -22, -22, -21, -17, -19, -22},
     {12, -5, -15, -14, -11, -8, -7, -8, -6, -8, -7, -4, -11, -17},
     {27, 15, 5, 7, 5, 5, 5, 5, 5, 4, 5, 5, -3, -12},
@@ -47,7 +47,7 @@ Torque_Map_Struct Torque_Map_Data = { { {
     {117, 116, 116, 123, 121, 125, 118, 115, 111, 105, 88, 88, 44, 0},
     {126, 125, 124, 127, 126, 127, 123, 120, 115, 106, 104, 88, 44, 0},
     {129, 130, 130, 129, 129, 130, 130, 130, 120, 108, 97, 86, 43, 0}
-} }, &Torque_Map_Data.map1 };
+}, Torque_Map_Data.map1 };
 
 //Buffer from DMA
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
@@ -74,17 +74,15 @@ void startAPPSTask() {
 	while (1) {
 
 		//Averages samples in DMA buffer
-		apps1Avg = 0;
-		for (int i = 0; i < ADC1_BUFF_LEN; i++) {
-			if(i%2 ==0){
-				apps1Avg += ADC1_buff[i];
-			} else {
-				apps2Avg += ADC1_buff[i];
-			}
+		uint32_t apps1AvgDMA = 0;
+		uint32_t apps2AvgDMA = 0;
+		for (int i = 0; i < ADC1_BUFF_LEN;) {
+			apps1AvgDMA += ADC1_buff[i++];
+			apps2AvgDMA += ADC1_buff[i++];
 		}
 
-		apps1Avg = (apps1Avg + (1<<8)) >> 10;
-		apps2Avg = (apps2Avg + (1<<8)) >> 10;
+		apps1AvgDMA = apps1AvgDMA / (ADC1_BUFF_LEN / 2); // Calculate the average
+		apps2AvgDMA = apps2AvgDMA / (ADC1_BUFF_LEN / 2);
 
 
 		//Calculates moving average of previous measurements
@@ -92,12 +90,11 @@ void startAPPSTask() {
 			circBuffPos = 0;
 		}
 		//Circular for moving average
-		apps1PrevMesurments[circBuffPos] = apps1Avg;
-		apps2PrevMesurments[circBuffPos] = apps2Avg;
+		apps1PrevMesurments[circBuffPos] = apps1AvgDMA;
+		apps2PrevMesurments[circBuffPos] = apps2AvgDMA;
 
 		apps1Avg = 0;
 		apps2Avg = 0;
-
 		for (int i = 0; i < AVG_WINDOW; i++) {
 			apps1Avg += apps1PrevMesurments[i];
 			apps2Avg += apps2PrevMesurments[i];
@@ -141,23 +138,20 @@ void startAPPSTask() {
 		int32_t rpmLowIndex = rpm / 500;
 		int32_t rpmHighIndex = rpmLowIndex + 1;
 		if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
-			int16_t requestedTorque = 0;
-			int16_t** torque_map = Torque_Map_Data.activeMap->data;
-
+			// Grab data points early then release mutex immediately.
 			// NOTE: because we capped our values, both lower indexes will never read the maximum index
 			// this always leaves one column left for the high index.
+			int16_t torque_pedallow_rpmlow = Torque_Map_Data.activeMap[pedalLowIndex][rpmLowIndex];
+			int16_t torque_pedallow_rpmhigh = Torque_Map_Data.activeMap[pedalLowIndex][rpmHighIndex];
+			int16_t torque_pedalhigh_rpmlow = Torque_Map_Data.activeMap[pedalHighIndex][rpmLowIndex];
+			int16_t torque_pedalhigh_rpmhigh = Torque_Map_Data.activeMap[pedalHighIndex][rpmHighIndex];
 
-			int16_t torque_pedallow_rpmlow = torque_map[pedalLowIndex][rpmLowIndex];
-			int16_t torque_pedallow_rpmhigh = torque_map[pedalLowIndex][rpmHighIndex];
-			int16_t torque_pedalhigh_rpmlow = torque_map[pedalHighIndex][rpmLowIndex];
-			int16_t torque_pedalhigh_rpmhigh = torque_map[pedalHighIndex][rpmHighIndex];
+			osMutexRelease(Torque_Map_MtxHandle);
 
 			// Interpolating across rpm values
 			int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
 			int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
-			requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
-
-			osMutexRelease(Torque_Map_MtxHandle);
+			int16_t requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
 
 			requestTorque(requestedTorque);
 		} else {
