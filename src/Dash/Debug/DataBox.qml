@@ -4,7 +4,7 @@ Item {
     required property string title;
     property double value;
     property int precision;
-    property bool is_fault; // false by default
+    property bool is_fault: false;
 
     width: parent.width
     height: 18

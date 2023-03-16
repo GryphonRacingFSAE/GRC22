@@ -234,45 +234,48 @@ Item {
 
     Connections {
         target: MotorController
+        
+        function onNewPOSTFaultHigh(post_fault) { // TODO: sort high vs. low + decode input
+            current_sensor_low.value = post_fault
+            current_sensor_high.value = post_fault
 
-        function onNewTestFault(value) {
-            current_sensor_low.value = value
-            current_sensor_high.value = value
+            sense_voltage_low_1_5_V.value = post_fault
+            sense_voltage_high_1_5_V.value = post_fault
+            sense_voltage_low_2_5_V.value = post_fault
+            sense_voltage_high_2_5_V.value = post_fault
+            sense_voltage_low_5_V.value = post_fault
+            sense_voltage_high_5_V.value = post_fault
+            sense_voltage_low_12_V.value = post_fault
+            sense_voltage_high_12_V.value = post_fault
+            dc_bus_voltage_low.value = post_fault
+            dc_bus_voltage_high.value = post_fault
 
-            sense_voltage_low_1_5_V.value = value
-            sense_voltage_high_1_5_V.value = value
-            sense_voltage_low_2_5_V.value = value
-            sense_voltage_high_2_5_V.value = value
-            sense_voltage_low_5_V.value = value
-            sense_voltage_high_5_V.value = value
-            sense_voltage_low_12_V.value = value
-            sense_voltage_high_12_V.value = value
-            dc_bus_voltage_low.value = value
-            dc_bus_voltage_high.value = value
+            module_temp_low.value = post_fault
+            module_temp_high.value = post_fault
+            control_pcb_temp_low.value = post_fault
+            control_pcb_temp_high.value = post_fault
+            gate_drive_pcb_temp_low.value = post_fault
+            gate_drive_pcb_temp_high.value = post_fault
 
-            module_temp_low.value = value
-            module_temp_high.value = value
-            control_pcb_temp_low.value = value
-            control_pcb_temp_high.value = value
-            gate_drive_pcb_temp_low.value = value
-            gate_drive_pcb_temp_high.value = value
+            accelerator_shorted.value = post_fault
+            accelerator_open.value = post_fault
 
-            accelerator_shorted.value = value
-            accelerator_open.value = value
+            brake_shorted.value = post_fault
+            brake_open.value = post_fault
 
-            brake_shorted.value = value
-            brake_open.value = value
+            eeprom_checksum_invalid.value = post_fault
+            eeprom_data_out_of_range.value = post_fault
+            eeprom_update_required.value = post_fault
 
-            eeprom_checksum_invalid.value = value
-            eeprom_data_out_of_range.value = value
-            eeprom_update_required.value = value
+            hardware_gate_desaturation_fault.value = post_fault
+            hw_over_current_fault.value = post_fault
+            pre_charge_timeout.value = post_fault
+            pre_charge_voltage_failure.value = post_fault
+            hardware_dc_bus_over_voltage.value = post_fault
+            gate_driver_initialization.value = post_fault
+        }
 
-            hardware_gate_desaturation_fault.value = value
-            hw_over_current_fault.value = value
-            pre_charge_timeout.value = value
-            pre_charge_voltage_failure.value = value
-            hardware_dc_bus_over_voltage.value = value
-            gate_driver_initialization.value = value
+        function onNewPOSTFaultLow(post_fault) {
         }
     }
 }

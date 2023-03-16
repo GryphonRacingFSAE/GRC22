@@ -196,14 +196,12 @@ Item {
     Connections {
         target: BMS
 
-        function onNewTestValue(value) {
-            bms_state_of_charge.value = value
-            bms_amphours.value = value
-            bms_resistance.value = value
-            bms_health.value = value
-            bms_total_pack_cycles.value = value
-            bms_pack_power_kw.value = value
-        }
+        function onNewStateOfCharge(value) {bms_state_of_charge.value = value}
+        function onNewAmphours(value) {bms_amphours.value = value}
+        function onNewResistance(value) {bms_resistance.value = value}
+        function onNewHealth(value) {bms_health.value = value}
+        function onNewTotalPackCycles(value) {bms_total_pack_cycles.value = value}
+        function onNewPackPowerKW(value) {bms_pack_power_kw.value = value}
     }
 
     Connections {
@@ -214,31 +212,29 @@ Item {
     Connections {
         target: MotorController
 
-        function onNewTestValue(value) {
-            mc_pwm_frequency.value = value
-            mc_inverter_state.value = value
-            mc_inverter_run_mode.value = value
-            mc_inverter_active_discharge_state.value = value
-            mc_inverter_enable_lockout.value = value
-            mc_bms_active.value = value
-            mc_bms_limiting_torque.value = value
-            mc_limit_max_speed.value = value
-            mc_limit_hot_spot.value = value
-            mc_low_speed_limiting.value = value
-            mc_coolant_temp_limiting.value = value
+        function onNewPWMFrequency(internal_state) {mc_pwm_frequency.value = internal_state}
+        function onNewInverterState(internal_state) {mc_inverter_state.value = internal_state}
+        function onNewInverterRunMode(internal_state) {mc_inverter_run_mode.value = internal_state}
+        function onNewInverterActiveDischargeState(internal_state) {mc_inverter_active_discharge_state.value = internal_state}
+        function onNewInverterEnableLockout(internal_state) {mc_inverter_enable_lockout.value = internal_state}
+        function onNewBMSActive(internal_state) {mc_bms_active.value = internal_state}
+        function onNewBMSLimitingTorque(internal_state) {mc_bms_limiting_torque.value = internal_state}
+        function onNewLimitMaxSpeed(internal_state) {mc_limit_max_speed.value = internal_state}
+        function onNewLimitHotSpot(internal_state) {mc_limit_hot_spot.value = internal_state}
+        function onNewLowSpeedLimiting(internal_state) {mc_low_speed_limiting.value = internal_state}
+        function onNewCoolantTempLimiting(internal_state) {mc_coolant_temp_limiting.value = internal_state}
 
-            mc_analog_input_1.value = value
-            mc_analog_input_2.value = value
-            mc_analog_input_3.value = value
-            mc_analog_input_4.value = value
-            mc_analog_input_5.value = value
-            mc_analog_input_6.value = value
+        function onNewAnalogInput1(analog_voltage) {mc_analog_input_1.value = analog_voltage}
+        function onNewAnalogInput2(analog_voltage) {mc_analog_input_2.value = analog_voltage}
+        function onNewAnalogInput3(analog_voltage) {mc_analog_input_3.value = analog_voltage}
+        function onNewAnalogInput4(analog_voltage) {mc_analog_input_4.value = analog_voltage}
+        function onNewAnalogInput5(analog_voltage) {mc_analog_input_5.value = analog_voltage}
+        function onNewAnalogInput6(analog_voltage) {mc_analog_input_6.value = analog_voltage}
 
-            mc_torque_shudder.value = value
-            mc_commanded_torque.value = value
-            mc_torque_feedback.value = value
+        function onNewTorqueShudder(torque) {mc_torque_shudder.value = torque}
+        function onNewCommandedTorque(torque) {mc_commanded_torque.value = torque}
+        function onNewTorqueFeedback(torque) {mc_torque_feedback.value = torque}
 
-            mc_motor_speed.value = value
-        }
+        function onNewMotorSpeed(speed) {mc_motor_speed.value = speed}
     }
 }

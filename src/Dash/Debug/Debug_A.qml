@@ -249,64 +249,58 @@ Item {
     Connections {
         target: BMS
 
-        function onNewTestValue(value) {
-            bms_avg_pack_current.value = value
-            bms_signed_current.value = value
-            bms_unsigned_current.value = value
-            bms_current_limit_status.value = value
-            bms_charge_current_limit_a.value = value
-            bms_charge_current_limit_kw.value = value
-            bms_discharge_current_limit_a.value = value
-            bms_discharge_current_limit_kw.value = value
+        function onNewAvgPackCurrent(current) {bms_avg_pack_current.value = current}
+        function onNewSignedCurrent(current) {bms_signed_current.value = current}
+        function onNewUnsignedCurrent(current) {bms_unsigned_current.value = current}
+        function onNewCurrentLimitStatus(current) {bms_current_limit_status.value = current}
+        function onNewChargeCurrentLimitA(current) {bms_charge_current_limit_a.value = current}
+        function onNewChargeCurrentLimitKW(current) {bms_charge_current_limit_kw.value = current}
+        function onNewDischargeCurrentLimitA(current) {bms_discharge_current_limit_a.value = current}
+        function onNewDischargeCurrentLimitKW(current) {bms_discharge_current_limit_kw.value = current}
 
-            bms_voltage.value = value
-            bms_open_voltage.value = value
-            bms_summed_voltage.value = value
-            bms_avg_cell_voltage.value = value
-            bms_low_cell_voltage.value = value
-            bms_low_cell_voltage_id.value = value
-            bms_high_cell_voltage.value = value
-            bms_high_cell_voltage_id.value = value
-            bms_avg_cell_open_voltage.value = value
-            bms_low_cell_open_voltage.value = value
-            bms_high_cell_open_voltage.value = value
-            bms_min_cell_voltage.value = value
-            bms_max_cell_voltage.value = value
-
-            bms_avg_temp.value = value
-            bms_lowest_temp.value = value
-            bms_highest_temp.value = value
-            bms_heatsink_temp.value = value
-            bms_hottest_thermistor_id.value = value
-        }
+        function onNewVoltage(voltage) {bms_voltage.value = voltage}
+        function onNewOpenVoltage(voltage) {bms_voltage.value = voltage}
+        function onNewSummedVoltage(voltage) {bms_voltage.value = voltage}
+        function onNewAvgCellVoltage(voltage) {bms_avg_cell_voltage.value = voltage}
+        function onNewLowCellVoltage(voltage) {bms_low_cell_voltage.value = voltage}
+        function onNewLowCellVoltageID(voltage) {bms_low_cell_voltage_id.value = voltage}
+        function onNewHighCellVoltage(voltage) {bms_high_cell_voltage.value = voltage}
+        function onNewHighCellVoltageID(voltage) {bms_high_cell_voltage_id.value = voltage}
+        function onNewAvgCellOpenVoltage(voltage) {bms_avg_cell_open_voltage.value = voltage}
+        function onNewLowCellOpenVoltage(voltage) {bms_low_cell_open_voltage.value = voltage}
+        function onNewHighCellOpenVoltage(voltage) {bms_high_cell_open_voltage.value = voltage}
+        function onNewMinCellVoltage(voltage) {bms_min_cell_voltage.value = voltage}
+        function onNewMaxCellVoltage(voltage) {bms_max_cell_voltage.value = voltage}
+    
+        function onNewAvgTemp(temp) {bms_avg_temp.value = temp}
+        function onNewLowestTemp(temp) {bms_lowest_temp.value = temp}
+        function onNewHighestTemp(temp) {bms_highest_temp.value = temp}
+        function onNewHeatsinkTemp(temp) {bms_heatsink_temp.value = temp}
+        function onNewHottestThermistorID(temp) {bms_hottest_thermistor_id.value = temp}
     }
 
     Connections {
         target: EnergyMeter
-        
-        function onNewTestValue(value) {
-            em_current.value = value
-            em_voltage.value = value
-        }
+
+        function onNewCurrent(current) {em_current.value = current}
+        function onNewVoltage(voltage) {em_voltage.value = voltage}
     }
 
     Connections {
         target: MotorController
 
-        function onNewTestValue(value) {
-            mc_dc_bus_current.value = value
+        function onNewDCBusCurrent(current) {mc_dc_bus_current.value = current}
+        
+        function onNewDCBusVoltage(voltage) {mc_dc_bus_voltage.value = voltage}
+        function onNewOutputVoltage(voltage) {mc_output_voltage.value = voltage}
 
-            mc_dc_bus_voltage.value = value
-            mc_output_voltage.value = value
-
-            mc_module_a_temp.value = value
-            mc_module_b_temp.value = value
-            mc_module_c_temp.value = value
-            mc_gate_driver_board_temp.value = value
-            mc_control_board_temp.value = value
-            mc_coolant_temp.value = value
-            mc_hot_spot_temp.value = value
-            mc_motor_temp.value = value
-        }
+        function onNewModuleATemp(temp) {mc_module_a_temp.value = temp}
+        function onNewModuleBTemp(temp) {mc_module_b_temp.value = temp}
+        function onNewModuleCTemp(temp) {mc_module_c_temp.value = temp}
+        function onNewGateDriverBoardTemp(temp) {mc_gate_driver_board_temp.value = temp}
+        function onNewControlBoardTemp(temp) {mc_control_board_temp.value = temp}
+        function onNewCoolantTemp(temp) {mc_coolant_temp.value = temp}
+        function onNewHotSpotTemp(temp) {mc_hot_spot_temp.value = temp}
+        function onNewMotorTemp(temp) {mc_motor_temp.value = temp}
     }
 }

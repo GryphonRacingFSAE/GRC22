@@ -1,5 +1,4 @@
 #include <cassert>
-#include <fmt/core.h>
 #include <tools.hpp>
 
 // Mask for can errors
