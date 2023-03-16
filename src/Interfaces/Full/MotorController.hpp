@@ -120,12 +120,10 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
 
   public:
     static constexpr size_t num_of_filters = 1;
-    inline static can_filter filters[num_of_filters] = {
-        {
-            0x0A0,
-            0x0CF // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
-        }
-    };
+    inline static can_filter filters[num_of_filters] = {{
+        0x0A0,
+        0x0CF // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
+    }};
 
     static constexpr uint32_t timeout_ms = 500;
 };
