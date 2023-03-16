@@ -153,7 +153,7 @@ void startAPPSTask() {
 			int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
 			int16_t requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
 
-			requestTorque(requestedTorque * 10); // Transmitting scales by 10 due to Limits of motor controller
+			requestTorque(requestedTorque); // Transmitting scales by 10 due to Limits of motor controller
 		} else {
 			CRITICAL_PRINT("Missed osMutexAcquire(Torque_Map_MtxHandle): APPS.c:startAPPSTask\n");
 		}
@@ -166,6 +166,7 @@ void startAPPSTask() {
 
 void requestTorque(int16_t requestedTorque) {
 	DEBUG_PRINT("Requesting: %dN.m\r\n", requestedTorque);
+	requestedTorque *= 10; // Scaling is 10:1, requested torque is what is requested, it needs to be sent as 10 this value
 	uint16_t bitwiseRequestedTorque = *(uint16_t*)&requestedTorque;
 
 	// Format is defined in CM200DZ CAN protocol V6.1 section 2.2
