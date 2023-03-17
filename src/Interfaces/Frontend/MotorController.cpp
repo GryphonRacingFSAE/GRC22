@@ -1,8 +1,6 @@
-#include <MotorController.hpp>
+#include <Frontend/MotorController.hpp>
 
-using namespace CAN;
-
-void MotorController::generateValues() {
+void fake::MotorController::generateValues() {
     static float current = 0.0f;
     static float voltage = 0.0f;
     static float temp = 0.0f;

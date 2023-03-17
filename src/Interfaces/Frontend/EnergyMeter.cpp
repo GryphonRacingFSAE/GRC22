@@ -1,8 +1,6 @@
-#include <EnergyMeter.hpp>
+#include <Frontend/EnergyMeter.hpp>
 
-using namespace CAN;
-
-void EnergyMeter::generateValues() {
+void fake::EnergyMeter::generateValues() {
     static float voltage = 0.0f;
     static float current = 0.0f;
 

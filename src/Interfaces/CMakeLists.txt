@@ -3,33 +3,22 @@ if (NOT ${BUILD_FRONTEND})
 endif()
 
 add_library(CANInterfaces)
-if (${BUILD_BACKEND})
-    target_sources(CANInterfaces PUBLIC
-        Full/MotorController.hpp
-        Full/EnergyMeter.hpp
-        Full/AN400ECU.hpp
-        Full/VCU.hpp
-        Full/BMS.hpp
-        Demo/MotorController.hpp
-    )
-    target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Full)
-    target_link_libraries(CANInterfaces PUBLIC )
-else()
-    target_sources(CANInterfaces PUBLIC
-        Frontend/FakeInterface.hpp
-        Frontend/FakeInterface.cpp
-        Frontend/MotorController.hpp
-        Frontend/MotorController.cpp
-        Frontend/EnergyMeter.cpp
-        Frontend/EnergyMeter.hpp
-        Frontend/BMS.hpp
-        Frontend/BMS.cpp
-        Frontend/AN400ECU.hpp
-        Frontend/AN400ECU.cpp
-        Frontend/VCU.hpp
-    )
-    target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Frontend)
-endif()
+target_sources(CANInterfaces PUBLIC
+    Full/MotorController.hpp
+    Full/EnergyMeter.hpp
+    Full/VCU.hpp
+    Full/BMS.hpp
+    Demo/MotorController.hpp
+    Frontend/FakeInterface.hpp
+    Frontend/FakeInterface.cpp
+    Frontend/MotorController.hpp
+    Frontend/MotorController.cpp
+    Frontend/EnergyMeter.cpp
+    Frontend/EnergyMeter.hpp
+    Frontend/BMS.hpp
+    Frontend/BMS.cpp
+    Frontend/VCU.hpp
+)
 set_target_properties(CANInterfaces PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
 target_include_directories(CANInterfaces PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(CANInterfaces PUBLIC qt::qt fmt::fmt rapidcsv::rapidcsv CANLib dbcppp::dbcppp)

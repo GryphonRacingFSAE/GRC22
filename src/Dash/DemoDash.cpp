@@ -33,9 +33,9 @@ int main(int argc, char* argv[]) {
     rt->parseQrc(ROOT_SOURCE_PATH "/qml.qrc");
     rt->setAutoReload(true); // Reload automatically on file update
 
-    rt->load(QStringLiteral("qrc:/main.qml"));
+    rt->load(QStringLiteral("qrc:/demo.qml"));
 #else
-    engine.load(QStringLiteral("qrc:/main.qml"));
+    engine.load(QStringLiteral("qrc:/demo.qml"));
 #endif
     auto retcode = app.exec();
     return retcode;

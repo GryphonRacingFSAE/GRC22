@@ -1,5 +1,5 @@
 add_executable(GryphonDash main.cpp qml.qrc)
-add_executable(GryphonDashDemo Dash2019.cpp qml.qrc)
+add_executable(GryphonDashDemo DemoDash.cpp qml.qrc)
 set_target_properties(GryphonDash PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
 set_target_properties(GryphonDashDemo PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
 target_compile_definitions(GryphonDash PRIVATE ROOT_SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")

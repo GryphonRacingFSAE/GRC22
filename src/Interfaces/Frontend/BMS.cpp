@@ -1,8 +1,6 @@
-#include <BMS.hpp>
+#include <Frontend/BMS.hpp>
 
-using namespace CAN;
-
-void BMS::generateValues() {
+void fake::BMS::generateValues() {
     static float voltage = 0.0f;
     static float current = 0.0f;
     static float temp = 0.0f;

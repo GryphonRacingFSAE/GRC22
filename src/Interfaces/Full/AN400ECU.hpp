@@ -3,6 +3,8 @@
 #include <DBCInterface.hpp>
 #include <QObject>
 
+namespace real {
+
 class AN400ECU : public QObject, public CAN::DBCInterface<AN400ECU> {
     Q_OBJECT
   public:
@@ -52,3 +54,5 @@ class AN400ECU : public QObject, public CAN::DBCInterface<AN400ECU> {
 
     static constexpr uint32_t timeout_ms = 500;
 };
+    
+}

@@ -8,6 +8,8 @@
 #include <rapidcsv.h>
 #include <tools.hpp>
 
+namespace real {
+
 class VCU : public QObject, public CAN::Interface {
     Q_OBJECT
     Q_PROPERTY(
@@ -184,3 +186,5 @@ class VCU : public QObject, public CAN::Interface {
 
     static constexpr uint32_t timeout_ms = 500;
 };
+
+}

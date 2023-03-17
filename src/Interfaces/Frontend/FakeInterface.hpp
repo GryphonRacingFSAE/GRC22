@@ -24,7 +24,7 @@ class FakeInterface {
     std::atomic<bool> m_should_exit = false;
 
   protected:
-    std::chrono::duration delay = std::chrono::milliseconds(100);
+    std::chrono::milliseconds delay{100};
 };
 
-} // namespace CAN
+} // namespace fake

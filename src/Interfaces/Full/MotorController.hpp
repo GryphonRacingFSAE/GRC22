@@ -3,6 +3,8 @@
 #include <DBCInterface.hpp>
 #include <QObject>
 
+namespace real {
+
 class MotorController : public QObject, public CAN::DBCInterface<MotorController> {
     Q_OBJECT
   public:
@@ -127,3 +129,5 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
 
     static constexpr uint32_t timeout_ms = 500;
 };
+
+}
