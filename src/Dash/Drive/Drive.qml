@@ -44,47 +44,15 @@ Item {
         }
 
         //Speed
-        Item {
+        ColumnLayout {
             Layout.preferredWidth: parent.width/16*6
-
-            Text {
-                id: speedValue
-                font.pointSize: main.height/3.5
-                opacity: 0.9
-                font.bold: true
-                color:"black"
-                text: ""
-                anchors{
-                    top: parent.top
-                    topMargin: main.height/10
-                    horizontalCenter: parent.horizontalCenter
-                }
-            }
-
-            Text {
-                text: "kmph"
-                font.bold: true
-                color:"black"
-                font.pointSize: main.height/15
-                anchors{
-                    top:speedValue.bottom
-                    horizontalCenter: parent.horizontalCenter
-                    topMargin: - main.height/15
-                }
-            }
 
             Rectangle {
                 id: torqueContainer
                 color: "grey"
-                radius: height/12
-                anchors{
-                    margins: main.height/20
-                    bottom: parent.bottom
-                    horizontalCenter: parent.horizontalCenter
-                    left: parent.left
-                    right: parent.right
-                }
-                height: main.height/10
+                radius: height/3
+                Layout.fillWidth: true;
+                implicitHeight: main.height/10
 
                 Text{
                     id: torqueValue
@@ -95,6 +63,55 @@ Item {
                     anchors{
                         horizontalCenter: parent.horizontalCenter
                         verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+
+            Rectangle {
+                id: torqueContainer2
+                color: "grey"
+                radius: height/3
+                Layout.fillWidth: true;
+                implicitHeight: main.height/10
+
+                Text{
+                    id: torqueValue2
+                    text: ""
+                    font.bold: true
+                    color:"black"
+                    font.pointSize: main.height/15
+                    anchors{
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: 160
+                Text {
+                    id: speedValue
+                    font.pointSize: main.height/3.5
+                    opacity: 0.9
+                    font.bold: true
+                    color:"black"
+                    text: ""
+                    anchors{
+                        top: parent.top
+                        topMargin: main.height/10
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                }
+
+                Text {
+                    text: "kmph"
+                    font.bold: true
+                    color:"black"
+                    font.pointSize: main.height/15
+                    anchors{
+                        top:speedValue.bottom
+                        horizontalCenter: parent.horizontalCenter
+                        topMargin: - main.height/15
                     }
                 }
             }
@@ -191,6 +208,22 @@ Item {
             }
 
             torqueValue.text = `${torque.toFixed(0)}`
+        }
+
+        function onNewOutputTorque(torque) {
+            if (torque < 0)
+            {
+                torqueContainer2.color = "red"
+            }
+            else if(torque > 0)
+            {
+                torqueContainer2.color = "green"
+            }
+            else{
+                torqueContainer2.color = "grey"
+            }
+
+            torqueValue2.text = `${torque.toFixed(0)}`
         }
     }
 

@@ -56,7 +56,9 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     };
 
     static constexpr uint32_t timeout_ms = 500;
+    static constexpr uint32_t torque_slew_rate = 60; // 60 N.m/s
     std::atomic<float> requestedTorque = 0;
+    std::atomic<float> outputTorque = 0;
     
   signals:
     // DEBUG A
@@ -175,6 +177,17 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
             torque = 0.0f;
         }   
 
+        fmt::print("{}, {}\n", requestedTorque, outputTorque);
+        if (outputTorque < requestedTorque) {
+            outputTorque += torque_slew_rate * 0.02;
+            outputTorque = outputTorque > requestedTorque ? requestedTorque.load() : outputTorque.load();
+        } else if (outputTorque > requestedTorque) {
+            outputTorque -= torque_slew_rate * 0.02;
+            outputTorque = outputTorque < requestedTorque ? requestedTorque.load() : outputTorque.load();
+        }
+
+        emit newOutputTorque(outputTorque);
+
         static float velocity = 0.0f;
         float gearRatio = 3.5;
         float tireRadius = 0.203;
@@ -187,7 +200,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         /*Equation to calculate Fd*/
         /*Fd = Cr * Mg + 1/2 * P * Cd * A * V^2*/
         float forceDrag = rollResistance * carMass * 9.81 + 0.5 * rho * dragCoefficient * area * velocity * velocity;
-        float acceleration = ((requestedTorque * gearRatio) / tireRadius - forceDrag) / carMass;
+        float acceleration = ((outputTorque * gearRatio) / tireRadius - forceDrag) / carMass;
         velocity += acceleration * 0.020; // 20 milliseconds
         velocity = velocity < 0 ? 0.0 : velocity; // m/s
 

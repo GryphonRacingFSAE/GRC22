@@ -38,7 +38,7 @@ class VCU : public QObject, public CAN::Interface {
 
     Q_INVOKABLE void saveTorqueMapCSV(QList<int> torque_map) {
         auto save_path = m_torque_map_directory / fmt::format("torque_map_{}.csv", m_profile_id);
-        rapidcsv::Document doc(save_path, rapidcsv::LabelParams(-1, -1));
+        rapidcsv::Document doc(save_path.string(), rapidcsv::LabelParams(-1, -1));
         for (qsizetype i = 0; i < torque_map.size(); i++) {
             doc.SetCell(i % 14, i / 14, torque_map.at(i));
         }
@@ -49,7 +49,7 @@ class VCU : public QObject, public CAN::Interface {
     void readTorqueMapCSV() {
         m_current_torque_map.clear();
         auto read_path = m_torque_map_directory / fmt::format("torque_map_{}.csv", m_profile_id);
-        rapidcsv::Document doc(read_path, rapidcsv::LabelParams(-1, -1));
+        rapidcsv::Document doc(read_path.string(), rapidcsv::LabelParams(-1, -1));
         for (size_t i = 0; i < doc.GetRowCount(); i++) {
             for (const auto cell : doc.GetRow<int>(i)) {
                 m_current_torque_map.push_back(cell);
