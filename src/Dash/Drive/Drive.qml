@@ -55,7 +55,8 @@ Item {
                 color:"black"
                 text: ""
                 anchors{
-                    verticalCenter: parent.verticalCenter
+                    top: parent.top
+                    topMargin: main.height/10
                     horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -69,6 +70,32 @@ Item {
                     top:speedValue.bottom
                     horizontalCenter: parent.horizontalCenter
                     topMargin: - main.height/15
+                }
+            }
+
+            Rectangle {
+                id: torqueContainer
+                color: "grey"
+                radius: height/12
+                anchors{
+                    margins: main.height/20
+                    bottom: parent.bottom
+                    horizontalCenter: parent.horizontalCenter
+                    left: parent.left
+                    right: parent.right
+                }
+                height: main.height/10
+
+                Text{
+                    id: torqueValue
+                    text: ""
+                    font.bold: true
+                    color:"black"
+                    font.pointSize: main.height/15
+                    anchors{
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
                 }
             }
         }
@@ -147,6 +174,23 @@ Item {
         }
         function onNewAnalogInput1(voltage) // 12V voltage
         {
+        }
+
+        function onNewRequestedTorque(torque)
+        {
+            if (torque < 0)
+            {
+                torqueContainer.color = "red"
+            }
+            else if(torque > 0)
+            {
+                torqueContainer.color = "green"
+            }
+            else{
+                torqueContainer.color = "grey"
+            }
+
+            torqueValue.text = `${torque.toFixed(0)}`
         }
     }
 
