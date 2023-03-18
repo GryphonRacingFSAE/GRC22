@@ -31,4 +31,10 @@ ApplicationWindow {
         Keys.onBacktabPressed: selected_display = (selected_display - 1 + display_sources.length) % display_sources.length
         Keys.forwardTo: [active_dash.item]
     }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: false
+        cursorShape: Qt.BlankCursor
+    }
 }

@@ -107,6 +107,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         static float current = 0.0f;
         static float voltage = 0.0f;
         static float temp = 0.0f;
+        static float temp2 = 0.0f;
         static float internal_state = 0.0f;
         static float analog_voltage = 0.0f;
         static float torque = 0.0f;
@@ -122,7 +123,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         emit newModuleCTemp(temp);
         emit newGateDriverBoardTemp(temp);
         emit newControlBoardTemp(temp);
-        emit newCoolantTemp(temp);
+        emit newCoolantTemp(temp2);
         emit newHotSpotTemp(temp);
         emit newMotorTemp(temp);
 
@@ -153,9 +154,10 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
 
         current += 0.1f;
         voltage += 0.1f;
-        temp += 0.1f;
+        temp += 0.293f;
+        temp2 += 0.192f;
         internal_state += 0.1f;
-        analog_voltage += 0.1f;
+        analog_voltage += 0.215f;
         torque += 0.1f;
 
         if (current >= 100) {
@@ -164,14 +166,17 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         if (voltage >= 100) {
             voltage = 0.0f;
         }
-        if (temp >= 100) {
+        if (temp >= 73) {
             temp = 0.0f;
+        }
+        if (temp2 >= 63) {
+            temp2 = 8.1;
         }
         if (internal_state >= 100) {
             internal_state = 0.0f;
         }
-        if (analog_voltage >= 100) {
-            analog_voltage = 0.0f;
+        if (analog_voltage >= 82) {
+            analog_voltage = 9.2f;
         }
         if (torque >= 100) {
             torque = 0.0f;
