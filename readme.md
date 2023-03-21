@@ -1,9 +1,9 @@
 
-# Gryphon SAE Dash
+# Gryphon Racing Dash
 
 ## About
 
-An electronic dash for the 2022 Gryphon Racing Team EV
+An electronic dash for Gryphon Racing Vechicles 22-Present
 
 ## Installing Dependencies
 
