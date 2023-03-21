@@ -101,7 +101,7 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
 |-|-|
 | Motor Controller | 0x0A0-0x0CF |
 | VCU | 0x0D0-0x0DF |
-| BMS | Undecided |
+| BMS | 0x0E0-0x0EF |
 
 ## Building For RPI1.2
 
