@@ -74,6 +74,7 @@ extern Transaction_Data_Struct Transaction_Data;
 
 
 void startCAN1TxTask();
+void startCAN2TxTask();
 void startCANRxTask();
 void canMsgHandler(CANRXMsg* rxMsg);
 void initiateTransaction(CANRXMsg* rxMsg);

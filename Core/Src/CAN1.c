@@ -48,11 +48,11 @@ void startCAN2TxTask() {
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	CANRXMsg rxMsg = { .from = hcan }; // Allow the message handler to know where to send any responses to.
 	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxMsg.header, rxMsg.data);
-	osMessageQueuePut(CANRX_QHandle, &rxMsg, 0, 5);
-	TRACE_PRINT("CAN received message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
+	osMessageQueuePut(CANRX_QHandle, &rxMsg, 0, 0);
+	DEBUG_PRINT("CAN received message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
 }
 
-// INFO: Because we only have one task for receiving messages from CAN, all CAN inputs can be considered "serial"
+// INFO: Because we only have one tasxk for receiving messages from CAN, all CAN inputs can be considered "serial"
 void startCANRxTask() {
 	CANRXMsg rxMsg;
 
@@ -60,7 +60,7 @@ void startCANRxTask() {
 		// Grab CAN message from RX queue
 		if (osMessageQueueGet(CANRX_QHandle, &rxMsg, NULL, osWaitForever) == osOK) {
 			// Send out TX message on CAN
-			DEBUG_PRINT("CAN2 sending message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
+			DEBUG_PRINT("CAN receiving message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
 			canMsgHandler(&rxMsg);
 		}
 	}
