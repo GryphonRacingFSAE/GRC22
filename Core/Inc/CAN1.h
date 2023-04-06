@@ -25,6 +25,7 @@ typedef struct {
 
 typedef struct {
 	CAN_RxHeaderTypeDef header;
+	CAN_HandleTypeDef* from; // CAN port that message was received from
 	uint8_t data[8];
 } CANRXMsg;
 
@@ -73,9 +74,10 @@ extern Transaction_Data_Struct Transaction_Data;
 
 
 void startCAN1TxTask();
+void startCAN2TxTask();
 void startCANRxTask();
-void canMsgHandler(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
-void initiateTransaction(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
-void handleTransactionPacket(CAN_RxHeaderTypeDef *msgHeader, uint8_t msgData[]);
+void canMsgHandler(CANRXMsg* rxMsg);
+void initiateTransaction(CANRXMsg* rxMsg);
+void handleTransactionPacket(CANRXMsg* rxMsg);
 
 #endif /* INC_CAN1_H_ */
