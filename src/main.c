@@ -1,5 +1,44 @@
 #include <stdio.h>
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "driver/twai.h"
+
+static void twai_transmit_task()
+{
+    twai_message_t tx_msg = {
+        .data_length_code = 4,
+        .identifier = 0x123,
+        .self = 1};
+
+    for (int i = 0; i < 100; i++)
+    {
+        for (int j = 0; j < tx_msg.data_length_code; j++)
+        {
+            tx_msg.data[j] = i;
+        }
+        ESP_ERROR_CHECK(twai_transmit(&tx_msg, portMAX_DELAY));
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    vTaskDelete(NULL);
+}
+
+static void twai_receive_task()
+{
+    twai_message_t rx_msg;
+
+    for (int i = 0; i < 100; i++)
+    {
+        ESP_ERROR_CHECK(twai_receive(&rx_msg, portMAX_DELAY));
+        printf("ID: 0x%x  Data:", rx_msg.identifier);
+        for (int i = 0; i < rx_msg.data_length_code; i++)
+        {
+            printf(" %02x", rx_msg.data[i]);
+        }
+        printf("\n");
+    }
+    vTaskDelete(NULL);
+}
 
 void app_main()
 {
@@ -7,65 +46,9 @@ void app_main()
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
-    if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK)
-    {
-        printf("Driver installed\n");
-    }
-    else
-    {
-        printf("Failed to install driver\n");
-        return;
-    }
+    ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
+    ESP_ERROR_CHECK(twai_start());
 
-    if (twai_start() == ESP_OK)
-    {
-        printf("Driver started\n");
-    }
-    else
-    {
-        printf("Failed to start driver\n");
-        return;
-    }
-
-    twai_message_t tx_msg;
-    twai_message_t rx_msg;
-
-    while (true)
-    {
-        tx_msg.identifier = 0x123;
-        tx_msg.data_length_code = 4;
-        tx_msg.data[0] = 0xAA;
-        tx_msg.data[1] = 0xBB;
-        tx_msg.data[2] = 0xCC;
-        tx_msg.data[3] = 0xDD;
-
-        if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1000)) == ESP_OK)
-        {
-            printf("Message queued for transmission\n");
-        }
-        else
-        {
-            printf("Failed to queue message for transmission\n");
-        }
-
-        if (twai_receive(&rx_msg, pdMS_TO_TICKS(10000)) == ESP_OK)
-        {
-            printf("Message received\n");
-
-            printf("ID: 0x%x  Data:", rx_msg.identifier);
-            if (!(rx_msg.rtr))
-            {
-                for (int i = 0; i < rx_msg.data_length_code; i++)
-                {
-                    printf(" %02X", rx_msg.data[i]);
-                }
-            }
-            printf("\n");
-        }
-        else
-        {
-            printf("Failed to receive message\n");
-            return;
-        }
-    }
+    xTaskCreate(twai_transmit_task, "twai_transmit_task", 2048, NULL, 5, NULL);
+    xTaskCreate(twai_receive_task, "twai_receive_task", 2048, NULL, 5, NULL);
 }
