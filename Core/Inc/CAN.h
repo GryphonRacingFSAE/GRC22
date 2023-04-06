@@ -5,8 +5,8 @@
  *      Author: Matt
  */
 
-#ifndef INC_CAN1_H_
-#define INC_CAN1_H_
+#ifndef INC_CAN_H_
+#define INC_CAN_H_
 
 #include "main.h"
 #include "cmsis_os.h"
@@ -80,4 +80,4 @@ void canMsgHandler(CANRXMsg* rxMsg);
 void initiateTransaction(CANRXMsg* rxMsg);
 void handleTransactionPacket(CANRXMsg* rxMsg);
 
-#endif /* INC_CAN1_H_ */
+#endif /* INC_CAN_H_ */

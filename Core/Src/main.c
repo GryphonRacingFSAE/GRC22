@@ -17,13 +17,13 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <CAN.h>
 #include "main.h"
 #include "cmsis_os.h"
 #include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "CAN1.h"
 #include "APPS.h"
 #include "utils.h"
 /* USER CODE END Includes */

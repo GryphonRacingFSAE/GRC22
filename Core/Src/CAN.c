@@ -4,7 +4,7 @@
  *  Created on: Jan 16, 2023
  *      Author: Matt, David, Dallas Hart
  */
-#include "CAN1.h"
+#include <CAN.h>
 #include "utils.h"
 #include "control.h"
 #include "APPS.h"

@@ -5,15 +5,17 @@
  *      Author: Matt and Ian McKechnie
  */
 
+#include <CAN.h>
 #include "APPS.h"
 #include "utils.h"
-#include "CAN1.h"
 #include "control.h"
 #include <string.h>
 
 #define AVG_WINDOW			3
 #define APPS1_MIN 			410
 #define APPS1_MAX			1230
+#define APPS2_MIN 			410
+#define APPS2_MAX			1230
 #define APPS_DIFF_THRESH	90
 
 int16_t interpolate(int16_t xdiff, int16_t ydiff, int16_t yoffset, int16_t xoffset_from_x1) {
@@ -57,8 +59,6 @@ void startAPPSTask() {
 	//used for averaging the apps signal
 	int32_t apps1Avg = 0;
 	int32_t apps2Avg = 0;
-
-	int32_t appsPos = 0;
 
 	//circular buffers for moving average
 	uint32_t apps1PrevMesurments[AVG_WINDOW];
@@ -104,13 +104,23 @@ void startAPPSTask() {
 		apps1Avg = apps1Avg/AVG_WINDOW;
 		apps2Avg = apps2Avg/AVG_WINDOW;
 
+		int32_t appsPos1 = (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
+		int32_t appsPos2 = (apps2Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
 
-		//TODO compare APPS signal to detect plausibility error;
-
-		appsPos= (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
+		// FSAE 2023 Rules V2 T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
+		// TODO: T.4.2.5
+		// TODO?: T.4.2.9
+		// TODO?: T.4.2.10
+		// TODO: T.4.3.3
+		// TODO: T.4.3.4
+		if (ABS(appsPos1 - appsPos2) > 10) {
+			appsPos = 0; // Treat as a fault
+		} else {
+			int32_t averageAppsPos = (appsPos1 + appsPos2) / 2;
+			appsPos = MAX(MIN(averageAppsPos, 100),0); // Clamp to between 0-100%
+		}
 
 		//Used for BSPC
-		appsPos = MAX(MIN(appsPos,100),0);
 
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
 			APPS_Data.pedalPos = appsPos;
