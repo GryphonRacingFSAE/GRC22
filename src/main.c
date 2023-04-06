@@ -52,7 +52,7 @@ void app_main()
         {
             printf("Message received\n");
 
-            printf("ID: 0x%lx  Data: ", rx_msg.identifier);
+            printf("ID: 0x%x  Data:", rx_msg.identifier);
             if (!(rx_msg.rtr))
             {
                 for (int i = 0; i < rx_msg.data_length_code; i++)
