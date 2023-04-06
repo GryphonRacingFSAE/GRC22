@@ -17,6 +17,7 @@
 
 
 APPS_Data_Struct APPS_Data;
+Torque_Map_Struct Torque_Map_Data = { { {} }, { {} }, &Torque_Map_Data.map1 };
 
 //Buffer from DMA
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
@@ -29,7 +30,7 @@ void startAPPSTask() {
 
 	int32_t appsPos = 0;
 
-	CANMsg txMsg;
+	CANTXMsg txMsg;
 
 	//circular buffers for moving average
 	uint32_t apps1PrevMesurments[AVG_WINDOW];
@@ -98,23 +99,20 @@ void startAPPSTask() {
 		//TODO format can message as motor controller torque command
 
 
-		txMsg.aData[3] = apps1Avg & 0xFFU;
-		txMsg.aData[2] = apps1Avg >> 8 & 0xFFU;
-		txMsg.aData[1] = apps1Avg >> 16 & 0xFFU;
-		txMsg.aData[0] = apps1Avg >> 24 & 0xFFU;
+		txMsg.data[3] = apps1Avg & 0xFFU;
+		txMsg.data[2] = apps1Avg >> 8 & 0xFFU;
+		txMsg.data[1] = apps1Avg >> 16 & 0xFFU;
+		txMsg.data[0] = apps1Avg >> 24 & 0xFFU;
 
 		txMsg.header.DLC = 4;
 		txMsg.header.StdId = 0x69U;
-
-		txMsg.header.ExtId = 0;
-		txMsg.header.IDE = 0;
+		txMsg.header.IDE = CAN_ID_STD;
 		txMsg.header.RTR = CAN_RTR_DATA;
-		txMsg.header.TransmitGlobalTime = DISABLE;
 
-		myprintf("APPS1:%d, APPS_POS:%d\n\r", apps1Avg, appsPos);
+		DEBUG_PRINT("APPS1:%d, APPS_POS:%d\r\n", apps1Avg, appsPos);
 
 
-		osMessageQueuePut(CAN1_QHandle, &txMsg, 0, 5);
+		osMessageQueuePut(CAN2_QHandle, &txMsg, 0, 5);
 
 
 		tick+= APPS_PERIOD;
