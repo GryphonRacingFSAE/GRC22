@@ -57,7 +57,7 @@ Text {
   font.pointSize: battery.height/3
   color: "black"
   font.bold: true
-  text: `Battery: ${percent.toFixed(1)}%`
+  text: `${percent.toFixed(1)}%`
 
   anchors {
     verticalCenter: batteryIcon.verticalCenter
