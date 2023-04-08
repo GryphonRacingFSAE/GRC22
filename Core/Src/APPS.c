@@ -52,7 +52,7 @@ Torque_Map_Struct Torque_Map_Data = { {
 }, Torque_Map_Data.map1 };
 
 //Buffer from DMA
-volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
+volatile uint16_t ADC1_buff[ADC1_BUFF_LEN] = {};
 
 void startAPPSTask() {
 
@@ -60,16 +60,13 @@ void startAPPSTask() {
 	int32_t apps1Avg = 0;
 	int32_t apps2Avg = 0;
 
-	//circular buffers for moving average
-	uint32_t apps1PrevMesurments[AVG_WINDOW];
-	uint32_t apps2PrevMesurments[AVG_WINDOW];
-
-	//position in circular buffer used for moving average
+	// Circular buffer of previous results of each apps signal
 	uint8_t circBuffPos = 0;
+	uint32_t apps1PrevMesurments[AVG_WINDOW] = {};
+	uint32_t apps2PrevMesurments[AVG_WINDOW] = {};
 
-	uint32_t tick;
 
-	tick = osKernelGetTickCount();
+	uint32_t tick = osKernelGetTickCount();
 
 	while (1) {
 
@@ -105,20 +102,22 @@ void startAPPSTask() {
 		apps2Avg = apps2Avg/AVG_WINDOW;
 
 		int32_t appsPos1 = (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
-		int32_t appsPos2 = (apps2Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
+		int32_t appsPos2 = (apps2Avg - APPS2_MIN) * 100 /(APPS2_MAX - APPS2_MIN);
 
-		// FSAE 2023 Rules V2 T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
+		// RULE (2023 V2): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
 		// TODO: T.4.2.5
 		// TODO?: T.4.2.9
 		// TODO?: T.4.2.10
 		// TODO: T.4.3.3
 		// TODO: T.4.3.4
-		if (ABS(appsPos1 - appsPos2) > 10) {
-			appsPos = 0; // Treat as a fault
-		} else {
+		int32_t appsPos = 0;
+		if (ABS(appsPos1 - appsPos2) <= 10) {
 			int32_t averageAppsPos = (appsPos1 + appsPos2) / 2;
 			appsPos = MAX(MIN(averageAppsPos, 100),0); // Clamp to between 0-100%
+		} else {
+			// FAULT
 		}
+		DEBUG_PRINT("APPS1:%d, APPS2:%d, APPS_POS:%d\r\n", apps1Avg, apps2Avg, appsPos);
 
 		//Used for BSPC
 
@@ -167,8 +166,6 @@ void startAPPSTask() {
 		} else {
 			CRITICAL_PRINT("Missed osMutexAcquire(Torque_Map_MtxHandle): APPS.c:startAPPSTask\n");
 		}
-
-		DEBUG_PRINT("APPS1:%d, APPS_POS:%d\r\n", apps1Avg, appsPos);
 
 		osDelayUntil(tick += APPS_PERIOD);
 	}

@@ -76,20 +76,12 @@ void Error_Handler(void);
 #define ADC3_AUX8_GPIO_Port GPIOF
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOH
-#define ADC2_DMPR1_Pin GPIO_PIN_0
-#define ADC2_DMPR1_GPIO_Port GPIOC
 #define ADC2_DMPR2_Pin GPIO_PIN_1
 #define ADC2_DMPR2_GPIO_Port GPIOC
-#define ADC2_DMPR3_Pin GPIO_PIN_2
-#define ADC2_DMPR3_GPIO_Port GPIOC
-#define ADC2_DMPR4_Pin GPIO_PIN_3
-#define ADC2_DMPR4_GPIO_Port GPIOC
-#define ADC1_APPS1_Pin GPIO_PIN_0
+#define ADC1_APPS2_Pin GPIO_PIN_0
+#define ADC1_APPS2_GPIO_Port GPIOA
+#define ADC1_APPS1_Pin GPIO_PIN_1
 #define ADC1_APPS1_GPIO_Port GPIOA
-#define ACD1_APPS2_Pin GPIO_PIN_1
-#define ACD1_APPS2_GPIO_Port GPIOA
-#define ADC3_AUX1_Pin GPIO_PIN_2
-#define ADC3_AUX1_GPIO_Port GPIOA
 #define ADC3_AUX2_Pin GPIO_PIN_3
 #define ADC3_AUX2_GPIO_Port GPIOA
 #define LD1_Pin GPIO_PIN_0
@@ -154,6 +146,8 @@ void Error_Handler(void);
 #define GPIO_BRAKE_LIGHT_GPIO_Port GPIOG
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define LD2_Pin GPIO_PIN_7
+#define LD2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
