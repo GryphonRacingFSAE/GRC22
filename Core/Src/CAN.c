@@ -13,33 +13,16 @@
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 
-void startCAN1TxTask() {
+void startCANTxTask() {
 	CANTXMsg txMsg;
 
 	while (1) {
 		// Grab CAN message from CAN1 queue
-		if (osMessageQueueGet(CAN1_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
+		if (osMessageQueueGet(CANTX_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
 			// Send out TX message on CAN
-			uint32_t mailbox_location = 0;
 			TRACE_PRINT("CAN1 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
-			if (HAL_CAN_AddTxMessage(&hcan1, &txMsg.header, txMsg.data, &mailbox_location) != HAL_OK) {
-				ERROR_PRINT("Could not transmit on CAN1!\r\n");
-			}
-		}
-	}
-}
-
-void startCAN2TxTask() {
-	CANTXMsg txMsg;
-
-	while (1) {
-		// Grab CAN message from CAN2 queue
-		if (osMessageQueueGet(CAN2_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
-			// Send out TX message on CAN
-			TRACE_PRINT("CAN2 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
-			uint32_t mailbox_location = 0;
-			if (HAL_CAN_AddTxMessage(&hcan2, &txMsg.header, txMsg.data, &mailbox_location) != HAL_OK) {
-				ERROR_PRINT("Could not transmit on CAN2!\r\n");
+			if (HAL_CAN_AddTxMessage(txMsg.to, &txMsg.header, txMsg.data, NULL) != HAL_OK) {
+				ERROR_PRINT("Could not transmit on CAN!\r\n");
 			}
 		}
 	}
@@ -49,7 +32,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	CANRXMsg rxMsg = { .from = hcan }; // Allow the message handler to know where to send any responses to.
 	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxMsg.header, rxMsg.data);
 	osMessageQueuePut(CANRX_QHandle, &rxMsg, 0, 0);
-	DEBUG_PRINT("CAN received message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
+	TRACE_PRINT("CAN received message: %d or %d\r\n", rxMsg.header.StdId, rxMsg.header.ExtId);
 }
 
 // INFO: Because we only have one tasxk for receiving messages from CAN, all CAN inputs can be considered "serial"
@@ -118,19 +101,14 @@ void sendTransactionResponse(Transaction_Response_Struct* response, CAN_HandleTy
         .header = {
             .DLC = sizeof(response),
             .StdId = 0x0D2
-        }
+        },
+		.to = target_bus
     };
     
     // Transaction response only contains uint8_t as effectively uint8_t[8]. So this should be a safe operation
     memcpy(&response_packet.data, &response, sizeof(response));
 
-    if (target_bus == &hcan1) {
-    	osMessageQueuePut(CAN1_QHandle, &response_packet, 0, 5);
-    } else if (target_bus == &hcan2) {
-    	osMessageQueuePut(CAN2_QHandle, &response_packet, 0, 5);
-    } else {
-    	ERROR_PRINT("Unknown target bus value: %p", target_bus);
-    }
+	osMessageQueuePut(CANTX_QHandle, &response_packet, 0, 5);
 }
 
 void initiateTransaction(CANRXMsg* rxMsg) {

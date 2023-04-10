@@ -16,7 +16,10 @@
 #define APPS1_MAX			1230
 #define APPS2_MIN 			410
 #define APPS2_MAX			1230
-#define APPS_DIFF_THRESH	90
+
+
+extern CAN_HandleTypeDef hcan1;
+extern CAN_HandleTypeDef hcan2;
 
 int16_t interpolate(int16_t xdiff, int16_t ydiff, int16_t yoffset, int16_t xoffset_from_x1) {
 	// Interpolation formula: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
@@ -120,7 +123,7 @@ void startAPPSTask() {
 		DEBUG_PRINT("APPS1:%d, APPS2:%d, APPS_POS:%d\r\n", apps1Avg, apps2Avg, appsPos);
 
 		//Used for BSPC
-
+		// TODO: RULE (2023 V2): EV.4.1.3 No regen < 5km/h
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
 			APPS_Data.pedalPos = appsPos;
 			osMutexRelease(APPS_Data_MtxHandle);
@@ -182,6 +185,7 @@ void requestTorque(int16_t requestedTorque) {
 	txMsg.header.RTR = CAN_RTR_DATA;
 	txMsg.header.StdId = 0x0C0;
 	txMsg.header.DLC = 8;
+	txMsg.to = &hcan2;
 
 	// Bytes 0 & 1 is the requested torque
 	txMsg.data[0] = bitwiseRequestedTorque & 0xFF;
@@ -205,5 +209,5 @@ void requestTorque(int16_t requestedTorque) {
 	txMsg.data[7] = 0;
 
 	// Send over CAN2
-	osMessageQueuePut(CAN2_QHandle, &txMsg, 0, 5);
+	osMessageQueuePut(CANTX_QHandle, &txMsg, 0, 5);
 }

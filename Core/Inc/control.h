@@ -42,5 +42,6 @@ void BSPC(); // Brake system plausibility check
 void RTD(); // Ready to drive
 void pumpCtrl(); // Motor & Motor controller cooling pump control
 void fanCtrl(); // Accumulator cooling fan control
+void LEDCtrl(); // Info
 
 #endif /* INC_CONTROL_H_ */

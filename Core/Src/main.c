@@ -62,10 +62,10 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for CAN1TxTask */
-osThreadId_t CAN1TxTaskHandle;
-const osThreadAttr_t CAN1TxTask_attributes = {
-  .name = "CAN1TxTask",
+/* Definitions for CANTxTask */
+osThreadId_t CANTxTaskHandle;
+const osThreadAttr_t CANTxTask_attributes = {
+  .name = "CANTxTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityHigh1,
 };
@@ -90,41 +90,16 @@ const osThreadAttr_t ControlTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for CAN2TxTask */
-osThreadId_t CAN2TxTaskHandle;
-const osThreadAttr_t CAN2TxTask_attributes = {
-  .name = "CAN2TxTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh1,
-};
-/* Definitions for LEDTask */
-osThreadId_t LEDTaskHandle;
-const osThreadAttr_t LEDTask_attributes = {
-  .name = "LEDTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
-/* Definitions for CAN1TX_Q */
-osMessageQueueId_t CAN1TX_QHandle;
-uint8_t CAN1TX_QBuffer[ 16 * sizeof( CANTXMsg ) ];
-osStaticMessageQDef_t CAN1TX_QControlBlock;
-const osMessageQueueAttr_t CAN1TX_Q_attributes = {
-  .name = "CAN1TX_Q",
-  .cb_mem = &CAN1TX_QControlBlock,
-  .cb_size = sizeof(CAN1TX_QControlBlock),
-  .mq_mem = &CAN1TX_QBuffer,
-  .mq_size = sizeof(CAN1TX_QBuffer)
-};
-/* Definitions for CAN2TX_Q */
-osMessageQueueId_t CAN2TX_QHandle;
-uint8_t CAN2TX_QBuffer[ 16 * sizeof( CANTXMsg ) ];
-osStaticMessageQDef_t CAN2TX_QControlBlock;
-const osMessageQueueAttr_t CAN2TX_Q_attributes = {
-  .name = "CAN2TX_Q",
-  .cb_mem = &CAN2TX_QControlBlock,
-  .cb_size = sizeof(CAN2TX_QControlBlock),
-  .mq_mem = &CAN2TX_QBuffer,
-  .mq_size = sizeof(CAN2TX_QBuffer)
+/* Definitions for CANTX_Q */
+osMessageQueueId_t CANTX_QHandle;
+uint8_t CANTX_QBuffer[ 32 * sizeof( CANTXMsg ) ];
+osStaticMessageQDef_t CANTX_QControlBlock;
+const osMessageQueueAttr_t CANTX_Q_attributes = {
+  .name = "CANTX_Q",
+  .cb_mem = &CANTX_QControlBlock,
+  .cb_size = sizeof(CANTX_QControlBlock),
+  .mq_mem = &CANTX_QBuffer,
+  .mq_size = sizeof(CANTX_QBuffer)
 };
 /* Definitions for CANRX_Q */
 osMessageQueueId_t CANRX_QHandle;
@@ -184,12 +159,10 @@ static void MX_USART3_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_RTC_Init(void);
 void StartDefaultTask(void *argument);
-extern void startCAN1TxTask(void *argument);
+extern void startCANTxTask(void *argument);
 extern void startAPPSTask(void *argument);
 extern void startCANRxTask(void *argument);
 extern void startControlTask(void *argument);
-extern void startCAN2TxTask(void *argument);
-extern void startLEDTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -268,11 +241,8 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
-  /* creation of CAN1TX_Q */
-  CAN1TX_QHandle = osMessageQueueNew (16, sizeof(CANTXMsg), &CAN1TX_Q_attributes);
-
-  /* creation of CAN2TX_Q */
-  CAN2TX_QHandle = osMessageQueueNew (16, sizeof(CANTXMsg), &CAN2TX_Q_attributes);
+  /* creation of CANTX_Q */
+  CANTX_QHandle = osMessageQueueNew (32, sizeof(CANTXMsg), &CANTX_Q_attributes);
 
   /* creation of CANRX_Q */
   CANRX_QHandle = osMessageQueueNew (32, sizeof(CANRXMsg), &CANRX_Q_attributes);
@@ -285,8 +255,8 @@ int main(void)
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of CAN1TxTask */
-  CAN1TxTaskHandle = osThreadNew(startCAN1TxTask, NULL, &CAN1TxTask_attributes);
+  /* creation of CANTxTask */
+  CANTxTaskHandle = osThreadNew(startCANTxTask, NULL, &CANTxTask_attributes);
 
   /* creation of APPSTask */
   APPSTaskHandle = osThreadNew(startAPPSTask, NULL, &APPSTask_attributes);
@@ -296,12 +266,6 @@ int main(void)
 
   /* creation of ControlTask */
   ControlTaskHandle = osThreadNew(startControlTask, NULL, &ControlTask_attributes);
-
-  /* creation of CAN2TxTask */
-  CAN2TxTaskHandle = osThreadNew(startCAN2TxTask, NULL, &CAN2TxTask_attributes);
-
-  /* creation of LEDTask */
-  LEDTaskHandle = osThreadNew(startLEDTask, NULL, &LEDTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

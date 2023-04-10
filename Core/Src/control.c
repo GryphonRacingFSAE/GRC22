@@ -21,6 +21,7 @@ void startControlTask() {
 		RTD();
 		pumpCtrl();
 		fanCtrl();
+		LEDCtrl();
 		osDelayUntil(tick += CTRL_PERIOD);
 	}
 }
@@ -107,4 +108,8 @@ void fanCtrl() {
 		HAL_GPIO_WritePin(GPIO_ACC_FAN_GPIO_Port, GPIO_ACC_FAN_Pin, GPIO_PIN_SET);
 		ERROR_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:fanCtrl\n");
 	}
+}
+
+void LEDCtrl() {
+
 }
