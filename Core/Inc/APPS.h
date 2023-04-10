@@ -11,20 +11,30 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-#define ADC1_BUFF_LEN 64
+
+#define ADC1_CHANNEL_BUFF_LEN 1024
+#define ADC1_CHANNELS 2
+#define ADC1_BUFF_LEN (ADC1_CHANNEL_BUFF_LEN * ADC1_CHANNELS)
 
 extern volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
 
 extern osMutexId_t APPS_Data_MtxHandle;
 
 typedef struct {
-	uint16_t torque;
-	uint16_t pedalPos;
 	uint32_t flags;
+	uint16_t pedalPos;
 } APPS_Data_Struct;
 
 #define APPS_BSPC_INVALID 0x1
 #define APPS_RTD_INVALID 0x2
+// RULE (2023 V2): T.4.2.10 Sensor out of defined range
+#define APPS_SENSOR_OUT_OF_RANGE_INVALID 0x4
+// RULE (2023 V2): T.4.2.4 APPS signals are within 10% of pedal position from each other
+#define APPS_SENSOR_CONFLICT_INVALID 0x8
+
+
+// RULE (2023 V2): T.4.3.4 BSE sensor out of defined range
+#define BRAKE_SENSOR_OUT_OF_RANGE_INVALID 0x10
 
 extern APPS_Data_Struct APPS_Data;
 
