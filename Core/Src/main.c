@@ -18,13 +18,16 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "CAN.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+typedef StaticQueue_t osStaticMessageQDef_t;
+typedef StaticSemaphore_t osStaticSemaphoreDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -45,6 +48,71 @@ CAN_HandleTypeDef hcan;
 
 UART_HandleTypeDef huart1;
 
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for CANTxTask */
+osThreadId_t CANTxTaskHandle;
+const osThreadAttr_t CANTxTask_attributes = {
+  .name = "CANTxTask",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
+};
+/* Definitions for CANRxTask */
+osThreadId_t CANRxTaskHandle;
+const osThreadAttr_t CANRxTask_attributes = {
+  .name = "CANRxTask",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
+};
+/* Definitions for ThermMonTask */
+osThreadId_t ThermMonTaskHandle;
+const osThreadAttr_t ThermMonTask_attributes = {
+  .name = "ThermMonTask",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for TEMInterTask */
+osThreadId_t TEMInterTaskHandle;
+const osThreadAttr_t TEMInterTask_attributes = {
+  .name = "TEMInterTask",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for CANTX_Q */
+osMessageQueueId_t CANTX_QHandle;
+uint8_t CANTXBuffer[ 32 * sizeof( CANTXMsg ) ];
+osStaticMessageQDef_t CANTXControlBlock;
+const osMessageQueueAttr_t CANTX_Q_attributes = {
+  .name = "CANTX_Q",
+  .cb_mem = &CANTXControlBlock,
+  .cb_size = sizeof(CANTXControlBlock),
+  .mq_mem = &CANTXBuffer,
+  .mq_size = sizeof(CANTXBuffer)
+};
+/* Definitions for CANRX_Q */
+osMessageQueueId_t CANRX_QHandle;
+uint8_t CANRXBuffer[ 32 * sizeof( CANRXMsg ) ];
+osStaticMessageQDef_t CANRXControlBlock;
+const osMessageQueueAttr_t CANRX_Q_attributes = {
+  .name = "CANRX_Q",
+  .cb_mem = &CANRXControlBlock,
+  .cb_size = sizeof(CANRXControlBlock),
+  .mq_mem = &CANRXBuffer,
+  .mq_size = sizeof(CANRXBuffer)
+};
+/* Definitions for GRCprintfSema */
+osSemaphoreId_t GRCprintfSemaHandle;
+osStaticSemaphoreDef_t GRCprintfSemaControlBlock;
+const osSemaphoreAttr_t GRCprintfSema_attributes = {
+  .name = "GRCprintfSema",
+  .cb_mem = &GRCprintfSemaControlBlock,
+  .cb_size = sizeof(GRCprintfSemaControlBlock),
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -55,6 +123,12 @@ static void MX_GPIO_Init(void);
 static void MX_CAN_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
+void StartDefaultTask(void *argument);
+extern void startCANTxTask(void *argument);
+extern void startCANRxTask(void *argument);
+extern void startThermistorMonitorTask(void *argument);
+extern void startTEMInterfaceTask(void *argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,6 +173,64 @@ int main(void)
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* creation of GRCprintfSema */
+  GRCprintfSemaHandle = osSemaphoreNew(1, 1, &GRCprintfSema_attributes);
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of CANTX_Q */
+  CANTX_QHandle = osMessageQueueNew (32, sizeof(CANTXMsg), &CANTX_Q_attributes);
+
+  /* creation of CANRX_Q */
+  CANRX_QHandle = osMessageQueueNew (32, sizeof(CANRXMsg), &CANRX_Q_attributes);
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of CANTxTask */
+  CANTxTaskHandle = osThreadNew(startCANTxTask, NULL, &CANTxTask_attributes);
+
+  /* creation of CANRxTask */
+  CANRxTaskHandle = osThreadNew(startCANRxTask, NULL, &CANRxTask_attributes);
+
+  /* creation of ThermMonTask */
+  ThermMonTaskHandle = osThreadNew(startThermistorMonitorTask, NULL, &ThermMonTask_attributes);
+
+  /* creation of TEMInterTask */
+  TEMInterTaskHandle = osThreadNew(startTEMInterfaceTask, NULL, &TEMInterTask_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -106,12 +238,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_GPIO_TogglePin(A_GPIO_Port, A_Pin);
-	  HAL_Delay(100);
-	  HAL_GPIO_TogglePin(B_GPIO_Port, B_Pin);
-	  HAL_Delay(100);
-	  HAL_GPIO_TogglePin(C_GPIO_Port, C_Pin);
-	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -132,7 +258,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -142,7 +270,7 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
@@ -222,11 +350,11 @@ static void MX_CAN_Init(void)
 
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 16;
+  hcan.Init.Prescaler = 1;
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_1TQ;
-  hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_13TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = DISABLE;
   hcan.Init.AutoWakeUp = DISABLE;
@@ -238,6 +366,24 @@ static void MX_CAN_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN_Init 2 */
+
+  // Set up and configure CAN2 filter
+  CAN_FilterTypeDef canfilterconfig;
+  canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
+  canfilterconfig.FilterBank = 10;  // anything between 0 to SlaveStartFilterBank
+  canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+  canfilterconfig.FilterIdHigh = 0x0000;
+  canfilterconfig.FilterIdLow = 0x0000;
+  canfilterconfig.FilterMaskIdHigh = 0x0000;
+  canfilterconfig.FilterMaskIdLow = 0x0000;
+  canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  canfilterconfig.SlaveStartFilterBank = 0;  // 13 to 27 are assigned to slave CAN (CAN 2) OR 0 to 12 are assgned to CAN1
+  HAL_CAN_ConfigFilter(&hcan, &canfilterconfig);
+
+  // Activate Notifications and start up CAN interface...
+  HAL_CAN_Start(&hcan);
+  HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
 
   /* USER CODE END CAN_Init 2 */
 
@@ -291,17 +437,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, A_Pin|B_Pin|C_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, ADDR0_Pin|ADDR1_Pin|ADDR2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : A_Pin B_Pin C_Pin */
-  GPIO_InitStruct.Pin = A_Pin|B_Pin|C_Pin;
+  /*Configure GPIO pins : ADDR0_Pin ADDR1_Pin ADDR2_Pin */
+  GPIO_InitStruct.Pin = ADDR0_Pin|ADDR1_Pin|ADDR2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DIP1_Pin DIP2_Pin DIP3_Pin */
-  GPIO_InitStruct.Pin = DIP1_Pin|DIP2_Pin|DIP3_Pin;
+  /*Configure GPIO pins : DIP0_Pin DIP1_Pin DIP2_Pin */
+  GPIO_InitStruct.Pin = DIP0_Pin|DIP1_Pin|DIP2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -311,6 +457,24 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
