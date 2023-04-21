@@ -4,7 +4,7 @@
 #include "cmsis_os2.h"
 
 // 2ms between measurements
-#define THERMISTOR_PERIOD 2
+#define THERMISTOR_PERIOD 500
 
 typedef struct {
 	uint32_t thermistors[4 * 8];
