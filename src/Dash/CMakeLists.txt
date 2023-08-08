@@ -7,7 +7,6 @@ target_compile_definitions(GryphonDash2019 PRIVATE ROOT_SOURCE_PATH="${CMAKE_CUR
 target_link_libraries(GryphonDash PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
 target_link_libraries(GryphonDash2019 PRIVATE fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
 
-# TODO: Add the deployment for linux
 if(WIN32)
     set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
     set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
@@ -21,35 +20,11 @@ if(WIN32)
         COMMAND windeployqt.exe --qmldir ${CMAKE_CURRENT_SOURCE_DIR} $<TARGET_FILE_DIR:GryphonDash2019>
     )
 elseif(UNIX AND NOT APPLE)
-    # Package into AppImages only when LINUX_X86_64_BUILD_APP_IMAGE env var is defined
-    if(DEFINED ENV{LINUX_X86_64_BUILD_APP_IMAGE})
-        execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/bin)
-        file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
-        add_custom_command(
-            TARGET GryphonDash POST_BUILD
-            DEPENDS GryphonDash.desktop images/GryphonDash.png
-            COMMAND rm -r -f $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
-            COMMAND mkdir -p $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
-            COMMAND cp ${dbc_files} -t $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin
-            COMMAND linuxdeploy-x86_64.AppImage
-                    -v2
-                    --appdir $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
-                    --executable $<TARGET_FILE:GryphonDash> 
-                    --icon-file ${CMAKE_CURRENT_SOURCE_DIR}/images/GryphonDash.png
-                    --desktop-file ${CMAKE_CURRENT_SOURCE_DIR}/GryphonDash.desktop
-                    --plugin qt
-                    --output appimage
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-            COMMAND_EXPAND_LISTS
-        )
-    else()
-        message(STATUS "No deployment for Linux, must use VirtualRunEnv")
-        set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
-        set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
-        file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
-        file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash>)
-        file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash2019>)
-    endif()
+    set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
+    set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
+    file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
+    file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash>)
+    file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash2019>)
 elseif(APPLE)
     message(STATUS "No deployment for Apple, implement.")
 else()
