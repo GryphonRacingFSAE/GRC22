@@ -29,7 +29,6 @@ class GRCDash(ConanFile):
             raise ConanInvalidConfiguration("Non-Linux backend for canbus not supported")
 
     def configure(self):
-        self.options["qt"].shared = True
         self.options["qt"].qtdeclarative = True
         self.options["qt"].qtshadertools = True
         self.options["qt"].with_libjpeg = "libjpeg"
@@ -58,15 +57,6 @@ class GRCDash(ConanFile):
     def build(self):
         env = Environment()
         env.append_path("PATH", self.deps_cpp_info["qt"].bin_paths[0].replace("\\", "/")) # Add qmake & windeployqt to path
-        if self.settings.os == "Linux" and self.settings.arch == "x86_64":
-            self.output.info("Using Linuxdeploy to deploy executable.")
-            self.run(f'wget -c -nv "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage" -P {self.build_folder}')
-            self.run(f'wget -c -nv "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -P {self.build_folder}')
-            self.run(f'chmod a+x {self.build_folder}/linuxdeploy-plugin-qt-x86_64.AppImage')
-            self.run(f'chmod a+x {self.build_folder}/linuxdeploy-x86_64.AppImage')
-            env.append_path("PATH", str(self.build_folder)) # Add linuxdeploy to path
-            env.define("LINUX_X86_64_BUILD_APP_IMAGE", "1")
-            env.define("QML_SOURCES_PATHS", os.path.join(self.source_folder, "src/Dash"))
         with env.vars(self).apply():
             cmake = CMake(self)
             cmake.configure()
