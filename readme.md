@@ -72,21 +72,6 @@ source build/activate_run.sh # RPi (maybe required on other linux distros)
 source build/deactivate_run.sh # RPi (maybe required on other linux distros)
 ```
 
-## Code Standards
-
-Naming standards are as follows:
-```C++
-namespace PascalCase {}
-class PascalCase {};
-int camelCase() {};
-int snake_case = 0;
-```
-
-Formatting is handled by clang format.
-```bash
-find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root folder of the repo.
-```
-
 ## Branch rules
 
 - Name your branch as follows: `firstname/branchtopic`, ex. `dallas/move-from-previous-repo`
