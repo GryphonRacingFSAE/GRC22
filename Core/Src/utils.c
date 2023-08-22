@@ -1,11 +1,3 @@
-/*
- * utils.c
- *	Shared utilities
- *
- *  Created on: Jan 19, 2023
- *      Author: Matt
- */
-
 #include "utils.h"
 #include <stdio.h>
 #include <stdarg.h>
@@ -13,7 +5,12 @@
 #include <sys/unistd.h> // STDOUT_FILENO, STDERR_FILENO
 
 // UART Handle for _write
-extern UART_HandleTypeDef huart1;
+//extern UART_HandleTypeDef huart1;
+
+// SWO IS UNAVAILABLE ON CHEAP CHINESE STLINKS:
+// https://embedblog.eu/?p=673
+// It's possible to mod them to enable it. (Dallas has successfully done this)
+
 
 // Low-level write handler for our printf
 int _write(int file, char *data, int len) {
@@ -23,11 +20,17 @@ int _write(int file, char *data, int len) {
 		return -1;
 	}
 
-	// Transmit in blocking mode over UART3 with an arbitrary timeout of 10ms
-	HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, (uint8_t*) data, len, 10);
+	// Sends over SWO
+	for (int idx = 0; idx < len; idx++) {
+		ITM_SendChar(*data++);
+	}
+	return len;
 
+	// If we ever switch back to UART - This is the code for that
+	//	// Transmit in blocking mode over UART1 with an arbitrary timeout of 10ms
+	//	HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, (uint8_t*) data, len, 10);
 	// Return # of bytes written - as best we can tell
-	return (status == HAL_OK ? len : 0);
+	//	return (status == HAL_OK ? len : 0)
 }
 
 // Semaphore ID for custom printf
