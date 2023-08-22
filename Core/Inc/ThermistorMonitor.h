@@ -7,7 +7,7 @@
 #define THERMISTOR_PERIOD 500
 
 typedef struct {
-	uint32_t thermistors[4 * 8];
+	int32_t thermistors[4 * 8];
 } ThermistorData_Struct;
 
 extern ThermistorData_Struct ThermistorData;
