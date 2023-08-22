@@ -5,10 +5,10 @@ RUN [ "cross-build-start" ]
 COPY . /
 RUN sudo apt-get update
 RUN sudo apt-get install build-essential pkg-config gcc g++ python3 python3-pip cmake fuse libgl-dev libxcb-util-dev libx11-xcb-dev
-RUN python3 -m pip install conan
 RUN conan remote add grc /*remote*/ false
 RUN conan user -r grc /*username*/ -p /*password*/
+RUN python3 -m pip install conan==1.60.2
 RUN conan remove "*" -f
-CMD conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini -r grc --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True 
+CMD conan install . -if build -pr:h ConanProfiles/pib+-Release.ini -pr:b ConanProfiles/pib+-Release.ini -r grc --build=missing && conan upload "*" --all -r grc --parallel -c
 
 RUN [ "cross-build-end" ]
