@@ -1,6 +1,10 @@
-# SMB-Firmware
+# SMU-Firmware
 
 Firmware for segment monitor boards. Utilizes an STM32F103x8 µC to monitor temperatures across a segment. Conforms to Orion BMS TEM [CAN specification](https://www.orionbms.com/products/thermistor-expansion-module).
+
+## Development
+
+This repo is a STMCubeIDE project, open it using STMCubeIDE using SWD to debug.
 
 ## CAN Specification
 
