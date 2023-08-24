@@ -4,13 +4,9 @@
 #include <errno.h> // EBADF
 #include <sys/unistd.h> // STDOUT_FILENO, STDERR_FILENO
 
-// UART Handle for _write
-//extern UART_HandleTypeDef huart1;
-
 // SWO IS UNAVAILABLE ON CHEAP CHINESE STLINKS:
 // https://embedblog.eu/?p=673
 // It's possible to mod them to enable it. (Dallas has successfully done this)
-
 
 // Low-level write handler for our printf
 int _write(int file, char *data, int len) {

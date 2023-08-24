@@ -46,8 +46,6 @@ ADC_HandleTypeDef hadc1;
 
 CAN_HandleTypeDef hcan;
 
-UART_HandleTypeDef huart1;
-
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
@@ -59,33 +57,26 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t CANTxTaskHandle;
 const osThreadAttr_t CANTxTask_attributes = {
   .name = "CANTxTask",
-  .stack_size = 64 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
-};
-/* Definitions for CANRxTask */
-osThreadId_t CANRxTaskHandle;
-const osThreadAttr_t CANRxTask_attributes = {
-  .name = "CANRxTask",
-  .stack_size = 64 * 4,
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for ThermMonTask */
 osThreadId_t ThermMonTaskHandle;
 const osThreadAttr_t ThermMonTask_attributes = {
   .name = "ThermMonTask",
-  .stack_size = 64 * 4,
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for TEMInterTask */
 osThreadId_t TEMInterTaskHandle;
 const osThreadAttr_t TEMInterTask_attributes = {
   .name = "TEMInterTask",
-  .stack_size = 64 * 4,
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for CANTX_Q */
 osMessageQueueId_t CANTX_QHandle;
-uint8_t CANTXBuffer[ 32 * sizeof( CANTXMsg ) ];
+uint8_t CANTXBuffer[ 8 * sizeof( CANTXMsg ) ];
 osStaticMessageQDef_t CANTXControlBlock;
 const osMessageQueueAttr_t CANTX_Q_attributes = {
   .name = "CANTX_Q",
@@ -93,17 +84,6 @@ const osMessageQueueAttr_t CANTX_Q_attributes = {
   .cb_size = sizeof(CANTXControlBlock),
   .mq_mem = &CANTXBuffer,
   .mq_size = sizeof(CANTXBuffer)
-};
-/* Definitions for CANRX_Q */
-osMessageQueueId_t CANRX_QHandle;
-uint8_t CANRXBuffer[ 32 * sizeof( CANRXMsg ) ];
-osStaticMessageQDef_t CANRXControlBlock;
-const osMessageQueueAttr_t CANRX_Q_attributes = {
-  .name = "CANRX_Q",
-  .cb_mem = &CANRXControlBlock,
-  .cb_size = sizeof(CANRXControlBlock),
-  .mq_mem = &CANRXBuffer,
-  .mq_size = sizeof(CANRXBuffer)
 };
 /* Definitions for GRCprintfSema */
 osSemaphoreId_t GRCprintfSemaHandle;
@@ -122,10 +102,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_USART1_UART_Init(void);
 void StartDefaultTask(void *argument);
 extern void startCANTxTask(void *argument);
-extern void startCANRxTask(void *argument);
 extern void startThermistorMonitorTask(void *argument);
 extern void startTEMInterfaceTask(void *argument);
 
@@ -168,7 +146,6 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN_Init();
   MX_ADC1_Init();
-  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -194,10 +171,7 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of CANTX_Q */
-  CANTX_QHandle = osMessageQueueNew (32, sizeof(CANTXMsg), &CANTX_Q_attributes);
-
-  /* creation of CANRX_Q */
-  CANRX_QHandle = osMessageQueueNew (32, sizeof(CANRXMsg), &CANRX_Q_attributes);
+  CANTX_QHandle = osMessageQueueNew (8, sizeof(CANTXMsg), &CANTX_Q_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -209,9 +183,6 @@ int main(void)
 
   /* creation of CANTxTask */
   CANTxTaskHandle = osThreadNew(startCANTxTask, NULL, &CANTxTask_attributes);
-
-  /* creation of CANRxTask */
-  CANRxTaskHandle = osThreadNew(startCANRxTask, NULL, &CANRxTask_attributes);
 
   /* creation of ThermMonTask */
   ThermMonTaskHandle = osThreadNew(startThermistorMonitorTask, NULL, &ThermMonTask_attributes);
@@ -235,7 +206,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* USER CODE END WHILE */
 
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -368,7 +341,7 @@ static void MX_CAN_Init(void)
   // Set up and configure CAN2 filter
   CAN_FilterTypeDef canfilterconfig;
   canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
-  canfilterconfig.FilterBank = 10;  // anything between 0 to SlaveStartFilterBank
+  canfilterconfig.FilterBank = 0;  // anything between 0 to SlaveStartFilterBank
   canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
   canfilterconfig.FilterIdHigh = 0x0000;
   canfilterconfig.FilterIdLow = 0x0000;
@@ -384,39 +357,6 @@ static void MX_CAN_Init(void)
   HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
 
   /* USER CODE END CAN_Init 2 */
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -449,6 +389,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure peripheral I/O remapping */
+  __HAL_AFIO_REMAP_USART1_ENABLE();
 
 }
 
