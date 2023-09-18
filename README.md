@@ -6,8 +6,8 @@ An onboard data logging system for our cars, using radio transmission for remote
 
 For the transmitter module:
 
-`pio run -e transmitter -t upload && pio device monitor -e transmitter`
+`PLATFORMIO > PROJECT TASKS > transmitter > Upload`
 
 For the receiver module:
 
-`pio run -e receiver -t upload && pio device monitor -e receiver`
+`PLATFORMIO > PROJECT TASKS > receiver > Upload and Monitor`
