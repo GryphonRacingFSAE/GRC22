@@ -1,8 +1,5 @@
-#include <Adafruit_MPU6050.h>
 #include <Arduino.h>
 #include <RF24.h>
-#include <SPI.h>
-#include <nRF24L01.h>
 
 RF24 radio(4, 5); // CE, CSN
 

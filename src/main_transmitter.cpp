@@ -1,8 +1,6 @@
 #include <Adafruit_MPU6050.h>
 #include <Arduino.h>
 #include <RF24.h>
-#include <SPI.h>
-#include <nRF24L01.h>
 
 RF24 radio(4, 5); // CE, CSN
 Adafruit_MPU6050 mpu;
@@ -38,23 +36,20 @@ void loop() {
     sensors_event_t a, g, t;
     mpu.getEvent(&a, &g, &t);
 
-    Serial.println("Sending sensor data...");
-
     char packet[200];
 
     sprintf(packet,
-            "Acceleration X: %.2f, Y: %.2f, Z: %.2f m/s^2\nRotation X: %.2f, Y: %.2f, Z: %.2f rad/s\nTemperature: %.2f degC\n\n",
+            "Acceleration X: %.2f, Y: %.2f, Z: %.2f m/s^2\nRotation X: %.2f, Y: %.2f, Z: %.2f rad/s\n",
             a.acceleration.x,
             a.acceleration.y,
             a.acceleration.z,
             g.gyro.x,
             g.gyro.y,
-            g.gyro.z,
-            t.temperature);
+            g.gyro.z);
 
     radio.write(&packet, sizeof(packet));
 
-    Serial.println("Done");
+    Serial.println(packet);
 
-    delay(500);
+    delay(100);
 }
