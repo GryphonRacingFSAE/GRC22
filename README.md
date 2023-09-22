@@ -6,7 +6,7 @@ An onboard data logging system for our cars, using radio transmission for remote
 
 For the transmitter module:
 
-`PLATFORMIO > PROJECT TASKS > transmitter > Upload`
+`PLATFORMIO > PROJECT TASKS > transmitter > Upload and Monitor`
 
 For the receiver module:
 
