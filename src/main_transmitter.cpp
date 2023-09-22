@@ -1,6 +1,10 @@
 #include <Adafruit_MPU6050.h>
 #include <Arduino.h>
 #include <RF24.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
+
+#include "message.pb.h"
 
 RF24 radio(4, 5); // CE, CSN
 Adafruit_MPU6050 mpu;
@@ -36,20 +40,8 @@ void loop() {
     sensors_event_t a, g, t;
     mpu.getEvent(&a, &g, &t);
 
-    char packet[200];
+    TestMessage msg;
+    msg.str = "Hello World!";
 
-    sprintf(packet,
-            "Acceleration X: %.2f, Y: %.2f, Z: %.2f m/s^2\nRotation X: %.2f, Y: %.2f, Z: %.2f rad/s\n",
-            a.acceleration.x,
-            a.acceleration.y,
-            a.acceleration.z,
-            g.gyro.x,
-            g.gyro.y,
-            g.gyro.z);
-
-    radio.write(&packet, sizeof(packet));
-
-    Serial.println(packet);
-
-    delay(100);
+    delay(500);
 }
