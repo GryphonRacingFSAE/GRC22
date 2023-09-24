@@ -1,7 +1,6 @@
 #include <Adafruit_MPU6050.h>
 #include <Arduino.h>
 #include <RF24.h>
-#include <pb_decode.h>
 #include <pb_encode.h>
 
 #include "message.pb.h"
@@ -40,8 +39,15 @@ void loop() {
     sensors_event_t a, g, t;
     mpu.getEvent(&a, &g, &t);
 
-    TestMessage msg;
-    msg.str = "Hello World!";
+    TestMessage msg = TestMessage_init_zero;
+    msg.number = 69;
+
+    uint8_t buffer[128];
+    pb_ostream_t ostream;
+    ostream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+
+    pb_encode(&ostream, &TestMessage_msg, &msg);
+    radio.write(buffer, ostream.bytes_written);
 
     delay(500);
 }
