@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message MPU6050_Message {
+    float acceleration_x = 1;
+    float acceleration_y = 2;
+    float acceleration_z = 3;
+
+    float rotation_x = 4;
+    float rotation_y = 5;
+    float rotation_z = 6;
+}
