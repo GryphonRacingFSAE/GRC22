@@ -11,7 +11,7 @@ RF24 radio(4, 5); // CE, CSN
 Adafruit_MPU6050 mpu;
 TinyGPSPlus gps;
 
-HardwareSerial GPSSerial(2);
+HardwareSerial SerialGPS(1);
 
 const byte address[6] = "00001";
 
@@ -36,7 +36,7 @@ void setup() {
     Serial.println("Done");
 
     Serial.println("Initializing BN-220...");
-    GPSSerial.begin(4800);
+    SerialGPS.begin(9600, SERIAL_8N1, 16, 17); // RX, TX
     Serial.println("Done");
 }
 
@@ -61,21 +61,15 @@ void loop() {
 
     radio.write(buffer, stream.bytes_written);
 
-    while (GPSSerial.available()) {
-        char c = GPSSerial.read();
-        Serial.print(c);
-        if (gps.encode(c)) {
-            Serial.println("C");
-            if (gps.location.isValid()) {
-                Serial.println("D");
-                float latitude = gps.location.lat();
-                float longitude = gps.location.lng();
-
-                Serial.print("Latitude: ");
-                Serial.println(latitude, 6);
-                Serial.print("Longitude: ");
-                Serial.println(longitude, 6);
-            }
+    while (SerialGPS.available() > 0) {
+        if (gps.encode(SerialGPS.read())) {
+            Serial.print("LAT=");
+            Serial.println(gps.location.lat(), 6);
+            Serial.print("LNG=");
+            Serial.println(gps.location.lng(), 6);
+            Serial.print("ALT=");
+            Serial.println(gps.altitude.meters());
+            Serial.println();
         }
     }
 
