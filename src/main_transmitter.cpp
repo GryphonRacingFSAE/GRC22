@@ -5,6 +5,7 @@
 #include <TinyGPSPlus.h>
 #include <pb_encode.h>
 
+#include "BN220.pb.h"
 #include "MPU6050.pb.h"
 
 RF24 radio(4, 5); // CE, CSN
@@ -22,13 +23,13 @@ void setup() {
     while (!Serial)
         delay(10);
 
-    Serial.println("\nInitializing NRF24L01...");
+    Serial.println("\nInitializing nRF24L01+...");
     radio.begin();
     radio.openWritingPipe(address);
     radio.stopListening();
     Serial.println("Done");
 
-    Serial.println("Initializing MPU6050...");
+    Serial.println("Initializing MPU-6050...");
     mpu.begin();
     mpu.setAccelerometerRange(MPU6050_RANGE_8_G); // 2, 4, 8, 16
     mpu.setGyroRange(MPU6050_RANGE_500_DEG);      // 250, 500, 1000, 2000
