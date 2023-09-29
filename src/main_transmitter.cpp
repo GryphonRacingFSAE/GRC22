@@ -5,8 +5,7 @@
 #include <TinyGPSPlus.h>
 #include <pb_encode.h>
 
-#include "BN220.pb.h"
-#include "MPU6050.pb.h"
+#include "message.pb.h"
 
 RF24 radio(4, 5); // CE, CSN
 Adafruit_MPU6050 mpu;
@@ -21,7 +20,7 @@ void setup() {
     delay(500);
 
     while (!Serial)
-        delay(10);
+        delay(100);
 
     Serial.println("\nInitializing nRF24L01+...");
     radio.begin();
@@ -45,34 +44,30 @@ void loop() {
     sensors_event_t a, g, t;
     mpu.getEvent(&a, &g, &t);
 
-    MPU6050_Message mpu_msg = MPU6050_Message_init_default;
+    MyMessage msg = MyMessage_init_default;
 
     // Values are opposite for some reason (but it works)
-    mpu_msg.acceleration_x = g.gyro.x;
-    mpu_msg.acceleration_y = g.gyro.y;
-    mpu_msg.acceleration_z = g.gyro.z;
-    mpu_msg.rotation_x = a.acceleration.x;
-    mpu_msg.rotation_y = a.acceleration.y;
-    mpu_msg.rotation_z = a.acceleration.z;
+    msg.acceleration_x = g.gyro.x;
+    msg.acceleration_y = g.gyro.y;
+    msg.acceleration_z = g.gyro.z;
+    msg.rotation_x = a.acceleration.x;
+    msg.rotation_y = a.acceleration.y;
+    msg.rotation_z = a.acceleration.z;
+
+    while (SerialGPS.available() > 0) {
+        if (gps.encode(SerialGPS.read())) {
+            msg.latitude = gps.location.lat();
+            msg.longitude = gps.location.lng();
+            msg.altitude = gps.altitude.meters();
+        }
+    }
 
     uint8_t buffer[128];
 
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    pb_encode(&stream, MPU6050_Message_fields, &mpu_msg);
+    pb_encode(&stream, MyMessage_fields, &msg);
 
     radio.write(buffer, stream.bytes_written);
-
-    while (SerialGPS.available() > 0) {
-        if (gps.encode(SerialGPS.read())) {
-            Serial.print("LAT=");
-            Serial.println(gps.location.lat(), 6);
-            Serial.print("LNG=");
-            Serial.println(gps.location.lng(), 6);
-            Serial.print("ALT=");
-            Serial.println(gps.altitude.meters());
-            Serial.println();
-        }
-    }
 
     delay(100);
 }
