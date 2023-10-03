@@ -32,7 +32,7 @@ void loop() {
         pb_istream_t stream = pb_istream_from_buffer(buffer, sizeof(buffer));
         pb_decode(&stream, MyMessage_fields, &msg);
 
-        Serial.printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.6d,%.6d,%.2d\n",
+        Serial.printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.6f,%.6f,%.2f\r\n",
                       msg.acceleration_x,
                       msg.acceleration_y,
                       msg.acceleration_z,

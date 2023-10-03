@@ -11,6 +11,7 @@ An onboard data logging system for our cars, using radio transmission for remote
 ## Setup
 
 Plug in both modules and check `platformio.ini` to ensure the correct ports are selected:
+
 ```
 [env:transmitter]
 ...
@@ -20,6 +21,7 @@ upload_port = /dev/ttyUSB0
 ...
 upload_port = /dev/ttyUSB1
 ```
+
 _NOTE: port names may differ between operating systems_
 
 ## Build + Run
@@ -35,9 +37,12 @@ For the receiver module:
 ## Resources
 
 **Datasheets**
+
 - [nRF24L01+](https://www.sparkfun.com/datasheets/Components/SMD/nRF24L01Pluss_Preliminary_Product_Specification_v1_0.pdf)
 - [MPU-6050](https://cdn.sparkfun.com/datasheets/Sensors/Accelerometers/RM-MPU-6000A.pdf)
 - [BN-220](https://files.banggood.com/2016/11/BN-220%20GPS+Antenna%20datasheet.pdf)
 
-**Websites**
-- [BonoGPS](https://github.com/renatobo/bonogps) (future idea: GPS app integration)
+**Other**
+
+- [Design Requirements](https://uoguelphca-my.sharepoint.com/:w:/r/personal/ugracing_uoguelph_ca/_layouts/15/Doc.aspx?sourcedoc=%7B7C1A61FF-9C05-44D4-A12C-FCA501E7928A%7D&file=Remote%20Data%20Logger%20Design%20Requirements.docx&action=default&mobileredirect=true&DefaultItemOpen=1&web=1)
+- [BonoGPS](https://github.com/renatobo/bonogps) (future idea)
