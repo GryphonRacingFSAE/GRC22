@@ -50,7 +50,7 @@ void startTEMInterfaceTask() {
 //	ERROR_PRINT("STARTING UP TEM INTERFACE TASK");
 
 	while (1) {
-        GRCprintf("Sending out to queue");
+        //GRCprintf("Sending out to queue");
         osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 0);
         osMessageQueuePut(CANTX_QHandle, &general_broadcast, 0, 0);
 		osDelayUntil(tick += TEM_PERIOD);

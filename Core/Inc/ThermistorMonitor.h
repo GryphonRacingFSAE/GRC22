@@ -5,12 +5,21 @@
 
 // 2ms between measurements
 #define THERMISTOR_PERIOD 500
-#define CHANNEL_COUNT 4
-#define THERMISTORS_PER_CHANNEL 7
-#define THERMISTOR_COUNT (THERMISTORS_PER_CHANNEL * CHANNEL_COUNT)
+
+#define DEV_BOARD 1
+
+#if DEV_BOARD == 0
+#define MODULE_COUNT 5
+#define THERMISTORS_PER_MODULE 8
+#else
+#define MODULE_COUNT 1
+#define THERMISTORS_PER_MODULE 2
+#endif
+
+#define THERMISTOR_COUNT (THERMISTORS_PER_MODULE * MODULE_COUNT)
 
 typedef struct {
-	int32_t thermistors[THERMISTOR_COUNT];
+	int32_t thermistors[MODULE_COUNT][THERMISTORS_PER_MODULE];
 } ThermistorData_Struct;
 
 extern ThermistorData_Struct ThermistorData;
