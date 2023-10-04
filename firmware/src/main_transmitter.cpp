@@ -7,6 +7,8 @@
 
 #include "message.pb.h"
 
+#define DEBUG
+
 RF24 radio(4, 5); // CE, CSN
 MPU6050 mpu;
 TinyGPSPlus gps;
@@ -38,49 +40,44 @@ void setup() {
     Serial.println("Done");
 }
 
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
 void loop() {
-    int16_t ax, ay, az;
-    int16_t gx, gy, gz;
 
     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
-    Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
-    Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
-
     while (SerialGPS.available() > 0) {
         if (gps.encode(SerialGPS.read())) {
-            Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
             break;
         }
     }
 
-    Serial.println();
+#ifdef DEBUG
+    Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
+    Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
+    Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+#endif
 
-    /*
-        MyMessage msg = MyMessage_init_default;
+    MyMessage msg = MyMessage_init_default;
 
-        // Values are opposite for some reason (but it works)
-        msg.acceleration_x = g.gyro.x;
-        msg.acceleration_y = g.gyro.y;
-        msg.acceleration_z = g.gyro.z;
-        msg.rotation_x = a.acceleration.x;
-        msg.rotation_y = a.acceleration.y;
-        msg.rotation_z = a.acceleration.z;
+    // Values are opposite for some reason (but it works)
+    msg.acceleration_x = ax;
+    msg.acceleration_y = ay;
+    msg.acceleration_z = az;
+    msg.rotation_x = gx;
+    msg.rotation_y = gy;
+    msg.rotation_z = gz;
+    msg.latitude = gps.location.lat();
+    msg.longitude = gps.location.lng();
+    msg.altitude = gps.altitude.meters();
 
-        while (SerialGPS.available() > 0) {
-            if (gps.encode(SerialGPS.read())) {
-                msg.latitude = gps.location.lat();
-                msg.longitude = gps.location.lng();
-                msg.altitude = gps.altitude.meters();
-            }
-        }
+    uint8_t buffer[128];
 
-        uint8_t buffer[128];
+    pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+    pb_encode(&stream, MyMessage_fields, &msg);
 
-        pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        pb_encode(&stream, MyMessage_fields, &msg);
+    radio.write(buffer, stream.bytes_written);
 
-        radio.write(buffer, stream.bytes_written);
-    */
     delay(100);
 }
