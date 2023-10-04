@@ -5,21 +5,21 @@
  *      Author: Matt
  */
 
-#ifndef INC_CAN1_H_
-#define INC_CAN1_H_
+#ifndef INC_CAN_H_
+#define INC_CAN_H_
 
 #include "main.h"
 #include "cmsis_os.h"
 
-extern osMessageQueueId_t CAN1_QHandle;
-extern osMessageQueueId_t CAN2_QHandle;
+extern osMessageQueueId_t CANTX_QHandle;
 extern osMessageQueueId_t CANRX_QHandle;
+extern CAN_HandleTypeDef hcan1;
+extern CAN_HandleTypeDef hcan2;
 
-#define CAN1_FLAG 0x00000001U
-#define CAN2_FLAG 0x00000002U
 
 typedef struct {
 	CAN_TxHeaderTypeDef header;
+	CAN_HandleTypeDef* to; // CAN port that message should be sent to
 	uint8_t data[8];
 } CANTXMsg;
 
@@ -45,7 +45,7 @@ typedef struct {
 // IF SUCCESS
 // TODO: extra info for header ack/message ack, in progress/finished, waiting for more data, etc
 // IF ERROR
-// 2nd LSB: message or header invalid
+// 2nd LSB: message or header invalid`
 #define CAN_TRANSACTION_HEADER_INVALID 0x00
 #define CAN_TRANSACTION_MESSAGE_INVALID 0x02 
 // Bits 3-8: Error specifics
@@ -80,4 +80,4 @@ void canMsgHandler(CANRXMsg* rxMsg);
 void initiateTransaction(CANRXMsg* rxMsg);
 void handleTransactionPacket(CANRXMsg* rxMsg);
 
-#endif /* INC_CAN1_H_ */
+#endif /* INC_CAN_H_ */

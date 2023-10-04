@@ -23,14 +23,14 @@ int _write(int file, char *data, int len) {
 		return -1;
 	}
 
-	// Transmit in blocking mode over UART3 with an arbitrary timeout of 1000ms
-	HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, (uint8_t*) data, len, 1000);
+	// Transmit in blocking mode over UART3 with an arbitrary timeout of 10ms
+	HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, (uint8_t*) data, len, 10);
 
 	// Return # of bytes written - as best we can tell
 	return (status == HAL_OK ? len : 0);
 }
 
-// Semaphore ID for myprintf
+// Semaphore ID for custom printf
 extern osSemaphoreId_t printSemHandle;
 
 // Custom printf for transmitting over UART3 (STLink connects it over USB to STMCube)
@@ -41,9 +41,9 @@ int GRCprintf(const char *format, ...) {
 	// Standard printf execution
 	va_list alist;
 	va_start(alist, format);
-	vprintf(format, alist);
+	int ret = vprintf(format, alist);
 	va_end(alist);
 
 	osSemaphoreRelease(printSemHandle);
-	return 0;
+	return ret;
 }
