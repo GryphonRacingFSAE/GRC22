@@ -1,0 +1,3 @@
+[submodule "pcb/KiCAD-Component-Library"]
+	path = pcb/KiCAD-Component-Library
+	url = https://github.com/GryphonRacingFSAE/KiCAD-Component-Library.git
