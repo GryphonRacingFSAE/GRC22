@@ -1,9 +1,9 @@
 
-# Gryphon SAE Dash
+# Gryphon Racing Dash
 
 ## About
 
-An electronic dash for the 2022 Gryphon Racing Team EV
+An electronic dash for Gryphon Racing Vechicles 22-Present
 
 ## Installing Dependencies
 
@@ -39,9 +39,6 @@ python -m pip install conan # or python3 on MacOS
 
 Run the conan install script (`-pr` is the profile being used, the options are found in [ConanProfiles](./ConanProfiles/))
 ```bash
-# Windows VS2019
-conan install . -if build -pr:h=ConanProfiles/VS2019-Debug.ini -pr:b=ConanProfiles/VS2019-Debug.ini --build=missing -o dev="front"
-
 # Windows VS2022
 conan install . -if build -pr:h=ConanProfiles/VS2022-Debug.ini -pr:b=ConanProfiles/VS2022-Debug.ini --build=missing -o dev="front"
 
@@ -73,21 +70,6 @@ conan build -if build .
 source build/activate_run.sh # RPi (maybe required on other linux distros)
 ./build/Debug/bin/GryphonDash
 source build/deactivate_run.sh # RPi (maybe required on other linux distros)
-```
-
-## Code Standards
-
-Naming standards are as follows:
-```C++
-namespace PascalCase {}
-class PascalCase {};
-int camelCase() {};
-int snake_case = 0;
-```
-
-Formatting is handled by clang format.
-```bash
-find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root folder of the repo.
 ```
 
 ## Branch rules

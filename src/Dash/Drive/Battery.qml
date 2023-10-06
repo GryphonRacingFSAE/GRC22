@@ -4,7 +4,7 @@ Rectangle {
     id: battery
     radius:height/10
     property double percent: 0
-    
+
     onPercentChanged: () => {
         if (percent <= 20) {
             color = "red"
@@ -19,7 +19,7 @@ Rectangle {
     Rectangle {
         color: "white"
         radius:height/12
-        anchors{
+        anchors {
             fill: parent
             margins:5
         }
@@ -30,7 +30,7 @@ Rectangle {
         color: battery.color
         width: (battery.width-20)/100*percent
         radius:height/14
-        anchors{
+        anchors {
             top: parent.top
             bottom: parent.bottom
             left: parent.left
@@ -39,12 +39,12 @@ Rectangle {
     }
 
     //Battery icon
-    Image{
+    Image {
         id: batteryIcon
         source: "qrc:/images/BatterySymbol"
-        width: battery.height/5
+        width: battery.height/3
         height: 2*width
-        anchors{
+        anchors {
             bottom: parent.bottom
             left: parent.left
             margins:15
@@ -53,11 +53,12 @@ Rectangle {
 
     //Battery text
     Text {
-        font.pointSize: battery.height/5
+        font.pointSize: battery.height/3
         color: "black"
         font.bold: true
-        text: `Battery: ${percent.toFixed(1)}%`
-        anchors{
+        text: `${percent.toFixed(1)}%`
+
+        anchors {
             verticalCenter: batteryIcon.verticalCenter
             left: batteryIcon.right
             margins: 15

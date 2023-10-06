@@ -46,34 +46,11 @@ if(WIN32)
         COMMAND windeployqt.exe --qmldir ${CMAKE_CURRENT_SOURCE_DIR} $<TARGET_FILE_DIR:GryphonDash2019>
     )
 elseif(UNIX AND NOT APPLE)
-    # Package into AppImages only when LINUX_X86_64_BUILD_APP_IMAGE env var is defined
-    if(DEFINED ENV{LINUX_X86_64_BUILD_APP_IMAGE})
-        execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/bin)
-        add_custom_command(
-            TARGET GryphonDash POST_BUILD
-            DEPENDS GryphonDash.desktop images/GryphonDash.png
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/DBCs
-                $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin/DBCs
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps
-                $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir/usr/bin/TorqueMaps
-            COMMAND linuxdeploy-x86_64.AppImage
-                    -v2
-                    --appdir $<TARGET_FILE_DIR:GryphonDash>/$<TARGET_FILE_BASE_NAME:GryphonDash>AppDir
-                    --executable $<TARGET_FILE:GryphonDash> 
-                    --icon-file ${CMAKE_CURRENT_SOURCE_DIR}/images/GryphonDash.png
-                    --desktop-file ${CMAKE_CURRENT_SOURCE_DIR}/GryphonDash.desktop
-                    --plugin qt
-                    --output appimage
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-            COMMAND_EXPAND_LISTS
-        )
-    else()
-        message(STATUS "No deployment for Linux, must use VirtualRunEnv")
-        set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
-        set_target_properties(GryphonDashDemo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/demo/$<0:>)
-    endif()
+    set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2022/$<0:>)
+    set_target_properties(GryphonDash2019 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/2019/$<0:>)
+    file(GLOB dbc_files ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/*.dbc)
+    file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash>)
+    file(COPY ${dbc_files} DESTINATION $<TARGET_FILE_DIR:GryphonDash2019>)
 elseif(APPLE)
     message(STATUS "No deployment for Apple, implement.")
 else()
