@@ -59,9 +59,9 @@ void startThermistorMonitorTask() {
 
 
 
-            float divider_voltage = (float) divider_output/(float) ADC_RESOLUTION * REFERENCE_VOLTAGE;
+            float divider_voltage = ((float) divider_output/(float) ADC_RESOLUTION * REFERENCE_VOLTAGE);
 
-            DEBUG_PRINT("Divider Voltage: %d.%d\n", (int) ((divider_voltage * 100) / 100), (int) ((int) (divider_voltage * 100) % 100));
+            DEBUG_PRINT("Divider Voltage: %d.%d\n", (int)divider_voltage, (int) (divider_voltage * 1000) % 1000);
 
             float thermistor_resistance = (divider_voltage * DIVIDER_RESISTANCE) / (REFERENCE_VOLTAGE - divider_voltage);
 
@@ -84,7 +84,7 @@ void startThermistorMonitorTask() {
 			DEBUG_PRINT("Thermistor Temperature (Steinhart & Hart Coeff) (K): %d.%d\n", (int) ((stein_temp * 100)/100), (int) ((int) (stein_temp * 100) % 100));
 
 //			float stein_resistance = CALIBRATION_RESISTANCE * exp(RES_COEFF_A + RES_COEFF_B/stein_temp + RES_COEFF_C/powf(stein_temp, 2.0) + RES_COEFF_D/powf(stein_temp, 3.0));
-//			DEBUG_PRINT("Thermistor Accurate Resistance (Stein): %d.%d", (int)((stein_resistance*100)/100), (int)((int) (stein_temp*100)%100));
+//			DEBUG_PRINT("Thermistor Accurate Resistance (Stein): %d.%d", (int)((stein_resistance*100)/100), (int)((int) (stein_resistance*100)%100));
 
             float temp_celsius = therm_temp - 273.15f;
             float stein_temp_celsius = stein_temp - 273.15f;
@@ -99,9 +99,14 @@ void startThermistorMonitorTask() {
         }
 
         //Counter Variable for MUX Select Lines
-		if (++current_thermistor == THERMISTORS_PER_MODULE) {
-			current_thermistor = 0;
-		}
+//		if (++current_thermistor == THERMISTORS_PER_MODULE) {
+//			current_thermistor = 0;
+//		}
+//		if (current_thermistor == 0) {
+//			current_thermistor = 3;
+//		} else {
+//			current_thermistor = 0;
+//		}
 
         CANTXMsg bms_broadcast = {
         	.header = {
