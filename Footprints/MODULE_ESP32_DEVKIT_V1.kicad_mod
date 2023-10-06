@@ -1,5 +1,5 @@
 
-(footprint MODULE_ESP32_DEVKIT_V1 (layer F.Cu) (tedit 651F19A4)
+(footprint MODULE_ESP32_DEVKIT_V1 (layer F.Cu) (tedit 65208F67)
   (descr "")
   (fp_text reference REF** (at -11.355 -27.36 0) (layer F.SilkS)
     (effects (font (size 1.0 1.0) (thickness 0.15)))
