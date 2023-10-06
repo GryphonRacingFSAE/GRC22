@@ -48,4 +48,5 @@
   (lib (name "GRC_Switch")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/Switch.kicad_sym")(options "")(descr ""))
   (lib (name "GRC_Timer")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/Timer.kicad_sym")(options "")(descr ""))
   (lib (name "GRC_TractiveSystemPCBv2")(type "Legacy")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/TractiveSystemPCBv2.lib")(options "")(descr ""))
+  (lib (name "GRC_ESP32-DEVKIT-V1")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/ESP32-DEVKIT-V1.kicad_sym")(options "")(descr ""))
 )
