@@ -97,6 +97,105 @@ Item {
             }
         }
 
+        //Speed
+        ColumnLayout {
+            Layout.preferredWidth: parent.width/16*6
+
+            Rectangle {
+                id: torqueContainer
+                color: "grey"
+                radius: height/3
+                Layout.fillWidth: true;
+                implicitHeight: main.height/10
+
+                Text{
+                    id: torqueValue
+                    text: ""
+                    font.bold: true
+                    color:"black"
+                    font.pointSize: main.height/15
+                    anchors{
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+
+            Rectangle {
+                id: torqueContainer2
+                color: "grey"
+                radius: height/3
+                Layout.fillWidth: true;
+                implicitHeight: main.height/10
+
+                Text{
+                    id: torqueValue2
+                    text: ""
+                    font.bold: true
+                    color:"black"
+                    font.pointSize: main.height/15
+                    anchors{
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: 160
+                Text {
+                    id: speedValue
+                    font.pointSize: main.height/3.5
+                    opacity: 0.9
+                    font.bold: true
+                    color:"black"
+                    text: ""
+                    anchors{
+                        top: parent.top
+                        topMargin: main.height/10
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                }
+
+                Text {
+                    text: "kmph"
+                    font.bold: true
+                    color:"black"
+                    font.pointSize: main.height/15
+                    anchors{
+                        top:speedValue.bottom
+                        horizontalCenter: parent.horizontalCenter
+                        topMargin: - main.height/15
+                    }
+                }
+            }
+        }
+
+        //Accum and Motor
+        ColumnLayout {
+            Layout.preferredWidth: parent.width/16*5
+            
+            DataBox {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                id: accumTempBox
+                title: "Accum Temp"
+                fontSize: root.height/20
+                precision: 1;
+                low: 20
+                high: 40
+            }
+            DataBox {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                id: motorTempBox
+                title: "Motor Temp"
+                fontSize: root.height/20
+                precision: 1;
+                low: 30
+                high: 75
+            }
+        }
     }
 
     RowLayout {
@@ -143,7 +242,42 @@ Item {
         function onNewMotorTemp(temp) {
             motorTempBox.value = temp
         }
-        function onNewAnalogInput1(voltage) // 12V voltage {}
+        function onNewAnalogInput1(voltage) // 12V voltage
+        {
+        }
+
+        function onNewRequestedTorque(torque)
+        {
+            if (torque < 0)
+            {
+                torqueContainer.color = "red"
+            }
+            else if(torque > 0)
+            {
+                torqueContainer.color = "green"
+            }
+            else{
+                torqueContainer.color = "grey"
+            }
+
+            torqueValue.text = `${torque.toFixed(0)}`
+        }
+
+        function onNewOutputTorque(torque) {
+            if (torque < 0)
+            {
+                torqueContainer2.color = "red"
+            }
+            else if(torque > 0)
+            {
+                torqueContainer2.color = "green"
+            }
+            else{
+                torqueContainer2.color = "grey"
+            }
+
+            torqueValue2.text = `${torque.toFixed(0)}`
+        }
     }
 
     Connections {

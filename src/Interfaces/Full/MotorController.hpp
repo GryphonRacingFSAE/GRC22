@@ -3,6 +3,8 @@
 #include <DBCInterface.hpp>
 #include <QObject>
 
+namespace real {
+
 class MotorController : public QObject, public CAN::DBCInterface<MotorController> {
     Q_OBJECT
   public:
@@ -15,6 +17,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
         can_signal_dispatch["INV_Output_Voltage"] = &MotorController::newOutputVoltage;
 
         can_signal_dispatch["INV_Module_A_Temp"] = &MotorController::newModuleATemp;
+        can_signal_dispatch["VCU_INV_Torque_Command"] = &MotorController::newRequestedTorque;
         can_signal_dispatch["INV_Module_B_Temp"] = &MotorController::newModuleBTemp;
         can_signal_dispatch["INV_Module_C_Temp"] = &MotorController::newModuleCTemp;
         can_signal_dispatch["INV_Gate_Driver_Board_Temp"] =
@@ -79,6 +82,7 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void newOutputVoltage(float voltage);
 
     void newModuleATemp(float temp);
+    void newRequestedTorque(float torque);
     void newModuleBTemp(float temp);
     void newModuleCTemp(float temp);
     void newGateDriverBoardTemp(float temp);
@@ -117,16 +121,13 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void newRUNFaultLow(float fault);
 
   public:
-    static constexpr size_t num_of_filters = 2;
-    inline static can_filter filters[num_of_filters] = {
-        {
-            0x0A0,
-            0x7F0 // Grab all messages from 0xA0 to 0xAF
-        },
-        {
-            0x0B0,
-            0x7FF // Grab all messages from 0xB0
-        }};
+    static constexpr size_t num_of_filters = 1;
+    inline static can_filter filters[num_of_filters] = {{
+        0x0A0,
+        0x0CF // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
+    }};
 
     static constexpr uint32_t timeout_ms = 500;
 };
+
+}

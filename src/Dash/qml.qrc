@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
+        <file>demo.qml</file>
         <file>main2019.qml</file>
 
         <file>Drive/Drive.qml</file>

@@ -3,13 +3,15 @@
 #include <QObject>
 #include <fmt/core.h>
 
-#include <FakeInterface.hpp>
+#include <Frontend/FakeInterface.hpp>
 
-class MotorController : public QObject, public CAN::FakeInterface {
+namespace fake {
+
+class MotorController : public QObject, public FakeInterface {
     Q_OBJECT
   public:
     MotorController(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
-        this->CAN::FakeInterface::startReceiving();
+        this->FakeInterface::startReceiving();
     }
     ~MotorController() = default;
 
@@ -70,3 +72,5 @@ class MotorController : public QObject, public CAN::FakeInterface {
   private:
     void generateValues();
 };
+
+}

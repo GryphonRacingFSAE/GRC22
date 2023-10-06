@@ -77,6 +77,14 @@ source build/deactivate_run.sh # RPi (maybe required on other linux distros)
 - Name your branch as follows: `firstname/branchtopic`, ex. `dallas/move-from-previous-repo`
 - `main` is a protected branch, and thus needs a PR to approve merging with it.
 
+## CAN reservations
+
+| Item | Reserved CAN Addresses |
+|-|-|
+| Motor Controller | 0x0A0-0x0CF |
+| VCU | 0x0D0-0x0DF |
+| BMS | 0x0E0-0x0EF |
+
 ## Building For RPI1.2
 
 ```bash

@@ -4,15 +4,14 @@ import QtQuick.Controls
 ApplicationWindow {
     id: application_window
     visible: true
-    width: 800
-    height: width * 10/16
+    // Width & Height is 800x480
     title: "GRC Dash"
     color: "white"
-    maximumHeight: height
-    maximumWidth: width
-    minimumHeight: height
-    minimumWidth: width
-    flags: Qt.Window // | Qt.FramelessWindowHint add when final project is reached.
+    x: 0
+    y: 0
+    width: 800
+    height: 480
+    flags: Qt.Window | Qt.FramelessWindowHint // add when final project is reached.
 
     Loader {
         id: active_dash
@@ -20,7 +19,7 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
-    readonly property list<string> display_sources: ["Drive/Drive.qml", "Debug/Debug_A.qml", "Debug/Debug_B.qml", "Debug/Debug_C.qml", "Debug/Debug_D.qml", "Tuning/Tuning.qml"];
+    readonly property list<string> display_sources: ["Drive/Drive.qml", "Debug/Debug_A.qml", "Debug/Debug_B.qml", "Tuning/Tuning.qml"];
     property int selected_display: 0;
 
     Item {
@@ -31,5 +30,11 @@ ApplicationWindow {
         Keys.onTabPressed: selected_display = (selected_display + 1) % display_sources.length
         Keys.onBacktabPressed: selected_display = (selected_display - 1 + display_sources.length) % display_sources.length
         Keys.forwardTo: [active_dash.item]
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: false
+        cursorShape: Qt.BlankCursor
     }
 }

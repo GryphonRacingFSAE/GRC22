@@ -3,6 +3,8 @@
 #include <DBCInterface.hpp>
 #include <QObject>
 
+namespace real {
+
 class BMS : public QObject, public CAN::DBCInterface<BMS> {
     Q_OBJECT
   public:
@@ -42,3 +44,5 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
 
     static constexpr uint32_t timeout_ms = 500;
 };
+
+}

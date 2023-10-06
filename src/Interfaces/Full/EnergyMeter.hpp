@@ -3,6 +3,8 @@
 #include <DBCInterface.hpp>
 #include <QObject>
 
+namespace real {
+
 class EnergyMeter : public QObject, public CAN::DBCInterface<EnergyMeter> {
     Q_OBJECT
   public:
@@ -29,3 +31,5 @@ class EnergyMeter : public QObject, public CAN::DBCInterface<EnergyMeter> {
 
     static constexpr uint32_t timeout_ms = 500;
 };
+
+}

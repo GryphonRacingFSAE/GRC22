@@ -1,6 +1,6 @@
-#include <FakeInterface.hpp>
+#include <Frontend/FakeInterface.hpp>
 
-using namespace CAN;
+using namespace fake;
 
 void FakeInterface::startReceiving() {
     m_reading_thread = std::thread(&FakeInterface::readLoop, this);
@@ -8,8 +8,7 @@ void FakeInterface::startReceiving() {
 
 void FakeInterface::readLoop() {
     while (!this->m_should_exit) {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::sleep_for(this->delay);
         this->generateValues();
     }
     this->m_should_exit = false;
