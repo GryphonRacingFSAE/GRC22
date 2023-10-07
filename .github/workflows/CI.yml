@@ -1,0 +1,31 @@
+name: Remote Logger CI
+
+on:
+  push:
+
+jobs:
+
+  Lint-Build-Check-Remote-Logger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+
+      #Update PlatformIO
+      - name: Setup PlatformIO
+        run: pip install --upgrade platformio
+
+      #Format Check
+      - name: Format Check
+        uses: DoozyX/clang-format-lint-action@v0.16
+        if: always()
+        with:
+          source: firmware
+
+      # Build with PlatformIO
+      - name: Compile Transmitter and Reciever Code
+        if: always()
+        run: |
+          cd firmware
+          pio run
