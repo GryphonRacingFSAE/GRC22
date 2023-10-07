@@ -21,11 +21,11 @@ jobs:
         uses: DoozyX/clang-format-lint-action@v0.16
         if: always()
         with:
-          source: firmware
+          source: software
 
       # Build with PlatformIO
       - name: Compile Transmitter and Reciever Code
         if: always()
         run: |
-          cd firmware
+          cd software
           pio run
