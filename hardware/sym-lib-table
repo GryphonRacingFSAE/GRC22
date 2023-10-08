@@ -50,4 +50,6 @@
   (lib (name "GRC_TractiveSystemPCBv2")(type "Legacy")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/TractiveSystemPCBv2.lib")(options "")(descr ""))
   (lib (name "GRC_ESP32-DEVKIT-V1")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/ESP32-DEVKIT-V1.kicad_sym")(options "")(descr ""))
   (lib (name "GRC_GY-521")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/GY-521.kicad_sym")(options "")(descr ""))
+  (lib (name "ESP32")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/ESP32.kicad_sym")(options "")(descr ""))
+  (lib (name "Remote-Logging-Module")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/Remote-Logging-Module.kicad_sym")(options "")(descr ""))
 )
