@@ -1,5 +1,5 @@
 
-(footprint GY-521 (layer F.Cu) (tedit 651F1CE3)
+(footprint GY-521 (layer F.Cu) (tedit 65221515)
   (descr "")
   (fp_text reference "REF**" (at 0 0) (layer F.SilkS)
     (effects (font (size 0.787401574803 0.787401574803) (thickness 0.15)))
