@@ -5,6 +5,11 @@
 #include <TinyGPSPlus.h>
 #include <pb_encode.h>
 
+//SD Card Libraries
+#include <SPI.h>
+#include <SD.h>
+#include <FS.h>
+
 #include "message.pb.h"
 
 #define DEBUG
@@ -14,6 +19,7 @@ MPU6050 mpu;
 TinyGPSPlus gps;
 
 HardwareSerial SerialGPS(1);
+File testFile;
 
 const byte address[6] = "00001";
 
@@ -38,6 +44,23 @@ void setup() {
     Serial.println("Initializing BN-220...");
     SerialGPS.begin(9600, SERIAL_8N1, 16, 17); // RX, TX
     Serial.println("Done");
+
+    //SD Test (D32 on board)
+    if(!SD.begin(27)){
+        Serial.println("Card Mount Failed");
+        return;
+    }
+
+    uint8_t cardType = SD.cardType();
+
+    if(cardType == CARD_NONE){
+        Serial.println("No SD card attached");
+        return;
+    }
+
+    
+
+
 }
 
 int16_t ax, ay, az;
