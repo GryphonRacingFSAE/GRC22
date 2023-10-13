@@ -6,23 +6,25 @@
 // 2ms between measurements
 #define THERMISTOR_PERIOD 500
 
-#define DEV_BOARD 1
+#define DEV_BOARD 0
 
 #if DEV_BOARD == 0
-#define MODULE_COUNT 5
-#define THERMISTORS_PER_MODULE 8
+#define MUX_COUNT 4
+#define THERMISTORS_PER_MUX 8
 #else
-#define MODULE_COUNT 1
-#define THERMISTORS_PER_MODULE 2
+#define MUX_COUNT 1
+#define THERMISTORS_PER_MUX 2
 #endif
 
-#define THERMISTOR_COUNT (THERMISTORS_PER_MODULE * MODULE_COUNT)
+#define THERMISTOR_COUNT (THERMISTORS_PER_MUX * MUX_COUNT)
 
 typedef struct {
-	int32_t thermistors[MODULE_COUNT][THERMISTORS_PER_MODULE];
+	int32_t thermistors[MUX_COUNT][THERMISTORS_PER_MUX];
 } ThermistorData_Struct;
 
 extern ThermistorData_Struct ThermistorData;
+
+void ADC_Select_MUX(int channel);
 
 void startThermistorMonitorTask();
 

@@ -35,24 +35,58 @@ extern ADC_HandleTypeDef hadc1;
 
 ThermistorData_Struct ThermistorData = { .thermistors = {} };
 
+void ADC_Select_MUX(int channel) {
+	ADC_ChannelConfTypeDef sConfig = {0};
+
+	if (DEV_BOARD == 0) {
+		switch(channel) {
+
+		case 0:
+			sConfig.Channel = ADC_CHANNEL_6;
+			break;
+		case 1:
+			sConfig.Channel = ADC_CHANNEL_7;
+			break;
+		case 2:
+			sConfig.Channel = ADC_CHANNEL_8;
+			break;
+		case 3:
+			sConfig.Channel = ADC_CHANNEL_9;
+			break;
+		}
+	} else {
+		sConfig.Channel = ADC_CHANNEL_8;
+	}
+
+	sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+		Error_Handler();
+	}
+}
+
 void startThermistorMonitorTask() {
 	uint32_t tick = osKernelGetTickCount();
-	uint8_t current_thermistor = 0;
+	uint8_t select_line = 0;
+
 
 
 	while (1) {
 
 		// Resetting pins A, B, C; then setting the next binary sequence as per table 1:
 		HAL_GPIO_WritePin(GPIOA, 0b111000, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, current_thermistor<<3, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, select_line<<3, GPIO_PIN_SET);
 
 		osDelay(100);
 
         // Grab the temperature for all modules at once
-        for (uint8_t module = 0; module < MODULE_COUNT; module++) {
+        for (uint8_t cur_mux = 0; cur_mux < MUX_COUNT; cur_mux++) {
+        	ADC_Select_MUX(cur_mux);
             HAL_ADC_Start(&hadc1);
             HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
             uint32_t divider_output = HAL_ADC_GetValue(&hadc1);
+            HAL_ADC_Stop(&hadc1);
+
 
             DEBUG_PRINT("----------------------------\n");
             DEBUG_PRINT("Divider ADC out: %d\n", divider_output);
@@ -70,7 +104,7 @@ void startThermistorMonitorTask() {
 
 		   // TODO: pick a better sentinel value
             if (thermistor_resistance == 0) {
-            	ThermistorData.thermistors[module][current_thermistor] = -1000;
+            	ThermistorData.thermistors[cur_mux][select_line] = -1000;
             	continue;
             }
 
@@ -91,22 +125,26 @@ void startThermistorMonitorTask() {
 
             DEBUG_PRINT("Thermistor Temperature (C): %d.%d\n", (int) ((temp_celsius * 100) / 100), (int) ((int) (temp_celsius * 100) % 100));
             DEBUG_PRINT("Thermistor Temperature (SteinHart & Hart) (C): %d.%d\n", (int) ((stein_temp_celsius * 100) / 100), (int) ((int) (stein_temp_celsius * 100) % 100));
-            DEBUG_PRINT("Thermistor channel: %d\n", current_thermistor);
+            DEBUG_PRINT("Thermistor channel: %d\n", select_line);
+            DEBUG_PRINT("Current MUX: %d\n", cur_mux);
 
-            //GRCprintf("Channel: %d, Count: %d, Temp: %d, Resistance: %d, Percent of voltage: %d, Measured Voltage: %d\n", (int32_t)module, (int32_t)current_thermistor, thermistor_temperature, (int32_t)thermistor_resistance, (int32_t)(percent_of_divider_input_voltage * 100), divider_voltage);
+            //GRCprintf("Channel: %d, Count: %d, Temp: %d, Resistance: %d, Percent of voltage: %d, Measured Voltage: %d\n", (int32_t)cur_mux, (int32_t)select_line, thermistor_temperature, (int32_t)thermistor_resistance, (int32_t)(percent_of_divider_input_voltage * 100), divider_voltage);
 
-            ThermistorData.thermistors[module][current_thermistor] = therm_temp;
+            ThermistorData.thermistors[cur_mux][select_line] = therm_temp;
         }
 
-        //Counter Variable for MUX Select Lines
-//		if (++current_thermistor == THERMISTORS_PER_MODULE) {
-//			current_thermistor = 0;
-//		}
-//		if (current_thermistor == 0) {
-//			current_thermistor = 3;
-//		} else {
-//			current_thermistor = 0;
-//		}
+		//Counter Variable for MUX Select Lines
+        if (DEV_BOARD == 0) {
+			if (++select_line == THERMISTORS_PER_MUX) {
+				select_line = 0;
+			}
+        } else {
+			if (select_line == 0) {
+				select_line = 3;
+			} else {
+				select_line = 0;
+			}
+        }
 
         CANTXMsg bms_broadcast = {
         	.header = {
