@@ -35,9 +35,10 @@ extern ADC_HandleTypeDef hadc1;
 
 ThermistorData_Struct ThermistorData = { .thermistors = {} };
 
-void ADC_Select_MUX(int channel) {
+void adcChangeMUX(int channel) {
 	ADC_ChannelConfTypeDef sConfig = {0};
 
+	// Selects ADC channel to convert
 	if (DEV_BOARD == 0) {
 		switch(channel) {
 
@@ -81,7 +82,7 @@ void startThermistorMonitorTask() {
 
         // Grab the temperature for all modules at once
         for (uint8_t cur_mux = 0; cur_mux < MUX_COUNT; cur_mux++) {
-        	ADC_Select_MUX(cur_mux);
+        	adcChangeMUX(cur_mux);
             HAL_ADC_Start(&hadc1);
             HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
             uint32_t divider_output = HAL_ADC_GetValue(&hadc1);
