@@ -19,7 +19,9 @@ MPU6050 mpu;
 TinyGPSPlus gps;
 
 HardwareSerial SerialGPS(1);
+
 File testFile;
+bool doWrite = true;
 
 const byte address[6] = "00001";
 
@@ -46,21 +48,29 @@ void setup() {
     Serial.println("Done");
 
     //SD Test (D32 on board)
-    if(!SD.begin(27)){
+
+    if(!SD.begin(27)) {
         Serial.println("Card Mount Failed");
         return;
+    }
+    else {
+
+        Serial.println("SD Card Mounted");
     }
 
     uint8_t cardType = SD.cardType();
 
-    if(cardType == CARD_NONE){
-        Serial.println("No SD card attached");
-        return;
+
+    testFile = SD.open("/test.csv", FILE_WRITE);
+
+    if(testFile.println("XACCEL, YACCEL, ZACCEL, XGYRO, YGYRO, ZGYRO, LAT, LNG, ALT")){
+        Serial.println("File Written");
+    }
+    else{
+        Serial.println("Write Failed: Check SD Card");
     }
 
-    
-
-
+    pinMode(35,INPUT);
 }
 
 int16_t ax, ay, az;
@@ -77,9 +87,32 @@ void loop() {
     }
 
 #ifdef DEBUG
+
+if(doWrite) {
     Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
     Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
     Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+
+    testFile.print(ax);
+    testFile.print(",");
+    testFile.print(ay);
+    testFile.print(",");
+    testFile.print(az);
+    testFile.print(",");
+    testFile.print(gx);
+    testFile.print(",");
+    testFile.print(gy);
+    testFile.print(",");
+    testFile.print(gz);
+    testFile.print(",");
+    testFile.print(gps.location.lat());
+    testFile.print(",");
+    testFile.print(gps.location.lng());
+    testFile.print(",");
+    testFile.print(gps.altitude.meters());
+    testFile.print("\n");
+    }
+
 #endif
 
     MyMessage msg = MyMessage_init_default;
@@ -101,6 +134,20 @@ void loop() {
     pb_encode(&stream, MyMessage_fields, &msg);
 
     radio.write(buffer, stream.bytes_written);
+
+    if(digitalRead(35) == HIGH){
+
+        if(doWrite) {
+            testFile = SD.open("/test.csv", FILE_WRITE);
+        }
+        else {
+            testFile.close();
+        }
+
+        doWrite = !doWrite;
+
+        delay(150);
+    }
 
     delay(100);
 }
