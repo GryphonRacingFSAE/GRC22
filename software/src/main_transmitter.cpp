@@ -158,7 +158,7 @@ void fileInit() {
     }
 
     file_name = "/" + String(gps.date.year()) + "_" + String(gps.date.month()) + "_" + String(gps.date.day()) + "_" + String(gps.time.hour()) + "_" +
-               String(gps.time.minute()) + "_" + String(gps.time.second()) + ".csv";
+                String(gps.time.minute()) + "_" + String(gps.time.second()) + ".csv";
 
     data_file = SD.open(file_name, FILE_WRITE);
 
@@ -171,26 +171,26 @@ void fileInit() {
     do_write = !do_write;
 }
 
-void writeToFile(){
+void writeToFile() {
 
-        data_file.print(delta_time);
-        data_file.print(",");
-        data_file.print(ax);
-        data_file.print(",");
-        data_file.print(ay);
-        data_file.print(",");
-        data_file.print(az);
-        data_file.print(",");
-        data_file.print(gx);
-        data_file.print(",");
-        data_file.print(gy);
-        data_file.print(",");
-        data_file.print(gz);
-        data_file.print(",");
-        data_file.print(gps.location.lat());
-        data_file.print(",");
-        data_file.print(gps.location.lng());
-        data_file.print(",");
-        data_file.print(gps.altitude.meters());
-        data_file.print("\n");
+    data_file.print(delta_time);
+    data_file.print(",");
+    data_file.print(ax);
+    data_file.print(",");
+    data_file.print(ay);
+    data_file.print(",");
+    data_file.print(az);
+    data_file.print(",");
+    data_file.print(gx);
+    data_file.print(",");
+    data_file.print(gy);
+    data_file.print(",");
+    data_file.print(gz);
+    data_file.print(",");
+    data_file.print(gps.location.lat());
+    data_file.print(",");
+    data_file.print(gps.location.lng());
+    data_file.print(",");
+    data_file.print(gps.altitude.meters());
+    data_file.print("\n");
 }
