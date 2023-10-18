@@ -13,6 +13,7 @@
 #include "message.pb.h"
 
 #define DEBUG
+#define SD_OFF_PIN 35
 
 RF24 radio(4, 5); // CE, CSN
 MPU6050 mpu;
@@ -20,48 +21,19 @@ TinyGPSPlus gps;
 
 HardwareSerial SerialGPS(1);
 
-File dataFile;
-bool doWrite = false;
-String fileName = "";
+File data_file;
+bool do_write = false;
+String file_name = "";
+String file_out;
 
 const byte address[6] = "00001";
 
-unsigned long int startTime;
-unsigned long int deltaTime;
+unsigned long int start_time;
+unsigned long int delta_time;
 
-unsigned long int getSeconds() {
-    unsigned long int totalSeconds;
-
-    totalSeconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
-
-    return totalSeconds;
-}
-
-void fileInit() {
-
-    // SD Test (D27 on board)
-
-    if (!SD.begin(27)) {
-        Serial.println("Card Mount Failed");
-        return;
-    } else {
-
-        Serial.println("SD Card Mounted");
-    }
-
-    fileName = "/" + String(gps.date.year()) + "_" + String(gps.date.month()) + "_" + String(gps.date.day()) + "_" + String(gps.time.hour()) + "_" +
-               String(gps.time.minute()) + "_" + String(gps.time.second()) + ".csv";
-
-    dataFile = SD.open(fileName, FILE_WRITE);
-
-    if (dataFile.println("DELTA-TIME, XACCEL, YACCEL, ZACCEL, XGYRO, YGYRO, ZGYRO, LAT, LNG, ALT")) {
-        Serial.println("File Written");
-    } else {
-        Serial.println("Write Failed: Check SD Card");
-    }
-
-    doWrite = !doWrite;
-}
+unsigned long int getSeconds();
+void fileInit();
+void writeToFile();
 
 void setup() {
     Serial.begin(115200);
@@ -85,7 +57,7 @@ void setup() {
     SerialGPS.begin(9600, SERIAL_8N1, 16, 17); // RX, TX
     Serial.println("Done");
 
-    pinMode(35, INPUT);
+    pinMode(SD_OFF_PIN, INPUT);
 }
 
 int16_t ax, ay, az;
@@ -103,9 +75,9 @@ void loop() {
 
 #ifdef DEBUG
 
-    if (doWrite) {
+    if (do_write) {
 
-        Serial.printf("Current Time: %lu\n", deltaTime);
+        Serial.printf("Current Time: %lu\n", delta_time);
         Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
         Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
         Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
@@ -113,39 +85,20 @@ void loop() {
 
 #endif
 
-    if (startTime == 0) {
+    if (start_time == 0) {
 
-        startTime = getSeconds();
+        start_time = getSeconds();
 
-        if (startTime != 0) {
+        if (start_time != 0) {
             fileInit();
         }
     }
 
-    deltaTime = getSeconds() - startTime;
+    delta_time = getSeconds() - start_time;
 
-    if (doWrite) {
+    if (do_write) {
 
-        dataFile.print(deltaTime);
-        dataFile.print(",");
-        dataFile.print(ax);
-        dataFile.print(",");
-        dataFile.print(ay);
-        dataFile.print(",");
-        dataFile.print(az);
-        dataFile.print(",");
-        dataFile.print(gx);
-        dataFile.print(",");
-        dataFile.print(gy);
-        dataFile.print(",");
-        dataFile.print(gz);
-        dataFile.print(",");
-        dataFile.print(gps.location.lat());
-        dataFile.print(",");
-        dataFile.print(gps.location.lng());
-        dataFile.print(",");
-        dataFile.print(gps.altitude.meters());
-        dataFile.print("\n");
+        writeToFile();
     }
 
     MyMessage msg = MyMessage_init_default;
@@ -168,18 +121,76 @@ void loop() {
 
     radio.write(buffer, stream.bytes_written);
 
-    if (digitalRead(35) == HIGH) {
+    if (digitalRead(SD_OFF_PIN) == HIGH) {
 
-        if (doWrite) {
-            dataFile = SD.open(fileName, FILE_WRITE);
+        if (do_write) {
+            data_file = SD.open(file_name, FILE_WRITE);
         } else {
-            dataFile.close();
+            data_file.close();
         }
 
-        doWrite = !doWrite;
+        do_write = !do_write;
 
         delay(150);
     }
 
     delay(100);
+}
+
+unsigned long int getSeconds() {
+    unsigned long int total_seconds;
+
+    total_seconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
+
+    return total_seconds;
+}
+
+void fileInit() {
+
+    // SD Test (D27 on board)
+
+    if (!SD.begin(27)) {
+        Serial.println("Card Mount Failed");
+        return;
+    } else {
+
+        Serial.println("SD Card Mounted");
+    }
+
+    file_name = "/" + String(gps.date.year()) + "_" + String(gps.date.month()) + "_" + String(gps.date.day()) + "_" + String(gps.time.hour()) + "_" +
+               String(gps.time.minute()) + "_" + String(gps.time.second()) + ".csv";
+
+    data_file = SD.open(file_name, FILE_WRITE);
+
+    if (data_file.println("DELTA-TIME, XACCEL, YACCEL, ZACCEL, XGYRO, YGYRO, ZGYRO, LAT, LNG, ALT")) {
+        Serial.println("File Written");
+    } else {
+        Serial.println("Write Failed: Check SD Card");
+    }
+
+    do_write = !do_write;
+}
+
+void writeToFile(){
+
+        data_file.print(delta_time);
+        data_file.print(",");
+        data_file.print(ax);
+        data_file.print(",");
+        data_file.print(ay);
+        data_file.print(",");
+        data_file.print(az);
+        data_file.print(",");
+        data_file.print(gx);
+        data_file.print(",");
+        data_file.print(gy);
+        data_file.print(",");
+        data_file.print(gz);
+        data_file.print(",");
+        data_file.print(gps.location.lat());
+        data_file.print(",");
+        data_file.print(gps.location.lng());
+        data_file.print(",");
+        data_file.print(gps.altitude.meters());
+        data_file.print("\n");
 }
