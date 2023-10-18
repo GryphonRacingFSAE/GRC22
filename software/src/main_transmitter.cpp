@@ -5,10 +5,10 @@
 #include <TinyGPSPlus.h>
 #include <pb_encode.h>
 
-//SD Card Libraries
-#include <SPI.h>
-#include <SD.h>
+// SD Card Libraries
 #include <FS.h>
+#include <SD.h>
+#include <SPI.h>
 
 #include "message.pb.h"
 
@@ -20,10 +20,48 @@ TinyGPSPlus gps;
 
 HardwareSerial SerialGPS(1);
 
-File testFile;
-bool doWrite = true;
+File dataFile;
+bool doWrite = false;
+String fileName = "";
 
 const byte address[6] = "00001";
+
+unsigned long int startTime;
+unsigned long int deltaTime;
+
+unsigned long int getSeconds() {
+    unsigned long int totalSeconds;
+
+    totalSeconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
+
+    return totalSeconds;
+}
+
+void fileInit() {
+
+    // SD Test (D27 on board)
+
+    if (!SD.begin(27)) {
+        Serial.println("Card Mount Failed");
+        return;
+    } else {
+
+        Serial.println("SD Card Mounted");
+    }
+
+    fileName = "/" + String(gps.date.year()) + "_" + String(gps.date.month()) + "_" + String(gps.date.day()) + "_" + String(gps.time.hour()) + "_" +
+               String(gps.time.minute()) + "_" + String(gps.time.second()) + ".csv";
+
+    dataFile = SD.open(fileName, FILE_WRITE);
+
+    if (dataFile.println("DELTA-TIME, XACCEL, YACCEL, ZACCEL, XGYRO, YGYRO, ZGYRO, LAT, LNG, ALT")) {
+        Serial.println("File Written");
+    } else {
+        Serial.println("Write Failed: Check SD Card");
+    }
+
+    doWrite = !doWrite;
+}
 
 void setup() {
     Serial.begin(115200);
@@ -47,30 +85,7 @@ void setup() {
     SerialGPS.begin(9600, SERIAL_8N1, 16, 17); // RX, TX
     Serial.println("Done");
 
-    //SD Test (D32 on board)
-
-    if(!SD.begin(27)) {
-        Serial.println("Card Mount Failed");
-        return;
-    }
-    else {
-
-        Serial.println("SD Card Mounted");
-    }
-
-    uint8_t cardType = SD.cardType();
-
-
-    testFile = SD.open("/test.csv", FILE_WRITE);
-
-    if(testFile.println("XACCEL, YACCEL, ZACCEL, XGYRO, YGYRO, ZGYRO, LAT, LNG, ALT")){
-        Serial.println("File Written");
-    }
-    else{
-        Serial.println("Write Failed: Check SD Card");
-    }
-
-    pinMode(35,INPUT);
+    pinMode(35, INPUT);
 }
 
 int16_t ax, ay, az;
@@ -88,32 +103,50 @@ void loop() {
 
 #ifdef DEBUG
 
-if(doWrite) {
-    Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
-    Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
-    Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+    if (doWrite) {
 
-    testFile.print(ax);
-    testFile.print(",");
-    testFile.print(ay);
-    testFile.print(",");
-    testFile.print(az);
-    testFile.print(",");
-    testFile.print(gx);
-    testFile.print(",");
-    testFile.print(gy);
-    testFile.print(",");
-    testFile.print(gz);
-    testFile.print(",");
-    testFile.print(gps.location.lat());
-    testFile.print(",");
-    testFile.print(gps.location.lng());
-    testFile.print(",");
-    testFile.print(gps.altitude.meters());
-    testFile.print("\n");
+        Serial.printf("Current Time: %lu\n", deltaTime);
+        Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
+        Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
+        Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
     }
 
 #endif
+
+    if (startTime == 0) {
+
+        startTime = getSeconds();
+
+        if (startTime != 0) {
+            fileInit();
+        }
+    }
+
+    deltaTime = getSeconds() - startTime;
+
+    if (doWrite) {
+
+        dataFile.print(deltaTime);
+        dataFile.print(",");
+        dataFile.print(ax);
+        dataFile.print(",");
+        dataFile.print(ay);
+        dataFile.print(",");
+        dataFile.print(az);
+        dataFile.print(",");
+        dataFile.print(gx);
+        dataFile.print(",");
+        dataFile.print(gy);
+        dataFile.print(",");
+        dataFile.print(gz);
+        dataFile.print(",");
+        dataFile.print(gps.location.lat());
+        dataFile.print(",");
+        dataFile.print(gps.location.lng());
+        dataFile.print(",");
+        dataFile.print(gps.altitude.meters());
+        dataFile.print("\n");
+    }
 
     MyMessage msg = MyMessage_init_default;
 
@@ -135,13 +168,12 @@ if(doWrite) {
 
     radio.write(buffer, stream.bytes_written);
 
-    if(digitalRead(35) == HIGH){
+    if (digitalRead(35) == HIGH) {
 
-        if(doWrite) {
-            testFile = SD.open("/test.csv", FILE_WRITE);
-        }
-        else {
-            testFile.close();
+        if (doWrite) {
+            dataFile = SD.open(fileName, FILE_WRITE);
+        } else {
+            dataFile.close();
         }
 
         doWrite = !doWrite;
