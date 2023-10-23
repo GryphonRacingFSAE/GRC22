@@ -139,12 +139,12 @@ void loop() {
     delay(100);
 }
 
-void calibrateMPU(){
+void calibrateMPU() {
 
     mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
     Serial.printf("\n*****MPU Recalibrated*****\n");
 
-    if(data_file){
+    if (data_file) {
 
         data_file.println("MPU Recalibrated");
     }
