@@ -31,9 +31,13 @@ const byte address[6] = "00001";
 unsigned long int start_time;
 unsigned long int delta_time;
 
+int16_t ax, ay, az, ax_offset, ay_offset, az_offset;
+int16_t gx, gy, gz, gx_offset, gy_offset, gz_offset;
+
 unsigned long int getSeconds();
 void fileInit();
 void writeToFile();
+void calibrateMPU();
 
 void setup() {
     Serial.begin(115200);
@@ -58,10 +62,9 @@ void setup() {
     Serial.println("Done");
 
     pinMode(SD_OFF_PIN, INPUT);
-}
 
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
+    calibrateMPU();
+}
 
 void loop() {
 
@@ -118,7 +121,6 @@ void loop() {
 
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
     pb_encode(&stream, MyMessage_fields, &msg);
-
     radio.write(buffer, stream.bytes_written);
 
     if (digitalRead(SD_OFF_PIN) == HIGH) {
@@ -135,6 +137,17 @@ void loop() {
     }
 
     delay(100);
+}
+
+void calibrateMPU(){
+
+    mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
+    Serial.printf("\n*****MPU Recalibrated*****\n");
+
+    if(data_file){
+
+        data_file.println("MPU Recalibrated");
+    }
 }
 
 unsigned long int getSeconds() {
