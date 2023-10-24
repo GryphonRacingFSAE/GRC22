@@ -14,6 +14,7 @@
 
 #define DEBUG
 #define SD_OFF_PIN 35
+#define MPU_CALIBRATE_PIN 33
 
 RF24 radio(4, 5); // CE, CSN
 MPU6050 mpu;
@@ -38,6 +39,7 @@ unsigned long int getSeconds();
 void fileInit();
 void writeToFile();
 void calibrateMPU();
+void applyCalibration();
 
 void setup() {
     Serial.begin(115200);
@@ -62,6 +64,7 @@ void setup() {
     Serial.println("Done");
 
     pinMode(SD_OFF_PIN, INPUT);
+    pinMode(MPU_CALIBRATE_PIN, INPUT);
 
     calibrateMPU();
 }
@@ -69,6 +72,7 @@ void setup() {
 void loop() {
 
     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    applyCalibration();
 
     while (SerialGPS.available() > 0) {
         if (gps.encode(SerialGPS.read())) {
@@ -136,6 +140,11 @@ void loop() {
         delay(150);
     }
 
+    if (digitalRead(MPU_CALIBRATE_PIN) == HIGH) {
+
+        calibrateMPU();
+    }
+
     delay(100);
 }
 
@@ -146,8 +155,10 @@ void calibrateMPU() {
 
     if (data_file) {
 
-        data_file.println("MPU Recalibrated");
+        data_file.println("****MPU Recalibrated****");
     }
+
+    delay(150);
 }
 
 unsigned long int getSeconds() {
@@ -156,6 +167,16 @@ unsigned long int getSeconds() {
     total_seconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
 
     return total_seconds;
+}
+
+void applyCalibration() {
+
+    ax -= ax_offset;
+    ay -= ay_offset;
+    az -= az_offset;
+    gx -= gx_offset;
+    gy -= gy_offset;
+    gz -= gz_offset;
 }
 
 void fileInit() {
