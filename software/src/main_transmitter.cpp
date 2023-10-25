@@ -14,6 +14,7 @@
 
 #define DEBUG
 #define SD_OFF_PIN 35
+#define MPU_CALIBRATE_PIN 33
 
 RF24 radio(4, 5); // CE, CSN
 MPU6050 mpu;
@@ -31,9 +32,14 @@ const byte address[6] = "00001";
 unsigned long int start_time;
 unsigned long int delta_time;
 
+int16_t ax, ay, az, ax_offset, ay_offset, az_offset;
+int16_t gx, gy, gz, gx_offset, gy_offset, gz_offset;
+
 unsigned long int getSeconds();
 void fileInit();
 void writeToFile();
+void calibrateMPU();
+void applyCalibration();
 
 void setup() {
     Serial.begin(115200);
@@ -58,14 +64,15 @@ void setup() {
     Serial.println("Done");
 
     pinMode(SD_OFF_PIN, INPUT);
-}
+    pinMode(MPU_CALIBRATE_PIN, INPUT);
 
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
+    calibrateMPU();
+}
 
 void loop() {
 
     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    applyCalibration();
 
     while (SerialGPS.available() > 0) {
         if (gps.encode(SerialGPS.read())) {
@@ -118,7 +125,6 @@ void loop() {
 
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
     pb_encode(&stream, MyMessage_fields, &msg);
-
     radio.write(buffer, stream.bytes_written);
 
     if (digitalRead(SD_OFF_PIN) == HIGH) {
@@ -134,7 +140,25 @@ void loop() {
         delay(150);
     }
 
+    if (digitalRead(MPU_CALIBRATE_PIN) == HIGH) {
+
+        calibrateMPU();
+    }
+
     delay(100);
+}
+
+void calibrateMPU() {
+
+    mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
+    Serial.printf("\n*****MPU Recalibrated*****\n");
+
+    if (data_file) {
+
+        data_file.println("****MPU Recalibrated****");
+    }
+
+    delay(150);
 }
 
 unsigned long int getSeconds() {
@@ -143,6 +167,16 @@ unsigned long int getSeconds() {
     total_seconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
 
     return total_seconds;
+}
+
+void applyCalibration() {
+
+    ax -= ax_offset;
+    ay -= ay_offset;
+    az -= az_offset;
+    gx -= gx_offset;
+    gy -= gy_offset;
+    gz -= gz_offset;
 }
 
 void fileInit() {
