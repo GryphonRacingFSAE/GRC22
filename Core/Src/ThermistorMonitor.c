@@ -92,17 +92,17 @@ void startThermistorMonitorTask() {
 
             DEBUG_PRINT("----------------------------\n");
             DEBUG_PRINT("Divider ADC out: %d\n", divider_output);
-
-
+//
+//
             // converts ADC units to volts
             float divider_voltage = ((float) divider_output/(float) ADC_RESOLUTION * REFERENCE_VOLTAGE);
-
-
+//
+//
             DEBUG_PRINT("Divider Voltage: %d.%d\n", (int)divider_voltage, (int) (divider_voltage * 1000) % 1000);
-
+//
             // calculates resistance of the thermistor using rearrangement of voltage divider formula: https://ohmslawcalculator.com/voltage-divider-calculator
             float thermistor_resistance = (divider_voltage * DIVIDER_RESISTANCE) / (REFERENCE_VOLTAGE - divider_voltage);
-
+//
             DEBUG_PRINT("Thermistor Resistance: %d\n", (int) (thermistor_resistance));
 
 
@@ -115,9 +115,9 @@ void startThermistorMonitorTask() {
 			// Convert Thermistor Resistance to Temperature
 			// This is a rearrangement of the equation found here: https://www.lasercalculator.com/ntc-thermistor-calculator/
 			float therm_temp = (float) (CALIBRATION_TEMPERATURE * THERMISTOR_BETA) / ((CALIBRATION_TEMPERATURE*log(thermistor_resistance/CALIBRATION_RESISTANCE)) + THERMISTOR_BETA);
-			DEBUG_PRINT("Thermistor Temperature (NTC appoximation)(K): %d.%d\n", (int) (therm_temp), (int) ((int) (therm_temp * 100) % 100));
-
-			// This is an equation which is can be more accurate than generalizing the shape of the temperature-resistange curve, found here: https://www.ametherm.com/thermistor/ntc-thermistors-steinhart-and-hart-equation
+//			DEBUG_PRINT("Thermistor Temperature (NTC appoximation)(K): %d.%d\n", (int) (therm_temp), (int) ((int) (therm_temp * 100) % 100));
+//
+//			// This is an equation which is can be more accurate than generalizing the shape of the temperature-resistange curve, found here: https://www.ametherm.com/thermistor/ntc-thermistors-steinhart-and-hart-equation
 			float stein_temp = 1.0 / (TEMP_COEFF_A + (TEMP_COEFF_B * log(thermistor_resistance/(float) CALIBRATION_RESISTANCE)) + TEMP_COEFF_C * powf(log(thermistor_resistance/(float) CALIBRATION_RESISTANCE), 2.0) + TEMP_COEFF_D * powf(log(thermistor_resistance/(float) CALIBRATION_RESISTANCE), 3.0));
 			DEBUG_PRINT("Thermistor Temperature (Steinhart & Hart Coeff) (K): %d.%d\n", (int) (stein_temp), (int) ((int) (stein_temp * 100) % 100));
 
@@ -128,7 +128,7 @@ void startThermistorMonitorTask() {
             float temp_celsius = therm_temp - 273.15f;
             float stein_temp_celsius = stein_temp - 273.15f;
 
-            DEBUG_PRINT("Thermistor Temperature (C): %d.%d\n", (int) (temp_celsius), abs((int) ((int) (temp_celsius * 100) % 100)));
+//            DEBUG_PRINT("Thermistor Temperature (C): %d.%d\n", (int) (temp_celsius), abs((int) ((int) (temp_celsius * 100) % 100)));
             DEBUG_PRINT("Thermistor Temperature (SteinHart & Hart) (C): %d.%d\n", (int) (stein_temp_celsius), abs((int) ((int) (stein_temp_celsius * 100) % 100)));
             DEBUG_PRINT("Thermistor channel: %d\n", select_line);
             DEBUG_PRINT("Current MUX: %d\n", cur_mux);
@@ -164,7 +164,7 @@ void startThermistorMonitorTask() {
 
 
         osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 5);
-        //GRCprintf("Sent TX broadcast\n");
+        GRCprintf("Sent TX broadcast\n");
 
 		osDelayUntil(tick += THERMISTOR_PERIOD);
 	}

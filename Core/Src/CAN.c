@@ -10,9 +10,9 @@ void startCANTxTask() {
 		// Grab CAN message from CAN1 queue
 		if (osMessageQueueGet(CANTX_QHandle, &txMsg, NULL, osWaitForever) == osOK) {
 			// Send out TX message on CAN
-			//TRACE_PRINT("CAN1 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
+			TRACE_PRINT("CAN1 sending message: %d or %d\r\n", txMsg.header.StdId, txMsg.header.ExtId);
 			if (HAL_CAN_AddTxMessage(txMsg.to, &txMsg.header, txMsg.data, &mailbox) != HAL_OK) {
-				//ERROR_PRINT("Could not transmit on CAN!\r\n");
+				ERROR_PRINT("Could not transmit on CAN!\r\n");
 			}
 		}
 	}
