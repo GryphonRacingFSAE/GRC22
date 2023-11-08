@@ -21,7 +21,7 @@ class GRCDash(ConanFile):
         "dev": "full"
     }
 
-    generators = "VirtualRunEnv", "VirtualBuildEnv", "qt"
+    generators = "VirtualRunEnv", "VirtualBuildEnv"
     exports_sources = "CMakeLists.txt", "src/*"
 
     def validate(self):
