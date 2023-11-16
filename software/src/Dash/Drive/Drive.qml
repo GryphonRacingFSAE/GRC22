@@ -171,31 +171,6 @@ Item {
             }
         }
 
-        //Accum and Motor
-        ColumnLayout {
-            Layout.preferredWidth: parent.width/16*5
-            
-            DataBox {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                id: accumTempBox
-                title: "Accum Temp"
-                fontSize: root.height/20
-                precision: 1;
-                low: 20
-                high: 40
-            }
-            DataBox {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                id: motorTempBox
-                title: "Motor Temp"
-                fontSize: root.height/20
-                precision: 1;
-                low: 30
-                high: 75
-            }
-        }
     }
 
     RowLayout {

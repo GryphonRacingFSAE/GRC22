@@ -25,6 +25,7 @@ class GRCDash(ConanFile):
             raise ConanInvalidConfiguration("Non-Linux backend for canbus not supported")
 
     def configure(self):
+        self.options["qt"].shared = True
         self.options["qt"].qtdeclarative = True
         self.options["qt"].qtshadertools = True
         self.options["qt"].with_libjpeg = "libjpeg"
