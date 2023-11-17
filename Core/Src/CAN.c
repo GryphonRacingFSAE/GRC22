@@ -21,6 +21,6 @@ void startCANTxTask() {
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	CANRXMsg rx_msg = { .from = hcan }; // Allow the message handler to know where to send any responses to.
 	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_msg.header, rx_msg.data);
-	//TRACE_PRINT("CAN received message: %d to address: %ld\r\n", (uint32_t)(hcan), (uint32_t)rx_msg.header.ExtId);
+	TRACE_PRINT("CAN received message: %d to address: %ld\r\n", (uint32_t)(hcan), (uint32_t)rx_msg.header.ExtId);
 	// We don't actually need to receive any data on this device, so printing and moving on is totally fine.
 }
