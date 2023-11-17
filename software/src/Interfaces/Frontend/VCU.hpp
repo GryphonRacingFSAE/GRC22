@@ -6,6 +6,7 @@
 #include <limits>
 #include <rapidcsv.h>
 
+namespace fake {
 class VCU : public QObject {
     Q_OBJECT
     Q_PROPERTY(
@@ -98,3 +99,5 @@ class VCU : public QObject {
     static constexpr int torque_map_min =
         std::numeric_limits<int8_t>::min() + torque_map_offset; // Estimated is around +230Nm
 };
+    
+}
