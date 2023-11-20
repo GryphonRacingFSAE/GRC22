@@ -19,7 +19,7 @@
 #define THERMISTOR_COUNT (THERMISTORS_PER_MUX * MUX_COUNT)
 
 typedef struct {
-	int32_t thermistors[MUX_COUNT][THERMISTORS_PER_MUX];
+    int32_t thermistors[MUX_COUNT][THERMISTORS_PER_MUX];
 } ThermistorData_Struct;
 
 extern ThermistorData_Struct ThermistorData;
