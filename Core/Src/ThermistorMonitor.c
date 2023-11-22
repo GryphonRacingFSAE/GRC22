@@ -4,7 +4,6 @@
 #include <CAN.h>
 #include <math.h>
 
-
 extern ADC_HandleTypeDef hadc1;
 
 // Use NTC 10K Thermistor Parameters
@@ -33,6 +32,9 @@ extern ADC_HandleTypeDef hadc1;
 
 ThermistorData_Struct ThermistorData = {.thermistors = {}};
 
+/* This function is called to reconfigure the current ADC Conversion channel without
+ * interrupts for the possibility to iterate over multiplexers on different ADC channels
+ */
 void adcChangeMUX(int channel) {
     ADC_ChannelConfTypeDef sConfig = {0};
 
@@ -64,6 +66,15 @@ void adcChangeMUX(int channel) {
     }
 }
 
+/* This function gets the thermistor readings from multiple multiplexers
+ *
+ *
+ * The order of how we scan for the data is as such:
+ *
+ * 1. Iterate over the Multiplexers, getting the thermistor on a specified select line on each MUX
+ * 2. Perform temperature calculations for each thermistor readings and store the data
+ * 3. Change to the next Select Line and repeat process
+ */
 void startThermistorMonitorTask() {
     uint32_t tick = osKernelGetTickCount();
     uint8_t select_line = 0;

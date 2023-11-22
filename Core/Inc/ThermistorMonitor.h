@@ -18,6 +18,9 @@
 
 #define THERMISTOR_COUNT (THERMISTORS_PER_MUX * MUX_COUNT)
 
+// Thermistor data is stored in a 2D array formatted as such:
+// [Multiplexer ID (from ADC channel; e.g.: 0, 1, 2, etc)] ->
+// [Thermistor of Multiplexer (based on select line of MUX; e.g: 0-7 for 8 channel MUX and 0-15 for 6 channel MUX)]
 typedef struct {
     int32_t thermistors[MUX_COUNT][THERMISTORS_PER_MUX];
 } ThermistorData_Struct;
