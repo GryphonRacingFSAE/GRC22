@@ -132,7 +132,7 @@ void startThermistorMonitorTask() {
             DEBUG_PRINT("Thermistor channel: %d\n", select_line);
             DEBUG_PRINT("Current MUX: %d\n", cur_mux);
 
-            ThermistorData.thermistors[cur_mux][select_line] = therm_temp;
+            ThermistorData.thermistors[cur_mux][select_line] = stein_temp;
         }
 
         // Counter Variable for MUX Select Lines
