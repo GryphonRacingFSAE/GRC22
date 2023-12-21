@@ -13,6 +13,7 @@ ApplicationWindow {
     minimumHeight: height
     minimumWidth: width
     flags: Qt.Window // | Qt.FramelessWindowHint add when final project is reached.
+    
 
     Loader {
         id: active_dash

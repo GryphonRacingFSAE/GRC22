@@ -50,7 +50,7 @@ Item {
         ColumnLayout {
             Layout.preferredWidth: parent.width/16*5
 
-            SpeedBox {
+            DataBox {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 id: speedBox
@@ -158,6 +158,7 @@ Item {
                 }
 
                 Text {
+                    font.family: "Consolas"
                     text: "kmph"
                     font.bold: true
                     color:"black"

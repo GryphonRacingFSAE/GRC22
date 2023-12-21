@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <fmt/core.h>
+#include <QFile>
 
 #include <Full/BMS.hpp>
 #include <Full/EnergyMeter.hpp>

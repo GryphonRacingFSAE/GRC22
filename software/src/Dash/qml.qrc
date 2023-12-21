@@ -5,6 +5,7 @@
         <file>main2019.qml</file>
 
         <file>Drive/Drive.qml</file>
+        
         <file>Drive/Battery.qml</file>
         <file>Drive/DataBox.qml</file>
         <file>Drive/SpeedBox.qml</file>
