@@ -43,7 +43,7 @@ void adcChangeMUX(int channel) {
         switch (channel) {
 
         case 0:
-            sConfig.Channel = ADC_CHANNEL_6;
+            sConfig.Channel = ADC_CHANNEL_2;
             break;
         case 1:
             sConfig.Channel = ADC_CHANNEL_7;
@@ -82,7 +82,7 @@ void startThermistorMonitorTask() {
     while (1) {
 
         // Resetting pins A, B, C; then setting the next binary sequence as per table 1:
-        HAL_GPIO_WritePin(GPIOA, 0b111000, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOA, 0b1111000, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOA, select_line << 3, GPIO_PIN_SET);
 
         osDelay(100);

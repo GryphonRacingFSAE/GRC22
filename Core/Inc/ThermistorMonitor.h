@@ -10,7 +10,7 @@
 
 #if DEV_BOARD == 0
 #define MUX_COUNT 4
-#define THERMISTORS_PER_MUX 8
+#define THERMISTORS_PER_MUX 16
 #else
 #define MUX_COUNT 1
 #define THERMISTORS_PER_MUX 2

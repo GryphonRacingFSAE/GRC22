@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define ADDR1_GPIO_Port GPIOA
 #define ADDR2_Pin GPIO_PIN_5
 #define ADDR2_GPIO_Port GPIOA
+#define ADDR3_Pin GPIO_PIN_6
+#define ADDR3_GPIO_Port GPIOA
 #define DIP0_Pin GPIO_PIN_12
 #define DIP0_GPIO_Port GPIOB
 #define DIP1_Pin GPIO_PIN_13
