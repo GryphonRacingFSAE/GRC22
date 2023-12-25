@@ -3,5 +3,4 @@
 
 uint checkIdentityTask();
 
-
 #endif
