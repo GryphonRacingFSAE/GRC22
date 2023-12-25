@@ -1,9 +1,7 @@
 #include "IdentityCheck.h"
 #include "main.h"
 
-extern moduleId;
-
-uint checkIdentityTask() {
+void checkIdentityTask() {
 
     uint bit0;
     uint bit1;
@@ -13,5 +11,5 @@ uint checkIdentityTask() {
     bit1 = HAL_GPIO_ReadPin(GPIOA, DIP1_Pin) << 1;
     bit2 = HAL_GPIO_ReadPin(GPIOA, DIP2_Pin) << 2;
 
-    return bit0 | bit1 | bit2;
+    MODULE_ID = (bit0 | bit1 | bit2);
 }

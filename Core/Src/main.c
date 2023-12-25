@@ -42,7 +42,6 @@ typedef StaticSemaphore_t osStaticSemaphoreDef_t;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-int moduleId;
 
 ADC_HandleTypeDef hadc1;
 
@@ -149,7 +148,7 @@ int main(void)
   MX_CAN_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  moduleId = checkIdentityTask();
+  checkIdentityTask();
   /* USER CODE END 2 */
 
   /* Init scheduler */
