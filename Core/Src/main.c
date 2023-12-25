@@ -107,6 +107,7 @@ void StartDefaultTask(void *argument);
 extern void startCANTxTask(void *argument);
 extern void startThermistorMonitorTask(void *argument);
 extern void startTEMInterfaceTask(void *argument);
+extern void checkIdentityTask(void);
 
 /* USER CODE BEGIN PFP */
 
