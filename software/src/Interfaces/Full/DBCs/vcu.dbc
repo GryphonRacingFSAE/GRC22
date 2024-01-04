@@ -36,6 +36,12 @@ BS_:
 BU_:
 
 
+BO_ 536 VCU_RECIEVE_MSG_ID_0X218: 8 Vector__XXX
+ SG_ RECIEVE_ADDRESS : 0|64@1+ (1,0) [0|1.84467440737096E+019] "" Vector__XXX
+
+BO_ 528 VCU_SEND_MSG_ID_0X210: 8 Vector__XXX
+ SG_ SEND_ADDRESS : 0|64@1+ (1,0) [0|1.84467440737096E+019] "" Vector__XXX
+
 
 
 BA_DEF_  "MultiplexExtEnabled" ENUM  "No","Yes";
