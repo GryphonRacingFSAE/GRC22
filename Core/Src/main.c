@@ -107,7 +107,6 @@ void StartDefaultTask(void *argument);
 extern void startCANTxTask(void *argument);
 extern void startThermistorMonitorTask(void *argument);
 extern void startTEMInterfaceTask(void *argument);
-extern void checkIdentityTask(void);
 
 /* USER CODE BEGIN PFP */
 
@@ -149,7 +148,6 @@ int main(void)
   MX_CAN_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  checkIdentityTask();
   /* USER CODE END 2 */
 
   /* Init scheduler */
