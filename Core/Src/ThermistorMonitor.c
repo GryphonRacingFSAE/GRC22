@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <CAN.h>
 #include <math.h>
+#include <stdlib.h>
 
 extern ADC_HandleTypeDef hadc1;
 
@@ -39,11 +40,10 @@ void adcChangeMUX(int channel) {
     ADC_ChannelConfTypeDef sConfig = {0};
 
     // Selects new ADC channel for conversion
-    if (DEV_BOARD == 0) {
+    if (!DEV_BOARD) {
         switch (channel) {
-
         case 0:
-            sConfig.Channel = ADC_CHANNEL_6;
+            sConfig.Channel = ADC_CHANNEL_2;
             break;
         case 1:
             sConfig.Channel = ADC_CHANNEL_7;
@@ -80,15 +80,24 @@ void startThermistorMonitorTask() {
     uint8_t select_line = 0;
 
     while (1) {
-
         // Resetting pins A, B, C; then setting the next binary sequence as per table 1:
-        HAL_GPIO_WritePin(GPIOA, 0b111000, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOA, 0b1111000, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOA, select_line << 3, GPIO_PIN_SET);
 
-        osDelay(100);
+        // This delay should be quite small, and only large enough to guarentee
+        // the multiplexers have time to react to the new addresses
+        osDelay(200);
 
         // Grab the temperature for all modules at once
         for (uint8_t cur_mux = 0; cur_mux < MUX_COUNT; cur_mux++) {
+        	// Skip this multiplexer for this select line, as there is no thermistor here.
+        	if (select_line == UNPOPULATED_THERMISTORS[cur_mux][0] || select_line == UNPOPULATED_THERMISTORS[cur_mux][1]) {
+        		continue;
+        	}
+
+        	// This math relies on the fact that the UNPOPULATED_THERMISTORS array is arranged from least to greatest
+            uint8_t current_thermistor_id = cur_mux * THERMISTORS_PER_MUX + select_line - (uint8_t)(select_line >= UNPOPULATED_THERMISTORS[cur_mux][0]) - (uint8_t)(select_line >= UNPOPULATED_THERMISTORS[cur_mux][1]);
+
             // changes the MUX that the ADC polls
             adcChangeMUX(cur_mux);
             HAL_ADC_Start(&hadc1);
@@ -96,23 +105,18 @@ void startThermistorMonitorTask() {
             uint32_t divider_output = HAL_ADC_GetValue(&hadc1);
             HAL_ADC_Stop(&hadc1);
 
-            DEBUG_PRINT("----------------------------\n");
-            DEBUG_PRINT("Divider ADC out: %d\n", divider_output);
-
             // converts ADC units to volts
             float divider_voltage = ((float)divider_output / (float)ADC_RESOLUTION * REFERENCE_VOLTAGE);
-
-            DEBUG_PRINT("Divider Voltage: %d.%d\n", (int)divider_voltage, (int)(divider_voltage * 1000) % 1000);
 
             // calculates resistance of the thermistor using rearrangement of voltage divider formula:
             // https://ohmslawcalculator.com/voltage-divider-calculator
             float thermistor_resistance = (divider_voltage * DIVIDER_RESISTANCE) / (REFERENCE_VOLTAGE - divider_voltage);
 
-            DEBUG_PRINT("Thermistor Resistance: %d\n", (int)(thermistor_resistance));
-
-            // TODO: pick a better sentinel value
-            if (thermistor_resistance == 0) {
-                ThermistorData.thermistors[cur_mux][select_line] = -1000;
+            // 100 ohms of resistance with our thermistors is about 200 degrees C, the battery pack is long gone by then.
+            // This is more for detecting open circuit connections.
+            // It seems that the TEM modules use -41 degrees as sentinal values, so we're copying it.
+            if (thermistor_resistance < 100) {
+                ThermistorData.thermistors[current_thermistor_id] = -41;
                 continue;
             }
 
@@ -122,36 +126,20 @@ void startThermistorMonitorTask() {
             float stein_temp = 1.0 / (TEMP_COEFF_A + (TEMP_COEFF_B * log(thermistor_resistance / (float)CALIBRATION_RESISTANCE)) +
                                       TEMP_COEFF_C * powf(log(thermistor_resistance / (float)CALIBRATION_RESISTANCE), 2.0) +
                                       TEMP_COEFF_D * powf(log(thermistor_resistance / (float)CALIBRATION_RESISTANCE), 3.0));
-            DEBUG_PRINT("Thermistor Temperature (Steinhart & Hart Coeff) (K): %d.%d\n", (int)(stein_temp), (int)((int)(stein_temp * 100) % 100));
 
             float stein_temp_celsius = stein_temp - 273.15f;
 
-            DEBUG_PRINT("Thermistor Temperature (SteinHart & Hart) (C): %d.%d\n",
-                        (int)(stein_temp_celsius),
-                        abs((int)((int)(stein_temp_celsius * 100) % 100)));
-            DEBUG_PRINT("Thermistor channel: %d\n", select_line);
-            DEBUG_PRINT("Current MUX: %d\n", cur_mux);
+            int8_t thermistor_temperature_celsius = (int8_t)round(stein_temp_celsius);
 
-            ThermistorData.thermistors[cur_mux][select_line] = stein_temp;
+        	DEBUG_PRINT("Multiplexer: %d, Index: %d Thermistor ID: %d Measured Voltage: %d Temperature: %dc\n", (int)cur_mux, (int)select_line, (int)current_thermistor_id, (int)divider_output, thermistor_temperature_celsius);
+            ThermistorData.thermistors[current_thermistor_id] = thermistor_temperature_celsius;
         }
 
         // Counter Variable for MUX Select Lines
-        if (!DEV_BOARD) {
-            if (++select_line == THERMISTORS_PER_MUX) {
-                select_line = 0;
-            }
-        } else {
-            if (select_line == 0) {
-                select_line = 3;
-            } else {
-                select_line = 0;
-            }
-        }
+		if (++select_line == MULTIPLEXER_SIZE) {
+			select_line = 0;
+		}
 
-        CANTXMsg bms_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x1839F380, .DLC = 8}, .to = &hcan};
-
-        osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 5);
-        GRCprintf("Sent TX broadcast\n");
 
         osDelayUntil(tick += THERMISTOR_PERIOD);
     }

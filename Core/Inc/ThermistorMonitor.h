@@ -10,7 +10,17 @@
 
 #if DEV_BOARD == 0
 #define MUX_COUNT 4
-#define THERMISTORS_PER_MUX 8
+#define MULTIPLEXER_SIZE 16
+#define THERMISTORS_PER_MUX 14
+
+// This has to be done because Chris and Zohair didn't listen/forgot logic.
+static const uint8_t UNPOPULATED_THERMISTORS[MUX_COUNT][2] = {
+	{8, 15},
+	{6, 7},
+	{0, 1},
+	{0, 1},
+};
+
 #else
 #define MUX_COUNT 1
 #define THERMISTORS_PER_MUX 2
@@ -22,8 +32,10 @@
 // [Multiplexer ID (from ADC channel; e.g.: 0, 1, 2, etc)] ->
 // [Thermistor of Multiplexer (based on select line of MUX; e.g: 0-7 for 8 channel MUX and 0-15 for 6 channel MUX)]
 typedef struct {
-    int32_t thermistors[MUX_COUNT][THERMISTORS_PER_MUX];
+    int8_t thermistors[THERMISTOR_COUNT];
 } ThermistorData_Struct;
+
+
 
 extern ThermistorData_Struct ThermistorData;
 
