@@ -105,24 +105,18 @@ void startThermistorMonitorTask() {
             uint32_t divider_output = HAL_ADC_GetValue(&hadc1);
             HAL_ADC_Stop(&hadc1);
 
-
-//            DEBUG_PRINT("----------------------------\n");
-//            DEBUG_PRINT("Divider ADC out: %d\n", divider_output);
-
             // converts ADC units to volts
             float divider_voltage = ((float)divider_output / (float)ADC_RESOLUTION * REFERENCE_VOLTAGE);
-
-//            DEBUG_PRINT("Divider Voltage: %d.%d\n", (int)divider_voltage, (int)(divider_voltage * 1000) % 1000);
 
             // calculates resistance of the thermistor using rearrangement of voltage divider formula:
             // https://ohmslawcalculator.com/voltage-divider-calculator
             float thermistor_resistance = (divider_voltage * DIVIDER_RESISTANCE) / (REFERENCE_VOLTAGE - divider_voltage);
 
-//            DEBUG_PRINT("Thermistor Resistance: %d\n", (int)(thermistor_resistance));
-
-            // TODO: pick a better sentinel value
-            if (thermistor_resistance == 0) {
-//                ThermistorData.thermistors[cur_mux][select_line] = -1000;
+            // 100 ohms of resistance with our thermistors is about 200 degrees C, the battery pack is long gone by then.
+            // This is more for detecting open circuit connections.
+            // It seems that the TEM modules use -41 degrees as sentinal values, so we're copying it.
+            if (thermistor_resistance < 100) {
+                ThermistorData.thermistors[current_thermistor_id] = -41;
                 continue;
             }
 
@@ -132,7 +126,6 @@ void startThermistorMonitorTask() {
             float stein_temp = 1.0 / (TEMP_COEFF_A + (TEMP_COEFF_B * log(thermistor_resistance / (float)CALIBRATION_RESISTANCE)) +
                                       TEMP_COEFF_C * powf(log(thermistor_resistance / (float)CALIBRATION_RESISTANCE), 2.0) +
                                       TEMP_COEFF_D * powf(log(thermistor_resistance / (float)CALIBRATION_RESISTANCE), 3.0));
-//            DEBUG_PRINT("Thermistor Temperature (Steinhart & Hart Coeff) (K): %d.%d\n", (int)(stein_temp), (int)((int)(stein_temp * 100) % 100));
 
             float stein_temp_celsius = stein_temp - 273.15f;
 
@@ -140,30 +133,12 @@ void startThermistorMonitorTask() {
 
         	DEBUG_PRINT("Multiplexer: %d, Index: %d Thermistor ID: %d Measured Voltage: %d Temperature: %dc\n", (int)cur_mux, (int)select_line, (int)current_thermistor_id, (int)divider_output, thermistor_temperature_celsius);
             ThermistorData.thermistors[current_thermistor_id] = thermistor_temperature_celsius;
-
-
-
-//            DEBUG_PRINT("Thermistor Temperature (SteinHart & Hart) (C): %d.%d\n",
-//                        (int)(stein_temp_celsius),
-//                        abs((int)((int)(stein_temp_celsius * 100) % 100)));
-//            DEBUG_PRINT("Thermistor channel: %d\n", select_line);
-//            DEBUG_PRINT("Current MUX: %d\n", cur_mux);
-
-//            ThermistorData.thermistors[cur_mux][select_line] = stein_temp;
         }
 
         // Counter Variable for MUX Select Lines
-        if (!DEV_BOARD) {
-            if (++select_line == MULTIPLEXER_SIZE) {
-                select_line = 0;
-            }
-        } else {
-            if (select_line == 0) {
-                select_line = 3;
-            } else {
-                select_line = 0;
-            }
-        }
+		if (++select_line == MULTIPLEXER_SIZE) {
+			select_line = 0;
+		}
 
 
         osDelayUntil(tick += THERMISTOR_PERIOD);
