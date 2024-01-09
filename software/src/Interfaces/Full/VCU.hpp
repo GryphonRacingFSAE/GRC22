@@ -17,9 +17,12 @@ class VCU : public QObject, public CAN::Interface {
     Q_PROPERTY(int profileId MEMBER m_profile_id NOTIFY profileIdChanged)
     Q_PROPERTY(int maxTorque MEMBER torque_map_max CONSTANT)
     Q_PROPERTY(int minTorque MEMBER torque_map_min CONSTANT)
+    Q_PROPERTY(
+        QList<float> currentTcTune MEMBER m_current_tc_tune NOTIFY currentTcTuneChanged)
+    Q_PROPERTY(int tcTuneId MEMBER m_tcTune_id NOTIFY tcTuneIdChanged)    
   public:
     VCU(const std::string& torque_map_directory = "")
-        : QObject(nullptr), m_torque_map_directory(torque_map_directory), m_profile_id(0) {
+        : QObject(nullptr), m_torque_map_directory(torque_map_directory), m_profile_id(0), m_tcTune_id(0){
 
         if (!std::filesystem::exists(m_torque_map_directory) ||
             !std::filesystem::is_directory(m_torque_map_directory)) {
@@ -28,8 +31,10 @@ class VCU : public QObject, public CAN::Interface {
         }
 
         connect(this, &VCU::profileIdChanged, &VCU::readTorqueMapCSV);
+        connect(this, &VCU::tcTuneIdChanged, &VCU::readTcTuneCSV);
 
         readTorqueMapCSV();
+        readTcTuneCSV();
 
         // Startup HW interface
         this->CAN::Interface::startReceiving(
@@ -41,6 +46,15 @@ class VCU : public QObject, public CAN::Interface {
         rapidcsv::Document doc(save_path.string(), rapidcsv::LabelParams(-1, -1));
         for (qsizetype i = 0; i < torque_map.size(); i++) {
             doc.SetCell(i % 14, i / 14, torque_map.at(i));
+        }
+        doc.Save();
+    }
+
+    Q_INVOKABLE void saveTcTuneCSV(QList<float> tc_tune) {
+        auto save_path = m_torque_map_directory / fmt::format("tc_tune_{}.csv", m_tcTune_id);
+        rapidcsv::Document doc(save_path.string(), rapidcsv::LabelParams(-1, -1));
+        for (qsizetype i = 0; i < tc_tune.size(); i++) {
+            doc.SetCell(i % 14, i / 14, tc_tune.at(i));
         }
         doc.Save();
     }
@@ -58,9 +72,22 @@ class VCU : public QObject, public CAN::Interface {
         emit currentTorqueMapChanged();
     }
 
+    void readTcTuneCSV(){
+        m_current_tc_tune.clear();
+        auto read_path = m_torque_map_directory / fmt::format("tc_tune_{}.csv", m_tcTune_id);
+        rapidcsv::Document doc(read_path.string(), rapidcsv::LabelParams(-1, -1));
+        for (const auto cell : doc.GetRow<float>(0)) {
+            m_current_tc_tune.push_back(cell);
+        }
+        
+        emit currentTcTuneChanged();
+    }   
+
   signals:
     void currentTorqueMapChanged();
     void profileIdChanged();
+    void profileIdChanged();
+    void tcTuneIdChanged();
 
   public:
     Q_INVOKABLE void sendTorqueMap(QList<int> torque_map) {
@@ -122,7 +149,11 @@ class VCU : public QObject, public CAN::Interface {
             fmt::print("Something went wrong sending the transaction");
         }
     }
-
+    
+    Q_INVOKABLE void sendTcTune(QList<float> tc_tune){
+        //TODO
+    }
+    
     template <class StorageClass>
     RetCode sendTransaction(std::array<uint8_t, 8> header, const StorageClass& transaction) {
         static_assert(std::is_same<typename StorageClass::value_type, uint8_t>::value);
