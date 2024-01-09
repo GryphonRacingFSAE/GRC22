@@ -45,6 +45,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ github.ref_name }}-
 
+      - run: cd software
+
       - name: Conan Install
         run: conan install . -if build -pr:h ConanProfiles/Ubuntu-gcc-11-Release.ini -pr:b ConanProfiles/Ubuntu-gcc-11-Release.ini -r grc
 
