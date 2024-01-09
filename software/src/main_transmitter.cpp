@@ -14,8 +14,8 @@
 
 #define DEBUG
 
-//Constants for pin numbers
-//TODO: probably move this to a header file
+// Constants for pin numbers
+// TODO: probably move this to a header file
 #define GPS_TX 32
 #define GPS_RX 33
 #define NRF_CE 25
