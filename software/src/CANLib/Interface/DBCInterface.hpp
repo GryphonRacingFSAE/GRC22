@@ -24,14 +24,12 @@ class DBCInterface : public CAN::Interface {
         }
 
         // Startup HW interface
-        this->CAN::Interface::startReceiving(
-            interface_name, CANNode::filters, CANNode::num_of_filters, CANNode::timeout_ms);
+        this->CAN::Interface::startReceiving(interface_name, CANNode::filters, CANNode::num_of_filters, CANNode::timeout_ms);
 
         fmt::print("Loaded DBC: {}\n", dbc_file);
         for (const dbcppp::IMessage& msg : dbc_network->Messages()) {
             fmt::print("\tLoaded Message: {}\n", msg.Name());
-            can_messages.insert(
-                std::make_pair(msg.Id(), &msg)); // Insert mapping between ID and message info
+            can_messages.insert(std::make_pair(msg.Id(), &msg)); // Insert mapping between ID and message info
             for (const dbcppp::ISignal& sig : msg.Signals()) {
                 fmt::print("\t\tLoaded Signal: {} ({})\n", sig.Name(), sig.Unit());
             }
@@ -51,9 +49,7 @@ class DBCInterface : public CAN::Interface {
             const auto signal_dispatch_func_iter = can_signal_dispatch.find(sig.Name());
             if (signal_dispatch_func_iter != can_signal_dispatch.end()) {
                 // Dispatch decoded CAN frame
-                std::invoke(signal_dispatch_func_iter->second,
-                            dynamic_cast<CANNode*>(this),
-                            sig.RawToPhys(sig.Decode(frame.data)));
+                std::invoke(signal_dispatch_func_iter->second, dynamic_cast<CANNode*>(this), sig.RawToPhys(sig.Decode(frame.data)));
             }
         }
     }
@@ -64,11 +60,9 @@ class DBCInterface : public CAN::Interface {
 
   protected:
     std::unique_ptr<dbcppp::INetwork> dbc_network;
-    std::unordered_map<uint64_t, const dbcppp::IMessage*>
-        can_messages; // Mapping between CAN ID and DBC Message info
-    std::unordered_map<std::string, void (CANNode::*)(float)>
-        can_signal_dispatch; // Mapping between signal name and a member function of a child class
-                             // which takes a float
+    std::unordered_map<uint64_t, const dbcppp::IMessage*> can_messages;            // Mapping between CAN ID and DBC Message info
+    std::unordered_map<std::string, void (CANNode::*)(float)> can_signal_dispatch; // Mapping between signal name and a member function of a child
+                                                                                   // class which takes a float
 };
 
 } // namespace CAN
