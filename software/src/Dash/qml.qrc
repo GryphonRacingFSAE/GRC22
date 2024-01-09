@@ -16,6 +16,7 @@
         <file>Debug/Debug_D.qml</file>
         <file>Debug/DataBox.qml</file>
         <file>Debug/SectionHeader.qml</file>
+        <file>Debug/BatteryTemp.qml</file>
 
         <file>Tuning/Tuning.qml</file>
         <file>Tuning/TractionControl.qml</file>
