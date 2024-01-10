@@ -185,7 +185,9 @@ class VCU : public QObject, public CAN::Interface {
   private:
     std::filesystem::path m_torque_map_directory;
     QList<int> m_current_torque_map;
+    QList<float> m_current_tc_tune;
     int m_profile_id;
+    int m_tcTune_id;
 
   public:
     static constexpr uint8_t torque_map_offset = 22;                  // -22 is target minimum
