@@ -5,8 +5,8 @@
 #include <Frontend/BMS.hpp>
 #include <Frontend/EnergyMeter.hpp>
 #include <Frontend/MotorController.hpp>
-#include <Frontend/VCU.hpp>
 #include <Frontend/SMU.hpp>
+#include <Frontend/VCU.hpp>
 
 #ifdef DEBUG
 #include <runtimeqml.hpp>

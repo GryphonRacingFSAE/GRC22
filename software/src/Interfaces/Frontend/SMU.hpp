@@ -1,8 +1,8 @@
 #pragma once
 
+#include <Frontend/FakeInterface.hpp>
 #include <QObject>
 #include <cstdlib>
-#include <Frontend/FakeInterface.hpp>
 
 namespace fake {
 
@@ -18,7 +18,7 @@ class SMU : public QObject, public FakeInterface {
   signals:
     void newThermistorTemp(int segment, int id, int temp);
     void temperaturesChanged();
-    
+
   private:
     QList<int> m_temperatures;
 
@@ -35,4 +35,4 @@ class SMU : public QObject, public FakeInterface {
     }
 };
 
-} // namespace real
+} // namespace fake
