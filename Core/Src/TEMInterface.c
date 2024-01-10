@@ -42,7 +42,7 @@ void startTEMInterfaceTask() {
     	int8_t average_thermistor_temperature = (int8_t)(thermistor_temperature_sum / THERMISTOR_COUNT);
 
     	// The TEM modules don't actually seem to offset their module numbers even though the CAN specification says they should.
-    	bms_broadcast.header.ExtId = 0x1839F380 + module_number; // The CAN ID is offset by the module number
+    	bms_broadcast.header.ExtId = 0x1839F380; // The CAN ID is offset by the module number
     	bms_broadcast.data[0] = module_number; // The TEM protocol for this number starts from 0
     	bms_broadcast.data[1] = *(uint8_t*)(&minimum_thermistor_temperature);
     	bms_broadcast.data[2] = *(uint8_t*)(&maximum_thermistor_temperature);
@@ -58,7 +58,7 @@ void startTEMInterfaceTask() {
     	bms_broadcast.data[7] = bms_broadcast_checksum;
 
     	// The TEM modules don't actually seem to offset their module numbers even though the CAN specification says they should.
-    	general_broadcast.header.ExtId = 0x1838F380 + module_number; // The CAN ID is offset by the module number
+    	general_broadcast.header.ExtId = 0x1838F380; // The CAN ID is offset by the module number
     	uint16_t absolute_thermistor_id = (uint16_t)module_number * 80 + current_thermistor_id;
     	general_broadcast.data[0] = (uint8_t)((absolute_thermistor_id & 0xFF00) >> 8);
     	general_broadcast.data[1] = (uint8_t)(absolute_thermistor_id & 0x00FF);
