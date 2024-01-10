@@ -23,14 +23,8 @@
 #define SD_CS 27
 #define SD_OFF 12
 #define MPU_CAL 13
-#define SPI_MOSI 23
-#define I2C_SCL 22
-#define I2C_SDA 21
-#define SPI_MISO 21
-#define SPI_SCK 18
 #define CAN_RX 17
 #define CAN_TX 16
-#define V_SENSE 15
 
 RF24 radio(NRF_CE, NRF_CSN); // CE, CSN
 MPU6050 mpu;
