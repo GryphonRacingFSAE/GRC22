@@ -42,7 +42,7 @@ class VCU : public QObject {
     }
 
     Q_INVOKABLE void saveTcTuneCSV(QList<float> tc_tune) {
-        auto save_path = m_torque_map_directory / fmt::format("tc_tune_{}.csv", m_tcTune_id);
+        auto save_path = m_torque_map_directory / fmt::format("tc_tune_{}.csv", m_tc_tune_id);
         rapidcsv::Document doc(save_path.string(), rapidcsv::LabelParams(-1, -1));
         for (qsizetype i = 0; i < tc_tune.size(); i++) {
             doc.SetCell(i % 14, i / 14, tc_tune.at(i));
@@ -65,7 +65,7 @@ class VCU : public QObject {
 
     void readTcTuneCSV() {
         m_current_tc_tune.clear();
-        auto read_path = m_torque_map_directory / fmt::format("tc_tune_{}.csv", m_tcTune_id);
+        auto read_path = m_torque_map_directory / fmt::format("tc_tune_{}.csv", m_tc_tune_id);
         rapidcsv::Document doc(read_path.string(), rapidcsv::LabelParams(-1, -1));
         for (const auto cell : doc.GetRow<float>(0)) {
             m_current_tc_tune.push_back(cell);
