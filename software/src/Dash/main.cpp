@@ -6,6 +6,7 @@
 #include <Full/EnergyMeter.hpp>
 #include <Full/MotorController.hpp>
 #include <Full/VCU.hpp>
+#include <Full/SMU.hpp>
 
 #ifdef DEBUG
 #include <runtimeqml.hpp>
@@ -19,6 +20,7 @@ int main(int argc, char* argv[]) {
     real::EnergyMeter* energy_meter = new real::EnergyMeter(app_root + "/DBCs/Energy_Meter_CAN_Messages.dbc");
     real::BMS* bms = new real::BMS(app_root + "/DBCs/Orion_CANBUS.dbc");
     real::VCU* vcu = new real::VCU(app_root + "/TorqueMaps");
+    real::SMU* smu = new real::SMU(app_root + "/DBCs/SMU_CANBUS.dbc");
 
     QQmlApplicationEngine engine;
 
@@ -26,6 +28,7 @@ int main(int argc, char* argv[]) {
     qmlRegisterSingletonInstance<real::EnergyMeter>("CAN.EnergyMeter", 1, 0, "EnergyMeter", energy_meter);
     qmlRegisterSingletonInstance<real::BMS>("CAN.BMS", 1, 0, "BMS", bms);
     qmlRegisterSingletonInstance<real::VCU>("CAN.VCU", 1, 0, "VCU", vcu);
+    qmlRegisterSingletonInstance<real::SMU>("CAN.SMU", 1, 0, "SMU", smu);
 #ifdef DEBUG
     RuntimeQml* rt = new RuntimeQml(&engine);
     rt->parseQrc(ROOT_SOURCE_PATH "/qml.qrc");

@@ -7,13 +7,15 @@ namespace real {
 
 class SMU : public QObject, public CAN::DBCInterface<SMU> {
     Q_OBJECT
+    Q_PROPERTY(QList<int> temperatures MEMBER m_temperatures NOTIFY temperaturesChanged)
   public:
-    SMU(const std::string& dbc_file_path = "SMU_CANBUS.dbc") : QObject(nullptr), DBCInterface(dbc_file_path) {
+    SMU(const std::string& dbc_file_path = "SMU_CANBUS.dbc") : QObject(nullptr), DBCInterface(dbc_file_path), m_temperatures(5 * 56, -40) {
         can_signal_dispatch[0x1838F380] = &SMU::handleGeneralBroadcast;
     }
 
   signals:
     void newThermistorTemp(int segment, int id, int temp);
+    void temperaturesChanged();
 
   private:
     void handleGeneralBroadcast(const dbcppp::IMessage* message_decoder, const can_frame& frame) {
@@ -21,8 +23,14 @@ class SMU : public QObject, public CAN::DBCInterface<SMU> {
         int thermistor_id = sig.RawToPhys(sig.Decode(frame.data));
         sig = message_decoder["Thermistor_Temperature"];
         int thermistor_temp = sig.RawToPhys(sig.Decode(frame.data));
+
+        m_temperatures[thermistor_id / 80 * 56 + thermistor_id % 80] = thermistor_temp;
+        emit temperaturesChanged();
         emit newThermistorTemp(thermistor_id / 80, thermistor_id % 80, thermistor_temp);
     }
+
+  private:
+    QList<int> m_temperatures;
 
   public:
     static constexpr size_t num_of_filters = 1;
