@@ -27,9 +27,9 @@ class SMU : public QObject, public CAN::DBCInterface<SMU> {
   public:
     static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {{
-                                                            0X1838F380,
-                                                            0x7FFFFFFF // Grab 0X1838F380 for general broadcast messages
-                                                        }};
+        0X1838F380,
+        0x7FFFFFFF // Grab 0X1838F380 for general broadcast messages
+    }};
 
     static constexpr uint32_t timeout_ms = 500;
 };

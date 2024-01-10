@@ -1,6 +1,6 @@
 #include <cassert>
-#include <tools.hpp>
 #include <cstdint>
+#include <tools.hpp>
 
 // Mask for can errors
 bool CAN::isError(const can_frame& frame) {

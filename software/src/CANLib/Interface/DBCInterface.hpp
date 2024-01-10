@@ -46,7 +46,7 @@ class DBCInterface : public CAN::Interface {
             return; // Could not find decoding logic for message in the provided DBC
 
         // Dispatch for entire message if requested
-        const auto message_dispatch_func_iter = can_message_dispatch.find(sig.Name());
+        const auto message_dispatch_func_iter = can_message_dispatch.find(CAN::frameId(frame));
         if (message_dispatch_func_iter != can_message_dispatch.end()) {
             // Dispatch CAN frame with decoder
             std::invoke(message_dispatch_func_iter->second, dynamic_cast<CANNode*>(this), message->second, frame);
@@ -70,7 +70,8 @@ class DBCInterface : public CAN::Interface {
     std::unordered_map<uint64_t, const dbcppp::IMessage*> can_messages;            // Mapping between CAN ID and DBC Message info
     std::unordered_map<std::string, void (CANNode::*)(float)> can_signal_dispatch; // Mapping between signal name and a member function of a child
                                                                                    // class which takes a float
-    std::unordered_map<uint64_t, void (CANNode::*)(const dbcppp::IMessage*, const can_frame&)> can_message_dispatch; // This is if you want to deal with non-float signals or deal with entire messages
+    std::unordered_map<uint64_t, void (CANNode::*)(const dbcppp::IMessage*, const can_frame&)>
+        can_message_dispatch; // This is if you want to deal with non-float signals or deal with entire messages
 };
 
 } // namespace CAN

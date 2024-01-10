@@ -28,9 +28,9 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
   public:
     static constexpr size_t num_of_filters = 3;
     inline static can_filter filters[num_of_filters] = {{
-                                                            0x0E0,
-                                                            0x7F0 // Grab 0x0E0 to 0x0EF for broadcast messages
-                                                        }};
+        0x0E0,
+        0x7F0 // Grab 0x0E0 to 0x0EF for broadcast messages
+    }};
 
     static constexpr uint32_t timeout_ms = 500;
 };
