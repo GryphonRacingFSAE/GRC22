@@ -19,9 +19,9 @@ class SMU : public QObject, public CAN::DBCInterface<SMU> {
 
   private:
     void handleGeneralBroadcast(const dbcppp::IMessage* message_decoder, const can_frame& frame) {
-        auto sig = message_decoder->Signals()["Thermistor_ID"];
+        auto sig = message_decoder->Signals().find("Thermistor_ID")->second;
         int thermistor_id = sig.RawToPhys(sig.Decode(frame.data));
-        sig = message_decoder->Signals()["Thermistor_Temperature"];
+        sig = message_decoder->Signals().find("Thermistor_Temperature")->second;
         int thermistor_temp = sig.RawToPhys(sig.Decode(frame.data));
 
         m_temperatures[thermistor_id / 80 * 56 + thermistor_id % 80] = thermistor_temp;
