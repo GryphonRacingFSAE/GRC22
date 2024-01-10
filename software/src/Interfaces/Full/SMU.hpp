@@ -2,6 +2,7 @@
 
 #include <DBCInterface.hpp>
 #include <QObject>
+#include <algorithm>
 
 namespace real {
 
@@ -19,10 +20,15 @@ class SMU : public QObject, public CAN::DBCInterface<SMU> {
 
   private:
     void handleGeneralBroadcast(const dbcppp::IMessage* message_decoder, const can_frame& frame) {
-        auto sig = message_decoder->Signals().find("Thermistor_ID")->second;
-        int thermistor_id = sig.RawToPhys(sig.Decode(frame.data));
-        sig = message_decoder->Signals().find("Thermistor_Temperature")->second;
-        int thermistor_temp = sig.RawToPhys(sig.Decode(frame.data));
+        int thermistor_temp, thermistor_id = 0;
+        for (const dbcppp::ISignal& sig : message_decoder->Signals()) {
+            if (sig.Name() == "Thermistor_ID") {
+                thermistor_temp = sig.RawToPhys(sig.Decode(frame.data));
+            }
+            if (sig.Name() == "Thermistor_Temperature") {
+                thermistor_id = sig.RawToPhys(sig.Decode(frame.data));
+            }
+        }
 
         m_temperatures[thermistor_id / 80 * 56 + thermistor_id % 80] = thermistor_temp;
 
