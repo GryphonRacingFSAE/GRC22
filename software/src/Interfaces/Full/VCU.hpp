@@ -81,7 +81,7 @@ class VCU : public QObject, public CAN::Interface {
 
   signals:
     void currentTorqueMapChanged();
-    void profileIdChanged();
+    void currentTcTuneChanged();
     void profileIdChanged();
     void tcTuneIdChanged();
 
