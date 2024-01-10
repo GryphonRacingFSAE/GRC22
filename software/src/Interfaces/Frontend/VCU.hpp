@@ -14,11 +14,11 @@ class VCU : public QObject {
     Q_PROPERTY(int maxTorque MEMBER torque_map_max CONSTANT)
     Q_PROPERTY(int minTorque MEMBER torque_map_min CONSTANT)
     Q_PROPERTY(QList<float> currentTcTune MEMBER m_current_tc_tune NOTIFY currentTcTuneChanged)
-    Q_PROPERTY(int tcTuneId MEMBER m_tcTune_id NOTIFY tcTuneIdChanged)
+    Q_PROPERTY(int tcTuneId MEMBER m_tc_tune_id NOTIFY tcTuneIdChanged)
 
   public:
     VCU(const std::string& torque_map_directory = "")
-        : QObject(nullptr), m_torque_map_directory(torque_map_directory), m_profile_id(0), m_tcTune_id(0) {
+        : QObject(nullptr), m_torque_map_directory(torque_map_directory), m_profile_id(0), m_tc_tune_id(0) {
 
         if (!std::filesystem::exists(m_torque_map_directory) || !std::filesystem::is_directory(m_torque_map_directory)) {
             fmt::print("Torque map directory doesn't exist!");
@@ -116,7 +116,7 @@ class VCU : public QObject {
     QList<int> m_current_torque_map;
     QList<float> m_current_tc_tune;
     int m_profile_id;
-    int m_tcTune_id;
+    int m_tc_tune_id;
 
   public:
     static constexpr int8_t torque_map_offset = 128 - 25;
