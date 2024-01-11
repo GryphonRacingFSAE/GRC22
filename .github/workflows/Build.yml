@@ -15,6 +15,9 @@ jobs:
       NOT_ON_C3I: 1
       LINUX_X86_64_BUILD_APP_IMAGE: 1
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./software
 
     steps:
       - uses: actions/checkout@v3
@@ -44,8 +47,6 @@ jobs:
           key: ${{ runner.os }}-${{ github.ref_name }}-${{ env.NOW }}
           restore-keys: |
             ${{ runner.os }}-${{ github.ref_name }}-
-
-      - run: cd software
 
       - name: Conan Install
         run: conan install . -if build -pr:h ConanProfiles/Ubuntu-gcc-11-Release.ini -pr:b ConanProfiles/Ubuntu-gcc-11-Release.ini -r grc

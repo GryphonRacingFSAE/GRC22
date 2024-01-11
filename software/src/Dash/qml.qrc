@@ -14,6 +14,7 @@
         <file>Debug/Debug_B.qml</file>
         <file>Debug/Debug_C.qml</file>
         <file>Debug/Debug_D.qml</file>
+        <file>Debug/SMU_Temps.qml</file>
         <file>Debug/DataBox.qml</file>
         <file>Debug/SectionHeader.qml</file>
 
