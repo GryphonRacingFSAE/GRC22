@@ -13,10 +13,21 @@
 #include "message.pb.h"
 
 #define DEBUG
-#define SD_OFF_PIN 35
-#define MPU_CALIBRATE_PIN 33
 
-RF24 radio(4, 5); // CE, CSN
+// Constants for pin numbers
+// TODO: probably move this to a header file
+#define CAN_RX 17
+#define CAN_TX 16
+#define GPS_RX 33
+#define GPS_TX 32
+#define MPU_CAL 13
+#define NRF_CE 25
+#define NRF_CSN 26
+#define SD_CS 27
+#define SD_OFF 12
+#define V_SENSE 15
+
+RF24 radio(NRF_CE, NRF_CSN); // CE, CSN
 MPU6050 mpu;
 TinyGPSPlus gps;
 
@@ -60,11 +71,11 @@ void setup() {
     Serial.println("Done");
 
     Serial.println("Initializing BN-220...");
-    SerialGPS.begin(9600, SERIAL_8N1, 16, 17); // RX, TX
+    SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX); // RX, TX
     Serial.println("Done");
 
-    pinMode(SD_OFF_PIN, INPUT);
-    pinMode(MPU_CALIBRATE_PIN, INPUT);
+    pinMode(SD_OFF, INPUT);
+    pinMode(MPU_CAL, INPUT);
 
     calibrateMPU();
 }
@@ -127,7 +138,7 @@ void loop() {
     pb_encode(&stream, MyMessage_fields, &msg);
     radio.write(buffer, stream.bytes_written);
 
-    if (digitalRead(SD_OFF_PIN) == HIGH) {
+    if (digitalRead(SD_OFF) == HIGH) {
 
         if (do_write) {
             data_file = SD.open(file_name, FILE_WRITE);
@@ -140,7 +151,7 @@ void loop() {
         delay(150);
     }
 
-    if (digitalRead(MPU_CALIBRATE_PIN) == HIGH) {
+    if (digitalRead(MPU_CAL) == HIGH) {
 
         calibrateMPU();
     }
@@ -183,7 +194,7 @@ void fileInit() {
 
     // SD Test (D27 on board)
 
-    if (!SD.begin(27)) {
+    if (!SD.begin(SD_CS)) {
         Serial.println("Card Mount Failed");
         return;
     } else {
