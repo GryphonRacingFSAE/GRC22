@@ -41,7 +41,7 @@ class DBCInterface : public CAN::Interface {
     // If a child class defines a mapping between a dispatch function and the corresponding DBC
     // message & signal, dispatch it
     void newFrame(const can_frame& frame) override {
-        const auto& message = can_messages.find(CAN::frameId(frame));
+        const auto& message = can_messages.find(frame.can_id);
         if (message == can_messages.end())
             return; // Could not find decoding logic for message in the provided DBC
 
