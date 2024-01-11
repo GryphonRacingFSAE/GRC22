@@ -23,16 +23,15 @@ class SMU : public QObject, public CAN::DBCInterface<SMU> {
         int thermistor_temp = -40, thermistor_id = -1;
         for (const dbcppp::ISignal& sig : message_decoder->Signals()) {
             if (sig.Name() == "Thermistor_ID") {
-                thermistor_temp = sig.RawToPhys(sig.Decode(frame.data));
+                thermistor_id = sig.RawToPhys(sig.Decode(frame.data));
             }
             if (sig.Name() == "Thermistor_Temperature") {
-                thermistor_id = sig.RawToPhys(sig.Decode(frame.data));
+                thermistor_temp = sig.RawToPhys(sig.Decode(frame.data));
             }
         }
 
         // Only update if we actually have a thermistor ID
         if (thermistor_id != -1) {
-            fmt::print("Module #{}, ID #{}, FEID: #{}", thermistor_id / 80, thermistor_id % 80, thermistor_id / 80 * 56 + thermistor_id % 80);
             m_temperatures[thermistor_id / 80 * 56 + thermistor_id % 80] = thermistor_temp;
             emit newThermistorTemp(thermistor_id / 80, thermistor_id % 80, thermistor_temp);
         }
