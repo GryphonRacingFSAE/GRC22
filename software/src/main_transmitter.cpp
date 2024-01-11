@@ -16,15 +16,16 @@
 
 // Constants for pin numbers
 // TODO: probably move this to a header file
-#define GPS_TX 32
+#define CAN_RX 17
+#define CAN_TX 16
 #define GPS_RX 33
+#define GPS_TX 32
+#define MPU_CAL 13
 #define NRF_CE 25
 #define NRF_CSN 26
 #define SD_CS 27
 #define SD_OFF 12
-#define MPU_CAL 13
-#define CAN_RX 17
-#define CAN_TX 16
+#define V_SENSE 15
 
 RF24 radio(NRF_CE, NRF_CSN); // CE, CSN
 MPU6050 mpu;
