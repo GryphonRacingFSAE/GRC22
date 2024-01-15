@@ -3,6 +3,7 @@
 #include <MPU6050.h>
 #include <RF24.h>
 #include <TinyGPSPlus.h>
+#include <driver/can.h>
 #include <pb_encode.h>
 
 // SD Card Libraries
@@ -16,8 +17,8 @@
 
 // Constants for pin numbers
 // TODO: probably move this to a header file
-#define CAN_RX 17
-#define CAN_TX 16
+#define CAN_RX GPIO_NUM_17
+#define CAN_TX GPIO_NUM_16
 #define GPS_RX 33
 #define GPS_TX 32
 #define MPU_CAL 13
@@ -32,6 +33,8 @@ MPU6050 mpu;
 TinyGPSPlus gps;
 
 HardwareSerial SerialGPS(1);
+
+can_message_t can_message;
 
 File data_file;
 bool do_write = false;
@@ -71,7 +74,23 @@ void setup() {
     Serial.println("Done");
 
     Serial.println("Initializing BN-220...");
-    SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX); // RX, TX
+    SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
+    Serial.println("Done");
+
+    Serial.println("Initializing CAN...");
+    can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
+    can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
+    can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
+
+    Serial.println("Installing CAN driver...");
+    if (can_driver_install(&g_config, &t_config, &f_config) != ESP_OK) {
+        Serial.println("Failed to install CAN driver");
+    }
+
+    Serial.println("Starting CAN driver...");
+    if (can_start() != ESP_OK) {
+        Serial.println("Failed to start CAN driver");
+    }
     Serial.println("Done");
 
     pinMode(SD_OFF, INPUT);
@@ -94,7 +113,6 @@ void loop() {
 #ifdef DEBUG
 
     if (do_write) {
-
         Serial.printf("Current Time: %lu\n", delta_time);
         Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
         Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
@@ -104,7 +122,6 @@ void loop() {
 #endif
 
     if (start_time == 0) {
-
         start_time = getSeconds();
 
         if (start_time != 0) {
@@ -115,7 +132,6 @@ void loop() {
     delta_time = getSeconds() - start_time;
 
     if (do_write) {
-
         writeToFile();
     }
 
@@ -139,7 +155,6 @@ void loop() {
     radio.write(buffer, stream.bytes_written);
 
     if (digitalRead(SD_OFF) == HIGH) {
-
         if (do_write) {
             data_file = SD.open(file_name, FILE_WRITE);
         } else {
@@ -147,26 +162,38 @@ void loop() {
         }
 
         do_write = !do_write;
-
         delay(150);
     }
 
     if (digitalRead(MPU_CAL) == HIGH) {
-
         calibrateMPU();
     }
 
-    delay(100);
+    if (can_receive(&can_message, pdMS_TO_TICKS(100)) == ESP_OK) {
+        Serial.println("CAN message received");
+
+        if (can_message.flags & CAN_MSG_FLAG_EXTD)
+            printf("Message is in Extended Format\n");
+        else
+            printf("Message is in Standard Format\n");
+
+        Serial.printf("ID: %d\n", can_message.identifier);
+        if (!(can_message.flags & CAN_MSG_FLAG_RTR)) {
+            Serial.printf("Data: ");
+            for (int i = 0; i < can_message.data_length_code; i++) {
+                printf("%d ", can_message.data[i]);
+            }
+            Serial.println();
+        }
+    }
 }
 
 void calibrateMPU() {
-
     mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
     Serial.printf("\n*****MPU Recalibrated*****\n");
 
     if (data_file) {
-
-        data_file.println("****MPU Recalibrated****");
+        data_file.println("*****MPU Recalibrated*****");
     }
 
     delay(150);
@@ -181,7 +208,6 @@ unsigned long int getSeconds() {
 }
 
 void applyCalibration() {
-
     ax -= ax_offset;
     ay -= ay_offset;
     az -= az_offset;
@@ -191,14 +217,10 @@ void applyCalibration() {
 }
 
 void fileInit() {
-
-    // SD Test (D27 on board)
-
     if (!SD.begin(SD_CS)) {
         Serial.println("Card Mount Failed");
         return;
     } else {
-
         Serial.println("SD Card Mounted");
     }
 
@@ -217,7 +239,6 @@ void fileInit() {
 }
 
 void writeToFile() {
-
     data_file.print(delta_time);
     data_file.print(",");
     data_file.print(ax);
