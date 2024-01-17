@@ -62,33 +62,31 @@ void initMPU() {
     mpu.initialize();
 }
 
-void readMPU() {
-    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-
-    applyCalibration();
-
-    Serial.printf("AX %d, AY %d, AZ %d\n", ax, ay, az);
-    Serial.printf("GX %d, GY %d, GZ %d\n", gx, gy, gz);
-}
-
 void calibrateMPU() {
     mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
     Serial.printf("\nMPU RECALIBRATED\n");
 
+    /*
     if (data_file) {
         data_file.println("MPU RECALIBRATED");
     }
+    */
 
     delay(500);
 }
 
-void applyCalibration() {
+void readMPU() {
+    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
     ax -= ax_offset;
     ay -= ay_offset;
     az -= az_offset;
     gx -= gx_offset;
     gy -= gy_offset;
     gz -= gz_offset;
+
+    Serial.printf("AX %d, AY %d, AZ %d\n", ax, ay, az);
+    Serial.printf("GX %d, GY %d, GZ %d\n", gx, gy, gz);
 }
 
 //================================================================================
