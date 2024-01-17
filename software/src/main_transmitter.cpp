@@ -13,10 +13,6 @@
 
 #include "message.pb.h"
 
-#define DEBUG
-
-// Constants for pin numbers
-// TODO: probably move this to a header file
 #define CAN_RX GPIO_NUM_17
 #define CAN_TX GPIO_NUM_16
 #define GPS_RX 33
@@ -28,70 +24,146 @@
 #define SD_OFF 12
 #define V_SENSE 15
 
-RF24 radio(NRF_CE, NRF_CSN); // CE, CSN
-MPU6050 mpu;
-TinyGPSPlus gps;
+//================================================================================
+// nRF24L01+
+//================================================================================
 
+RF24 radio(NRF_CE, NRF_CSN);
+const byte address[6] = "00001";
+
+void initNRF() {
+    if (radio.begin()) {
+        Serial.println("Radio initialized successfully");
+    } else {
+        Serial.println("Failed to initialize radio");
+    }
+    radio.openWritingPipe(address);
+    radio.stopListening();
+}
+
+//================================================================================
+// MPU-6050
+//================================================================================
+
+MPU6050 mpu;
+
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
+int16_t ax_offset, ay_offset, az_offset;
+int16_t gx_offset, gy_offset, gz_offset;
+
+void initMPU() {
+    if (Wire.begin()) {
+        Serial.println("I2C initialized successfully");
+    } else {
+        Serial.println("Failed to initialize I2C");
+    }
+    mpu.initialize();
+}
+
+void readMPU() {
+    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+    applyCalibration();
+
+    Serial.printf("AX %d, AY %d, AZ %d\n", ax, ay, az);
+    Serial.printf("GX %d, GY %d, GZ %d\n", gx, gy, gz);
+}
+
+void calibrateMPU() {
+    mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
+    Serial.printf("\nMPU RECALIBRATED\n");
+
+    if (data_file) {
+        data_file.println("MPU RECALIBRATED");
+    }
+
+    delay(500);
+}
+
+void applyCalibration() {
+    ax -= ax_offset;
+    ay -= ay_offset;
+    az -= az_offset;
+    gx -= gx_offset;
+    gy -= gy_offset;
+    gz -= gz_offset;
+}
+
+//================================================================================
+// BN-220
+//================================================================================
+
+TinyGPSPlus gps;
 HardwareSerial SerialGPS(1);
 
+void initGPS() {
+    SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
+    Serial.println("GPS serial port initialized successfully");
+}
+
+void readGPS() {
+    while (SerialGPS.available() > 0) {
+        gps.encode(SerialGPS.read());
+    }
+
+    Serial.printf("LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+}
+
+//================================================================================
+// CAN
+//================================================================================
+
+can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
+can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
+can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
+
 can_message_t can_message;
+
+void initCAN() {
+    if (can_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
+        Serial.println("CAN driver installed successfully");
+    } else {
+        Serial.println("Failed to install CAN driver");
+    }
+
+    if (can_start() == ESP_OK) {
+        Serial.println("CAN driver started successfully");
+    } else {
+        Serial.println("Failed to start CAN driver");
+    }
+}
+
+// NEED TO MOVE THIS STUFF
 
 File data_file;
 bool do_write = false;
 String file_name = "";
 String file_out;
 
-const byte address[6] = "00001";
-
 unsigned long int start_time;
 unsigned long int delta_time;
-
-int16_t ax, ay, az, ax_offset, ay_offset, az_offset;
-int16_t gx, gy, gz, gx_offset, gy_offset, gz_offset;
 
 unsigned long int getSeconds();
 void fileInit();
 void writeToFile();
-void calibrateMPU();
-void applyCalibration();
+
+//================================================================================
+// Setup
+//================================================================================
 
 void setup() {
     Serial.begin(115200);
-    delay(500);
 
-    while (!Serial)
+    while (!Serial) {
         delay(100);
-
-    Serial.println("\nInitializing nRF24L01+...");
-    radio.begin();
-    radio.openWritingPipe(address);
-    radio.stopListening();
-    Serial.println("Done");
-
-    Serial.println("Initializing MPU-6050...");
-    Wire.begin();
-    mpu.initialize();
-    Serial.println("Done");
-
-    Serial.println("Initializing BN-220...");
-    SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
-    Serial.println("Done");
-
-    Serial.println("Initializing CAN...");
-    can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
-    can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
-    can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
-
-    Serial.println("Installing CAN driver...");
-    if (can_driver_install(&g_config, &t_config, &f_config) != ESP_OK) {
-        Serial.println("Failed to install CAN driver");
     }
 
-    Serial.println("Starting CAN driver...");
-    if (can_start() != ESP_OK) {
-        Serial.println("Failed to start CAN driver");
-    }
-    Serial.println("Done");
+    initNRF();
+    initMPU();
+    initGPS();
+    initCAN();
 
     pinMode(SD_OFF, INPUT);
     pinMode(MPU_CAL, INPUT);
@@ -99,27 +171,15 @@ void setup() {
     calibrateMPU();
 }
 
+//================================================================================
+// Loop
+//================================================================================
+
 void loop() {
+    Serial.printf("Current Time: %lu\n", delta_time);
 
-    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    applyCalibration();
-
-    while (SerialGPS.available() > 0) {
-        if (gps.encode(SerialGPS.read())) {
-            break;
-        }
-    }
-
-#ifdef DEBUG
-
-    if (do_write) {
-        Serial.printf("Current Time: %lu\n", delta_time);
-        Serial.printf("ACCEL: X %d, Y %d, Z %d\n", ax, ay, az);
-        Serial.printf("GYRO:  X %d, Y %d, Z %d\n", gx, gy, gz);
-        Serial.printf("GPS:   LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
-    }
-
-#endif
+    readGPS();
+    readMPU();
 
     if (start_time == 0) {
         start_time = getSeconds();
@@ -137,7 +197,6 @@ void loop() {
 
     MyMessage msg = MyMessage_init_default;
 
-    // Values are opposite for some reason (but it works)
     msg.acceleration_x = ax;
     msg.acceleration_y = ay;
     msg.acceleration_z = az;
@@ -188,32 +247,12 @@ void loop() {
     }
 }
 
-void calibrateMPU() {
-    mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
-    Serial.printf("\n*****MPU Recalibrated*****\n");
-
-    if (data_file) {
-        data_file.println("*****MPU Recalibrated*****");
-    }
-
-    delay(150);
-}
-
 unsigned long int getSeconds() {
     unsigned long int total_seconds;
 
     total_seconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
 
     return total_seconds;
-}
-
-void applyCalibration() {
-    ax -= ax_offset;
-    ay -= ay_offset;
-    az -= az_offset;
-    gx -= gx_offset;
-    gy -= gy_offset;
-    gz -= gz_offset;
 }
 
 void fileInit() {
