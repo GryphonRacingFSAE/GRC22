@@ -89,7 +89,7 @@ void calibrateMPU() {
         csv_file.println("MPU RECALIBRATED");
     }
 
-    delay(500);
+    delay(1000);
 }
 
 void readMPU() {
@@ -195,19 +195,19 @@ void initFile() {
 
     csv_file.println("TIME,AX,AY,AZ,GX,GY,GZ,LAT,LNG,ALT");
 
-    delay(500);
+    delay(1000);
 }
 
 void stopWriting() {
     if (is_writing) {
         csv_file.close();
         is_writing = false;
-        Serial.println("SD writing disabled");
+        Serial.printf("\nSD writing disabled\n");
     } else {
-        Serial.println("SD writing is not enabled");
+        Serial.printf("\nSD writing is not enabled\n");
     }
 
-    delay(500);
+    delay(1000);
 }
 
 uint64_t getCentiseconds() {
@@ -269,13 +269,6 @@ void loop() {
                         gps.altitude.meters());
     }
 
-    if (digitalRead(MPU_CAL) == HIGH) {
-        calibrateMPU();
-    }
-    if (digitalRead(SD_OFF) == HIGH) {
-        stopWriting();
-    }
-
     MyMessage msg = MyMessage_init_default;
 
     msg.acceleration_x = ax;
@@ -295,6 +288,13 @@ void loop() {
     radio.write(buffer, stream.bytes_written);
 
     readCAN();
+
+    if (digitalRead(MPU_CAL) == HIGH) {
+        calibrateMPU();
+    }
+    if (digitalRead(SD_OFF) == HIGH) {
+        stopWriting();
+    }
 
     Serial.println();
 }
