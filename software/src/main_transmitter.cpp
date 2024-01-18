@@ -175,7 +175,14 @@ void initFile() {
     }
 
     char file_name[32];
-    sprintf(file_name, "/%d-%d-%d_%d-%d-%d.csv", gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute(), gps.time.second());
+    sprintf(file_name,
+            "/%d-%d-%d_%d-%d-%d.csv",
+            gps.date.year(),
+            gps.date.month(),
+            gps.date.day(),
+            gps.time.hour(),
+            gps.time.minute(),
+            gps.time.second());
 
     csv_file = SD.open(file_name, FILE_WRITE);
     if (csv_file) {
@@ -249,7 +256,17 @@ void loop() {
     readGPS();
 
     if (is_writing) {
-        csv_file.printf("%lu,%hd,%hd,%hd,%hd,%hd,%hd,%f,%f,%f\n", delta_time, ax, ay, az, gx, gy, gz, gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+        csv_file.printf("%lu,%hd,%hd,%hd,%hd,%hd,%hd,%f,%f,%f\n",
+                        delta_time,
+                        ax,
+                        ay,
+                        az,
+                        gx,
+                        gy,
+                        gz,
+                        gps.location.lat(),
+                        gps.location.lng(),
+                        gps.altitude.meters());
     }
 
     if (digitalRead(MPU_CAL) == HIGH) {
