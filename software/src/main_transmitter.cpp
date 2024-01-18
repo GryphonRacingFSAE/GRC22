@@ -2,34 +2,59 @@
 #include <HardwareSerial.h>
 #include <MPU6050.h>
 #include <RF24.h>
+#include <SD.h>
 #include <TinyGPSPlus.h>
 #include <driver/can.h>
 #include <pb_encode.h>
 
-// SD Card Libraries
-#include <FS.h>
-#include <SD.h>
-#include <SPI.h>
-
 #include "message.pb.h"
 
-#define CAN_RX GPIO_NUM_17
+//================================================================================
+// Global
+//================================================================================
+
+// GPIO
+#define SD_OFF GPIO_NUM_12
+#define MPU_CAL GPIO_NUM_13
+#define V_SENSE GPIO_NUM_15
 #define CAN_TX GPIO_NUM_16
-#define GPS_RX 33
-#define GPS_TX 32
-#define MPU_CAL 13
-#define NRF_CE 25
-#define NRF_CSN 26
-#define SD_CS 27
-#define SD_OFF 12
-#define V_SENSE 15
+#define CAN_RX GPIO_NUM_17
+#define NRF_CE GPIO_NUM_25
+#define NRF_CSN GPIO_NUM_26
+#define SD_CS GPIO_NUM_27
+#define GPS_TX GPIO_NUM_32
+#define GPS_RX GPIO_NUM_33
+
+// nRF24L01+
+RF24 radio(NRF_CE, NRF_CSN);
+const byte address[6] = "00001";
+
+// MPU-6050
+MPU6050 mpu;
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+int16_t ax_offset, ay_offset, az_offset;
+int16_t gx_offset, gy_offset, gz_offset;
+
+// BN-220
+TinyGPSPlus gps;
+HardwareSerial SerialGPS(1);
+
+// CAN
+can_message_t can_message;
+can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
+can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
+can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
+
+// SD Card
+File csv_file;
+bool is_writing;
+uint64_t start_time;
+uint64_t delta_time;
 
 //================================================================================
 // nRF24L01+
 //================================================================================
-
-RF24 radio(NRF_CE, NRF_CSN);
-const byte address[6] = "00001";
 
 void initNRF() {
     if (radio.begin()) {
@@ -41,17 +66,11 @@ void initNRF() {
     radio.stopListening();
 }
 
+void sendMessage() {}
+
 //================================================================================
 // MPU-6050
 //================================================================================
-
-MPU6050 mpu;
-
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
-
-int16_t ax_offset, ay_offset, az_offset;
-int16_t gx_offset, gy_offset, gz_offset;
 
 void initMPU() {
     if (Wire.begin()) {
@@ -66,11 +85,9 @@ void calibrateMPU() {
     mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
     Serial.printf("\nMPU RECALIBRATED\n");
 
-    /*
-    if (data_file) {
-        data_file.println("MPU RECALIBRATED");
+    if (csv_file) {
+        csv_file.println("MPU RECALIBRATED");
     }
-    */
 
     delay(500);
 }
@@ -93,9 +110,6 @@ void readMPU() {
 // BN-220
 //================================================================================
 
-TinyGPSPlus gps;
-HardwareSerial SerialGPS(1);
-
 void initGPS() {
     SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
     Serial.println("GPS serial port initialized successfully");
@@ -113,12 +127,6 @@ void readGPS() {
 // CAN
 //================================================================================
 
-can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
-can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
-can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
-
-can_message_t can_message;
-
 void initCAN() {
     if (can_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
         Serial.println("CAN driver installed successfully");
@@ -133,19 +141,71 @@ void initCAN() {
     }
 }
 
-// NEED TO MOVE THIS STUFF
+void readCAN() {
+    if (can_receive(&can_message, pdMS_TO_TICKS(100)) == ESP_OK) {
+        Serial.println("CAN message received");
 
-File data_file;
-bool do_write = false;
-String file_name = "";
-String file_out;
+        if (can_message.flags & CAN_MSG_FLAG_EXTD)
+            printf("Message is in Extended Format\n");
+        else
+            printf("Message is in Standard Format\n");
 
-unsigned long int start_time;
-unsigned long int delta_time;
+        Serial.printf("ID: %d\n", can_message.identifier);
+        if (!(can_message.flags & CAN_MSG_FLAG_RTR)) {
+            Serial.printf("Data: ");
+            for (int i = 0; i < can_message.data_length_code; i++) {
+                printf("%d ", can_message.data[i]);
+            }
+            Serial.println();
+        }
+    } else {
+        Serial.println("Failed to receive CAN message");
+    }
+}
 
-unsigned long int getSeconds();
-void fileInit();
-void writeToFile();
+//================================================================================
+// SD Card
+//================================================================================
+
+void initFile() {
+    if (SD.begin(SD_CS)) {
+        Serial.println("SD initialized successfully");
+    } else {
+        Serial.println("Failed to initialize SD");
+    }
+
+    char file_name[32];
+    sprintf(file_name, "/%d-%d-%d_%d-%d-%d.csv", gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute(), gps.time.second());
+
+    csv_file = SD.open(file_name, FILE_WRITE);
+    if (csv_file) {
+        Serial.printf("CSV file created successfully: %s\n", file_name);
+    } else {
+        Serial.println("Failed to create CSV file");
+    }
+
+    is_writing = true;
+
+    csv_file.println("TIME,AX,AY,AZ,GX,GY,GZ,LAT,LNG,ALT");
+
+    delay(500);
+}
+
+void stopWriting() {
+    if (is_writing) {
+        csv_file.close();
+        is_writing = false;
+        Serial.println("SD writing disabled");
+    } else {
+        Serial.println("SD writing is not enabled");
+    }
+
+    delay(500);
+}
+
+uint64_t getCentiseconds() {
+    return (gps.time.hour() * 360000 + gps.time.minute() * 6000 + gps.time.second() * 100 + gps.time.centisecond());
+}
 
 //================================================================================
 // Setup
@@ -174,23 +234,29 @@ void setup() {
 //================================================================================
 
 void loop() {
-    Serial.printf("Current Time: %lu\n", delta_time);
+    if (start_time == 0) {
+        start_time = getCentiseconds();
+
+        if (start_time != 0) {
+            initFile();
+        }
+    }
+
+    delta_time = getCentiseconds() - start_time;
+    Serial.printf("TIME %020lu\n", delta_time);
 
     readGPS();
     readMPU();
 
-    if (start_time == 0) {
-        start_time = getSeconds();
-
-        if (start_time != 0) {
-            fileInit();
-        }
+    if (is_writing) {
+        csv_file.printf("%lu,%hd,%hd,%hd,%hd,%hd,%hd,%f,%f,%f\n", delta_time, ax, ay, az, gx, gy, gz, gps.location.lat(), gps.location.lng(), gps.altitude.meters());
     }
 
-    delta_time = getSeconds() - start_time;
-
-    if (do_write) {
-        writeToFile();
+    if (digitalRead(MPU_CAL) == HIGH) {
+        calibrateMPU();
+    }
+    if (digitalRead(SD_OFF) == HIGH) {
+        stopWriting();
     }
 
     MyMessage msg = MyMessage_init_default;
@@ -211,89 +277,5 @@ void loop() {
     pb_encode(&stream, MyMessage_fields, &msg);
     radio.write(buffer, stream.bytes_written);
 
-    if (digitalRead(SD_OFF) == HIGH) {
-        if (do_write) {
-            data_file = SD.open(file_name, FILE_WRITE);
-        } else {
-            data_file.close();
-        }
-
-        do_write = !do_write;
-        delay(150);
-    }
-
-    if (digitalRead(MPU_CAL) == HIGH) {
-        calibrateMPU();
-    }
-
-    if (can_receive(&can_message, pdMS_TO_TICKS(100)) == ESP_OK) {
-        Serial.println("CAN message received");
-
-        if (can_message.flags & CAN_MSG_FLAG_EXTD)
-            printf("Message is in Extended Format\n");
-        else
-            printf("Message is in Standard Format\n");
-
-        Serial.printf("ID: %d\n", can_message.identifier);
-        if (!(can_message.flags & CAN_MSG_FLAG_RTR)) {
-            Serial.printf("Data: ");
-            for (int i = 0; i < can_message.data_length_code; i++) {
-                printf("%d ", can_message.data[i]);
-            }
-            Serial.println();
-        }
-    }
-}
-
-unsigned long int getSeconds() {
-    unsigned long int total_seconds;
-
-    total_seconds = (gps.time.hour() * 3600) + (gps.time.minute() * 60) + (gps.time.second());
-
-    return total_seconds;
-}
-
-void fileInit() {
-    if (!SD.begin(SD_CS)) {
-        Serial.println("Card Mount Failed");
-        return;
-    } else {
-        Serial.println("SD Card Mounted");
-    }
-
-    file_name = "/" + String(gps.date.year()) + "_" + String(gps.date.month()) + "_" + String(gps.date.day()) + "_" + String(gps.time.hour()) + "_" +
-                String(gps.time.minute()) + "_" + String(gps.time.second()) + ".csv";
-
-    data_file = SD.open(file_name, FILE_WRITE);
-
-    if (data_file.println("DELTA-TIME, XACCEL, YACCEL, ZACCEL, XGYRO, YGYRO, ZGYRO, LAT, LNG, ALT")) {
-        Serial.println("File Written");
-    } else {
-        Serial.println("Write Failed: Check SD Card");
-    }
-
-    do_write = !do_write;
-}
-
-void writeToFile() {
-    data_file.print(delta_time);
-    data_file.print(",");
-    data_file.print(ax);
-    data_file.print(",");
-    data_file.print(ay);
-    data_file.print(",");
-    data_file.print(az);
-    data_file.print(",");
-    data_file.print(gx);
-    data_file.print(",");
-    data_file.print(gy);
-    data_file.print(",");
-    data_file.print(gz);
-    data_file.print(",");
-    data_file.print(gps.location.lat());
-    data_file.print(",");
-    data_file.print(gps.location.lng());
-    data_file.print(",");
-    data_file.print(gps.altitude.meters());
-    data_file.print("\n");
+    readCAN();
 }

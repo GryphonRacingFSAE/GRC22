@@ -1,6 +1,6 @@
 BasedOnStyle: llvm
-IndentWidth: 4 
-ColumnLimit: 150 
+IndentWidth: 4
+ColumnLimit: 500
 AlwaysBreakTemplateDeclarations: true
 AllowShortFunctionsOnASingleLine: Empty
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
@@ -10,6 +10,6 @@ BinPackParameters: false
 AllowAllParametersOfDeclarationOnNextLine: false
 ExperimentalAutoDetectBinPacking: false
 DerivePointerAlignment: false
-FixNamespaceComments: true 
-PointerAlignment: Left 
+FixNamespaceComments: true
+PointerAlignment: Left
 UseTab: Never
