@@ -102,8 +102,8 @@ void readMPU() {
     gy -= gy_offset;
     gz -= gz_offset;
 
-    Serial.printf("AX %d, AY %d, AZ %d\n", ax, ay, az);
-    Serial.printf("GX %d, GY %d, GZ %d\n", gx, gy, gz);
+    Serial.printf("AX %d | AY %d | AZ %d\n", ax, ay, az);
+    Serial.printf("GX %d | GY %d | GZ %d\n", gx, gy, gz);
 }
 
 //================================================================================
@@ -111,7 +111,7 @@ void readMPU() {
 //================================================================================
 
 void initGPS() {
-    SerialGPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
+    SerialGPS.begin(115200, SERIAL_8N1, GPS_RX, GPS_TX);
     Serial.println("GPS serial port initialized successfully");
 }
 
@@ -120,7 +120,7 @@ void readGPS() {
         gps.encode(SerialGPS.read());
     }
 
-    Serial.printf("LAT %.2f, LNG %.2f, ALT %.2f\n\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+    Serial.printf("LAT %.2f | LNG %.2f | ALT %.2f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
 }
 
 //================================================================================
@@ -243,10 +243,10 @@ void loop() {
     }
 
     delta_time = getCentiseconds() - start_time;
-    Serial.printf("TIME %020lu\n", delta_time);
+    Serial.printf("TIME %lu\n", delta_time);
 
-    readGPS();
     readMPU();
+    readGPS();
 
     if (is_writing) {
         csv_file.printf("%lu,%hd,%hd,%hd,%hd,%hd,%hd,%f,%f,%f\n", delta_time, ax, ay, az, gx, gy, gz, gps.location.lat(), gps.location.lng(), gps.altitude.meters());
@@ -278,4 +278,6 @@ void loop() {
     radio.write(buffer, stream.bytes_written);
 
     readCAN();
+
+    Serial.println();
 }
