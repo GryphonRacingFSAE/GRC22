@@ -42,6 +42,13 @@ void fake::BMS::generateValues() {
     emit newTotalPackCycles(value);
     emit newPackPowerKW(value);
 
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 28; j++) {
+            int cVolt = rand() % 5;
+            emit newCellVoltage(i, j, cVolt);
+        }
+    }
+
     voltage += 0.1f;
     current += 0.1f;
     temp += 0.1f;

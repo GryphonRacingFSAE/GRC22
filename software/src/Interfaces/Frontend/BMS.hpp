@@ -8,6 +8,7 @@ namespace fake {
 
 class BMS : public QObject, public FakeInterface {
     Q_OBJECT
+    Q_PROPERTY(QList<int> voltages MEMBER m_voltages NOTIFY voltagesChanged)
   public:
     BMS(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
         this->FakeInterface::startReceiving();
@@ -50,6 +51,12 @@ class BMS : public QObject, public FakeInterface {
     void newHealth(float value);
     void newTotalPackCycles(float value);
     void newPackPowerKW(float value);
+
+    void newCellVoltage(int segment, int id, float voltage);
+    void voltagesChanged();
+
+  private:
+    QList<int> m_voltages;
 
   private:
     void generateValues();

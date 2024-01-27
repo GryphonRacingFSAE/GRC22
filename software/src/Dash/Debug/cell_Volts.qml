@@ -20,7 +20,7 @@ Rectangle {
             font.pixelSize: 24
             font.bold: true
             color: "white"
-            text: "Thermistor Tempuratures"
+            text: "Voltages"
         }
 
         Repeater{
@@ -36,16 +36,21 @@ Rectangle {
                     color: "white"
                     text: "Segment #" + `${num}`
                 }
+                
                 Segment{
-                    type: 1 //type 1 = temperatures from smu
+                    type: 0 //type 1 = temperatures from smu
                     segment: num
-                    max: 100
+                    max: 5
                     min: 1
                     boxSize: 25
-                    rows: 2
+                    rows: 1
                     columns: 28
                 }
             }
         }
     }
 }
+
+
+    
+    
