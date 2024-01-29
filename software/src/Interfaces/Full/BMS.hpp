@@ -8,8 +8,9 @@ namespace real {
 class BMS : public QObject, public CAN::DBCInterface<BMS> {
     Q_OBJECT
     Q_PROPERTY(QList<int> voltages MEMBER m_voltages NOTIFY voltagesChanged)
+    Q_PROPERTY(QList<int> resistances MEMBER m_resistances NOTIFY resistancesChanged)
   public:
-    BMS(const std::string& dbc_file_path = "Orion_CANBUS.dbc") : QObject(nullptr), DBCInterface(dbc_file_path) {
+    BMS(const std::string& dbc_file_path = "Orion_CANBUS.dbc") : QObject(nullptr), DBCInterface(dbc_file_path), m_voltages(5*28, -40), m_resistances(5*28, -40) {
         can_signal_dispatch["Pack_Open_Voltage"] = &BMS::newAccumulatorOpenVoltage;
         can_signal_dispatch["Pack_SOC"] = &BMS::newAccumulatorSOC;
         can_signal_dispatch["Pack_Inst_Voltage"] = &BMS::newAccumulatorInstVoltage;
@@ -30,8 +31,11 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
     void newCellVoltage(int segment, int id, float voltage);
     void voltagesChanged();
 
+    void newCellResistance(int segment, int id, float ohms);
+    void resistancesChanged();
+
   private void handleGeneralBroadcast(const dbcppp::IMessage* message_decoder, const can_frame& frame) {
-    int voltage = -40m cell_id = -1;
+    int voltage = -40, resistance = -40, cell_id = -1;
     for(const dbcppp::ISignal& sig : message_decoder->Signals()){
       if(sig.Name() == "CellId"){
         cell_id = sig.RawToPhys(sig.Decode(frame.data));
@@ -39,17 +43,28 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
       if(sig.Name() == "CellVoltage"){
         voltage = sig.RawToPhys(sig.Decode(frame.data));
       }
+      if(sig.Name() == "CellResistance"){
+        resistance = sig.RawToPhys(sig.Decode(frame.data));
+      }
     }
 
     if(cell_id != -1){
       //add to voltage arr
       m_voltages[cell_id] = voltage;
+      m_resistances[cell_id] = resistance;
       emit newCellVoltage(cell_id / 26, cell_id % 26, voltage);
+      emit newCellResistance(cell_id / 26, cell_id % 26, resistance);
+    }
+
+    if(cell_id % 139 == 0){
+      emit voltagesChanged();
+      emit resistancesChanged();
     }
   }
 
   private:
     QList<int> m_voltages;
+    QList<int> m_resistances;
 
   public:
     static constexpr size_t num_of_filters = 3;

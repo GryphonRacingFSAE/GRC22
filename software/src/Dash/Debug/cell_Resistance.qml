@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import CAN.SMU
 
 
 Rectangle {
@@ -19,7 +20,7 @@ Rectangle {
             font.pixelSize: 24
             font.bold: true
             color: "white"
-            text: "Thermistor Tempuratures"
+            text: "Resistances"
         }
 
         Repeater{
@@ -35,13 +36,14 @@ Rectangle {
                     color: "white"
                     text: "Segment #" + `${num}`
                 }
+
                 Segment{
-                    type: 2 //type 2 = temperatures from smu
+                    type: 1 //type 1 = resistances from bms
                     segment: num
-                    max: 100
+                    max: 5
                     min: 1
                     boxSize: 25
-                    rows: 2
+                    rows: 1
                     columns: 28
                 }
             }

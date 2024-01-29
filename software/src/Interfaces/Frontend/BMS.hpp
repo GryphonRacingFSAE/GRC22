@@ -9,8 +9,9 @@ namespace fake {
 class BMS : public QObject, public FakeInterface {
     Q_OBJECT
     Q_PROPERTY(QList<int> voltages MEMBER m_voltages NOTIFY voltagesChanged)
+    Q_PROPERTY(QList<int> resistances MEMBER m_resistances NOTIFY resistancesChanged)
   public:
-    BMS(const std::string& /* dbc_file_path */ = "") : QObject(nullptr) {
+    BMS(const std::string& /* dbc_file_path */ = "") : QObject(nullptr), m_voltages(5*28, -40), m_resistances(5*28, -40) {
         this->FakeInterface::startReceiving();
     }
     ~BMS() = default;
@@ -55,8 +56,12 @@ class BMS : public QObject, public FakeInterface {
     void newCellVoltage(int segment, int id, float voltage);
     void voltagesChanged();
 
+    void newCellResistance(int segment, int id, float ohms);
+    void resistancesChanged();
+
   private:
     QList<int> m_voltages;
+    QList<int> m_resistances;
 
   private:
     void generateValues();

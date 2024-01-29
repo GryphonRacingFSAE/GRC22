@@ -41,7 +41,17 @@ Rectangle {
                 width: boxSize
                 height: boxSize
 
-                property double value
+                property double value: {
+                    if(root.type == 0){
+                        return BMS.voltages[root.segment*(root.rows*root.columns) + index]
+                    } else if(root.type == 1){
+                        return BMS.resistances[root.segment*(root.rows*root.columns) + index]
+                    } else if(root.type == 2){
+                        return SMU.temperatures[root.segment*(root.rows*root.columns) + index]
+                    } 
+
+                }
+
                 Text{
                     font.family: "Consolas"
                     width: parent.width
@@ -61,28 +71,6 @@ Rectangle {
                         return Qt.rgba(1, 0, 0, value/root.max)
                     }
                 }
-            }
-        }
-    }
-
-    Connections{
-        target: BMS
-        enabled: root.type == 0;
-
-        function onNewCellVoltage(segment, id, voltage){
-            if(segment == root.segment){
-                repeater.itemAt(id).value = voltage;
-            }
-        }
-    }
-
-    Connections{
-        target: SMU
-        enabled: root.type == 1;
-
-        function onNewThermistorTemp(segment, id, temp){
-            if(segment == root.segment){
-                repeater.itemAt(id).value = temp;
             }
         }
     }

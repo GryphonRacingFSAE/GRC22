@@ -36,9 +36,9 @@ Rectangle {
                     color: "white"
                     text: "Segment #" + `${num}`
                 }
-                
+
                 Segment{
-                    type: 0 //type 1 = temperatures from smu
+                    type: 0 //type 0 = voltages from bms
                     segment: num
                     max: 5
                     min: 1
