@@ -59,7 +59,12 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
 
-                    text: value
+                    text: {
+                        if(root.type == 0 || root.type == 1){
+                            return value.toFixed(1)
+                        } 
+                        return value
+                    }
                     font.pointSize: 10
                 }
 
