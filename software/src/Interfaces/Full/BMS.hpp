@@ -68,7 +68,7 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
     QList<int> m_resistances;
 
   public:
-    static constexpr size_t num_of_filters = 1;
+    static constexpr size_t num_of_filters = 3;
     inline static can_filter filters[num_of_filters] = {{
         0x0E0, 
         0x7F0 // Grab 0x0E0 to 0x0EF for broadcast messages
