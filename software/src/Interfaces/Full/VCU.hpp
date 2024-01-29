@@ -137,9 +137,9 @@ class VCU : public QObject, public CAN::Interface {
         }
     }
 
-    Q_INVOKABLE void sendTcTune(QList<float> tc_tune) {
-        // TODO
-    }
+    // Q_INVOKABLE void sendTcTune(QList<float> tc_tune) {
+    //     // TODO
+    // }
 
     template <class StorageClass>
     RetCode sendTransaction(std::array<uint8_t, 8> header, const StorageClass& transaction) {

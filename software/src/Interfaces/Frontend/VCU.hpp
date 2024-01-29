@@ -107,9 +107,9 @@ class VCU : public QObject {
         }
     }
 
-    Q_INVOKABLE void sendTcTune(QList<float> tc_tune) {
-        // TODO
-    }
+    // Q_INVOKABLE void sendTcTune(QList<float> tc_tune) {
+    //     // TODO
+    // }
 
   private:
     std::filesystem::path m_torque_map_directory;

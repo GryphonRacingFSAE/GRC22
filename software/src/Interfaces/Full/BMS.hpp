@@ -34,7 +34,8 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
     void newCellResistance(int segment, int id, float ohms);
     void resistancesChanged();
 
-  private void handleGeneralBroadcast(const dbcppp::IMessage* message_decoder, const can_frame& frame) {
+  private: 
+  void handleGeneralBroadcast(const dbcppp::IMessage* message_decoder, const can_frame& frame) {
     int voltage = -40, resistance = -40, cell_id = -1;
     for(const dbcppp::ISignal& sig : message_decoder->Signals()){
       if(sig.Name() == "CellId"){
@@ -67,7 +68,7 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
     QList<int> m_resistances;
 
   public:
-    static constexpr size_t num_of_filters = 3;
+    static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {{
         0X108, //general broadcast messages
         0x0E0, 
