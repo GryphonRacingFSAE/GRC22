@@ -79,6 +79,8 @@ void initMPU() {
         Serial.println("Failed to initialize I2C");
     }
     mpu.initialize();
+    mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_4);
+    mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
 }
 
 void calibrateMPU() {
@@ -102,8 +104,8 @@ void readMPU() {
     gy -= gy_offset;
     gz -= gz_offset;
 
-    Serial.printf("AX %d | AY %d | AZ %d\n", ax, ay, az);
-    Serial.printf("GX %d | GY %d | GZ %d\n", gx, gy, gz);
+    Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", 4 * (float(ax) / 32768), 4 * (float(ay) / 32768), 4 * (float(az) / 32768));
+    Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", 250 * (float(gx) / 32768), 250 * (float(gy) / 32768), 250 * (float(gz) / 32768));
 }
 
 //================================================================================
@@ -120,7 +122,7 @@ void readGPS() {
         gps.encode(SerialGPS.read());
     }
 
-    Serial.printf("LAT %.2f | LNG %.2f | ALT %.2f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+    Serial.printf("LAT %.3f\tLNG %.3f\tALT %.3f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
 }
 
 //================================================================================
@@ -287,7 +289,7 @@ void loop() {
     pb_encode(&stream, MyMessage_fields, &msg);
     radio.write(buffer, stream.bytes_written);
 
-    readCAN();
+    // readCAN();
 
     if (digitalRead(MPU_CAL) == HIGH) {
         calibrateMPU();
