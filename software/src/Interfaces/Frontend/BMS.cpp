@@ -45,8 +45,8 @@ void fake::BMS::generateValues() {
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 28; j++) {
             int num = rand() % 5;
-            m_voltages[i*28 + j] = num;
-            m_resistances[i*28 + j] = num;
+            m_voltages[i * 28 + j] = num;
+            m_resistances[i * 28 + j] = num;
 
             emit newCellVoltage(i, j, num);
             emit newCellResistance(i, j, num);
