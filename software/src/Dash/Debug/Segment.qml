@@ -66,10 +66,7 @@ Rectangle {
                         return value.toFixed()
                     }
                     font.pointSize: {
-                        if(root.type == 2){
-                            return 8
-                        }
-                        return 10
+                        return 8
                     }
                 }
 

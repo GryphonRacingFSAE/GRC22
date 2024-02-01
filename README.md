@@ -68,8 +68,8 @@ conan build -if build .
 ## Running
 
 ```bash
-source build/activate_run.sh # RPi (maybe required on other linux distros)
-./build/Debug/bin/GryphonDash #(This runs the executable on RPi)
+source build/Release/generators/conanrun.sh # RPi (maybe required on other linux distros)
+./build/Release/bin/GryphonDash #(This runs the executable on RPi)
 ./build/bin/GryphonDash.exe #(This is to run the executable on windows)
 source build/deactivate_run.sh # RPi (maybe required on other linux distros)
 ```
