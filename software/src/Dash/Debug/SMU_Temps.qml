@@ -94,9 +94,9 @@ Rectangle {
                                                 temp = SMU.temperatures[seg*28 + i];
                                             }
                                         }
-                                        return temp.toFixed(2);
+                                        return temp.toFixed();
                                     } 
-                                    font.pointSize: 5
+                                    font.pointSize: 8
                                 }
                             }
                             //maximum box
@@ -120,9 +120,9 @@ Rectangle {
                                                 temp = SMU.temperatures[seg*28 + i];
                                             }
                                         }
-                                        return temp.toFixed(2);
+                                        return temp.toFixed();
                                     } 
-                                    font.pointSize: 5
+                                    font.pointSize: 8
                                 }
                             }
                         }
