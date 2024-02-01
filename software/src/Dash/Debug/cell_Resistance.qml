@@ -12,7 +12,7 @@ Rectangle {
 
     Column{
         anchors.centerIn: parent
-        spacing: 10
+        spacing: 5
         Text{
             anchors.horizontalCenter: parent.horizontalCenter
 
@@ -42,9 +42,9 @@ Rectangle {
                     segment: num
                     max: 5
                     min: 1
-                    boxSize: 25
-                    rows: 1
-                    columns: 28
+                    boxSize: 35
+                    rows: 2
+                    columns: 14
                 }
             }
         }
