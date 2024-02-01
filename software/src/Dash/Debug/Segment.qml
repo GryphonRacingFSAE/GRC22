@@ -60,12 +60,17 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
 
                     text: {
-                        if(root.type == 0 || root.type == 1){
-                            return value.toFixed(1)
+                        if(root.type == 0 || root.type == 2){
+                            return value.toFixed(2)
                         } 
-                        return value
+                        return value.toFixed(1)
                     }
-                    font.pointSize: 10
+                    font.pointSize: {
+                        if(root.type == 2){
+                            return 5
+                        }
+                        return 10
+                    }
                 }
 
 

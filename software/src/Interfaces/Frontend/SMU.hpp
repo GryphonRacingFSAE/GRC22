@@ -31,7 +31,7 @@ class SMU : public QObject, public FakeInterface {
                 emit newThermistorTemp(i, j, temp);
             }
         }
-        emit temperaturesChanged();
+        //emit temperaturesChanged();
     }
 };
 

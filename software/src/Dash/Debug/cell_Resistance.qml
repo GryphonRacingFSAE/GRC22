@@ -6,6 +6,7 @@ import CAN.SMU
 
 Rectangle {
     id: root
+    property int boxSize: 36
     color: "black"
     
     readonly property int segments: 5
@@ -23,26 +24,48 @@ Rectangle {
             text: "Resistances"
         }
 
+        Text{
+            anchors{
+                left: parent.left
+            }
+
+            font.family: "Consolas"
+            font.pixelSize: 15
+            color: "white"
+            text: "Segments"
+        }
+
         Repeater{
             id: repeater
             model: segments
 
-            Column{
+            Row{
                 property int num: modelData
-                spacing: 0
-                Text{
-                    font.family: "Consolas"
-                    font.pointSize: 10
-                    color: "white"
-                    text: "Segment #" + `${num}`
+                spacing: 3
+                Rectangle{
+                    width: boxSize*2
+                    height: boxSize*2
+                    color: "transparent"
+                    Text{
+                        anchors{
+                            verticalCenter: parent.verticalCenter
+                            right: parent.right
+                        }
+
+                        font.family: "Consolas"
+                        font.pointSize: 20
+                        color: "white"
+                        text: `${num}` + " {"
+                    }
                 }
 
                 Segment{
+                    id: grid
                     type: 1 //type 1 = resistances from bms
                     segment: num
                     max: 5
                     min: 1
-                    boxSize: 35
+                    boxSize: root.boxSize
                     rows: 2
                     columns: 14
                 }

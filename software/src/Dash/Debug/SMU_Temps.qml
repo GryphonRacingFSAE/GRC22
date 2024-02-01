@@ -6,12 +6,12 @@ import QtQuick.Layouts
 Rectangle {
     id: root
     color: "black"
-    
-    readonly property int segments: 5
+    property int boxSize: 27
+    property int segments: 5
 
     Column{
         anchors.centerIn: parent
-        spacing: 10
+        spacing: 5
         Text{
             anchors.horizontalCenter: parent.horizontalCenter
 
@@ -22,25 +22,43 @@ Rectangle {
             text: "Thermistor Tempuratures"
         }
 
+        Text{
+            anchors{
+                left: parent.left
+            }
+
+            font.family: "Consolas"
+            font.pixelSize: 15
+            color: "white"
+            text: "Segments"
+        }
+
         Repeater{
             id: repeater
             model: segments
 
-            Column{
+            Row{
                 property int num: modelData
-                spacing: 0
-                Text{
-                    font.family: "Consolas"
-                    font.pointSize: 10
-                    color: "white"
-                    text: "Segment #" + `${num}`
+                spacing: 3
+                Rectangle{
+                    width: boxSize
+                    height: boxSize*2
+                    color: "transparent"
+                    Text{
+                        anchors.centerIn: parent
+                        font.family: "Consolas"
+                        font.pointSize: 20
+                        color: "white"
+                        text: `${num}` + "{"
+                    }
                 }
                 Segment{
+                    id: segDisplay
                     type: 2 //type 2 = temperatures from smu
                     segment: num
                     max: 100
                     min: 1
-                    boxSize: 25
+                    boxSize: root.boxSize
                     rows: 2
                     columns: 28
                 }
