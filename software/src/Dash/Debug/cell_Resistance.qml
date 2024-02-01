@@ -116,7 +116,7 @@ Rectangle {
                                             temp = BMS.resistances[seg*28 + i];
                                         }
                                     }
-                                    return temp.toFixed(1);
+                                    return temp.toFixed(2);
                                 } 
                             }
                         }
@@ -140,7 +140,7 @@ Rectangle {
                                             temp = BMS.resistances[seg*28 + i];
                                         }
                                     }
-                                    return temp.toFixed(1);
+                                    return temp.toFixed(2);
                                 } 
                             }
                         }   
