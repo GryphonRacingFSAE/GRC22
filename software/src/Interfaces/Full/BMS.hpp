@@ -11,7 +11,7 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
     Q_PROPERTY(QList<float> resistances MEMBER m_resistances NOTIFY resistancesChanged)
   public:
     BMS(const std::string& dbc_file_path = "Orion_CANBUS.dbc")
-        : QObject(nullptr), DBCInterface(dbc_file_path), m_voltages(5 * 28, -40), m_resistances(5 * 28, -40) {
+        : QObject(nullptr), DBCInterface(dbc_file_path), m_voltages(5 * 28, -40), m_resistances(5 * 28, -40){
         can_signal_dispatch["Pack_Open_Voltage"] = &BMS::newAccumulatorOpenVoltage;
         can_signal_dispatch["Pack_SOC"] = &BMS::newAccumulatorSOC;
         can_signal_dispatch["Pack_Inst_Voltage"] = &BMS::newAccumulatorInstVoltage;
@@ -77,6 +77,7 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
             // add to voltage arr
             m_voltages[cell_id / 36 * 28 + segment_relative_cell_number] = voltage;
             m_resistances[cell_id / 36 * 28 + segment_relative_cell_number] = resistance;
+
             emit newCellVoltage(cell_id / 36, segment_relative_cell_number, voltage);
             emit newCellResistance(cell_id / 36, segment_relative_cell_number, resistance);
         }

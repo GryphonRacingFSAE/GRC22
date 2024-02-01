@@ -9,8 +9,8 @@ Rectangle {
     id: root 
     required property int type
     required property int segment
-    required property int max
-    required property int min
+    required property double max
+    required property double min
     required property int boxSize
     required property int rows
     required property int columns
@@ -75,10 +75,15 @@ Rectangle {
 
 
                 color: {
-                    if (repeater.itemAt(index).value < 0) {
-                        return Qt.rgba(0, 0, 1, -(value/root.max))
-                    } else {
-                        return Qt.rgba(1, 0, 0, value/root.max)
+                    if(value > root.max){
+                        //red above max
+                        return Qt.rgba(1,0,0,1)
+                    }else if(value < root.min){
+                        //shade of blue below min
+                        return Qt.rgba(0,0,1, 0.1 + 0.9*Math.abs((value-root.min)/(root.max-root.min)))
+                    }else if(value >= root.min && value <= root.max){
+                        //shade of green within range
+                        return Qt.rgba(0,1,0, 0.3 + 0.7*Math.abs((value-root.min)/(root.max-root.min)))
                     }
                 }
             }
