@@ -11,33 +11,23 @@ Rectangle {
     property bool selectedColumn: false
 
     Keys.onLeftPressed: () => {
-        if(!selectedColumn && selectedIndex == 2){
-            selectedIndex = 1;
-        }
         selectedColumn = !selectedColumn;
     }
 
     Keys.onRightPressed: () => {
-        if(!selectedColumn && selectedIndex == 2){
-            selectedIndex = 1;
-        }
         selectedColumn = !selectedColumn;
     }
 
     Keys.onUpPressed: () => {
-        if (selectedIndex == 0 && !selectedColumn){
-            selectedIndex = 2;
-        } else if (selectedIndex == 0){
-            selectedIndex = 1;
+        if (selectedIndex == 0){
+            selectedIndex = 3;
         } else {
             selectedIndex--;
         }
     }
 
     Keys.onDownPressed: () => {
-        if(selectedIndex == 2){
-            selectedIndex = 0;
-        } else if(selectedIndex == 1 && selectedColumn){
+        if(selectedIndex == 3){
             selectedIndex = 0;
         } else{
             selectedIndex++;
@@ -45,13 +35,17 @@ Rectangle {
     }
 
     Keys.onDigit1Pressed: () => {
-        if(selectedColumn){
-            //wheel slip & max reduction
+        if(selectedIndex == 3){
+            tireCompound.val = !tireCompound.val;
+        } else if(selectedColumn){
+            //wheel slip & max reduction & driver weight
             if(selectedIndex == 0){
                 wheelSlip.val += 1;
-            } else {
+            } else if(selectedIndex == 1){
                 maxReduction.val += 1;
-            }
+            } else if(selectedIndex == 2){
+                driverWeight.val += 1;
+            } 
         } else {
             //pid
             pidValues.itemAt(selectedIndex).val += 1;
@@ -59,16 +53,20 @@ Rectangle {
     }
 
     Keys.onDigit2Pressed: () => {
-        if(selectedColumn){
-            //wheel slip & max reduction
+        if(selectedIndex == 3){
+            tireCompound.val = !tireCompound.val;
+        } else if(selectedColumn){
+            //wheel slip & max reduction & driver weight
             if(selectedIndex == 0){
                 wheelSlip.val -= 1;
-            } else {
+            } else if(selectedIndex == 1){
                 maxReduction.val -= 1;
-            }
+            } else if(selectedIndex == 2){
+                driverWeight.val -= 1;
+            } 
         } else {
             //pid
-            pidValues.itemAt(selectedIndex).val -= 1;
+            pidValues.itemAt(selectedIndex).val += 1;
         }
     }
 
@@ -193,6 +191,19 @@ Rectangle {
                         text: "Max Reduction"
                     }
                 }
+
+                Rectangle{
+                    width: boxSize*4
+                    height: boxSize
+                    color: "black"
+                    Text{
+                        anchors.centerIn: parent
+                        font.family: "Consolas"
+                        font.pointSize: 10
+                        color: "white"
+                        text: "Driver Weight"
+                    }
+                }
             }
 
             Column{
@@ -235,22 +246,76 @@ Rectangle {
                         text: parent.val
                     }
                 }
+
+                Rectangle{
+                    id: driverWeight
+                    width: boxSize
+                    height: boxSize
+                    color: "green"
+                    property bool isSelected: root.selectedIndex == 2 && selectedColumn == 1
+                    property int val: VCU.currentTcTune[5]
+                    border{
+                        color: "blue"
+                        width: isSelected ? 3 : 0
+                    }
+                    Text{                        
+                        anchors.centerIn: parent
+                        font.family: "Consolas"
+                        font.pointSize: 10
+                        color: "black"
+                        text: parent.val
+                    }
+                }
             }
         }
     }
 
-    //Profile Num
-    Text{
+    Column{
+        spacing: 20
         anchors{
-            horizontalCenter: data.horizontalCenter
             top: data.bottom
-            margins: 25
+            horizontalCenter: data.horizontalCenter
+            topMargin: 20
         }
-        font.family: "Consolas"
-        font.pixelSize: 24
-        font.bold: true
-        color: "white"
-        text: "Profile #" + `${VCU.tcTuneId}`
+        Row{
+            spacing: 20
+            Text{             
+                anchors.verticalCenter: parent.verticalCenter
+                font.family: "Consolas"
+                font.pointSize: 10
+                color: "white"
+                text: "Tire Compound"
+            }
+
+            Rectangle{
+                id: tireCompound
+                width: boxSize
+                height: boxSize
+                color: "green"
+                property bool isSelected: root.selectedIndex == 3
+                property int val: VCU.currentTcTune[6]
+                border{
+                    color: "blue"
+                    width: isSelected ? 3 : 0
+                }
+                Text{                        
+                    anchors.centerIn: parent
+                    font.family: "Consolas"
+                    font.pointSize: 10
+                    color: "black"
+                    text: tireCompound.val ? "LC0" : "R20" 
+                }
+            }
+        }
+
+        //Profile Num
+        Text{
+            font.family: "Consolas"
+            font.pixelSize: 24
+            font.bold: true
+            color: "white"
+            text: "Profile #" + `${VCU.tcTuneId}`
+        }
     }
 
     //Title: Traction Control
@@ -266,4 +331,5 @@ Rectangle {
         color: "white"
         text: "Traction Control"
     }
+    
 }
