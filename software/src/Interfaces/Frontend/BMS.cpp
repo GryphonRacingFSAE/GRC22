@@ -44,8 +44,8 @@ void fake::BMS::generateValues() {
 
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 28; j++) {
-            float vol = (rand() % 30 + 340)/100.0;
-            float res = (rand() % 35 + 35)/10.0;
+            float vol = (rand() % 30 + 340) / 100.0;
+            float res = (rand() % 35 + 35) / 10.0;
 
             m_voltages[i * 28 + j] = vol;
             m_resistances[i * 28 + j] = res;

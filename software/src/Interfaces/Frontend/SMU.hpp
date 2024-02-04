@@ -26,12 +26,12 @@ class SMU : public QObject, public FakeInterface {
     void generateValues() {
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 56; j++) {
-                int temp = rand() % 70 -10;
+                int temp = rand() % 70 - 10;
                 m_temperatures[i * 56 + j] = temp;
                 emit newThermistorTemp(i, j, temp);
             }
         }
-        //emit temperaturesChanged();
+        // emit temperaturesChanged();
     }
 };
 
