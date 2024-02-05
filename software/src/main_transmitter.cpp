@@ -113,16 +113,17 @@ void readMPU() {
 //================================================================================
 
 void initGPS() {
-    SerialGPS.begin(115200, SERIAL_8N1, GPS_RX, GPS_TX);
+    SerialGPS.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);
     Serial.println("GPS serial port initialized successfully");
 }
 
 void readGPS() {
     while (SerialGPS.available() > 0) {
-        gps.encode(SerialGPS.read());
+        if (gps.encode(SerialGPS.read())) {
+            Serial.printf("LAT %f\tLNG %f\tALT %.1f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+            return;
+        }
     }
-
-    Serial.printf("LAT %.3f\tLNG %.3f\tALT %.3f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
 }
 
 //================================================================================
@@ -163,6 +164,10 @@ void readCAN() {
     } else {
         Serial.println("Failed to receive CAN message");
     }
+}
+
+uint64_t getSeconds() {
+    return (gps.time.hour() * 3600 + gps.time.minute() * 60 + gps.time.second());
 }
 
 //================================================================================
@@ -212,10 +217,6 @@ void stopWriting() {
     delay(1000);
 }
 
-uint64_t getCentiseconds() {
-    return (gps.time.hour() * 360000 + gps.time.minute() * 6000 + gps.time.second() * 100 + gps.time.centisecond());
-}
-
 //================================================================================
 // Setup
 //================================================================================
@@ -244,15 +245,17 @@ void setup() {
 
 void loop() {
     if (start_time == 0) {
-        start_time = getCentiseconds();
+        start_time = getSeconds();
 
         if (start_time != 0) {
             initFile();
         }
     }
 
-    delta_time = getCentiseconds() - start_time;
+    delta_time = getSeconds() - start_time;
+
     Serial.printf("TIME %lu\n", delta_time);
+    Serial.printf("SATs %d\n", gps.satellites.value());
 
     readMPU();
     readGPS();
