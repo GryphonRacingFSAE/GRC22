@@ -12,11 +12,21 @@
 #include "main.h"
 #include <string.h>
 
+volatile uint16_t gu16_TIM2_OVC = 0;
+volatile uint8_t gu8_State = 0;
+volatile uint8_t gu8_MSG[35] = {'\0'};
+volatile uint32_t gu32_T1 = 0;
+volatile uint32_t gu32_T2 = 0;
+volatile uint32_t gu32_Ticks = 0;
+volatile uint32_t gu32_Freq = 0;
+
 Ctrl_Data_Struct Ctrl_Data;
 
 void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
 	while (1) {
+//		ERROR_PRINT("Time thing: %d\n", TIM2->CCR1);
+    	GRCprintf("Frequency = %lu Hz\r\n", gu32_Freq);
 		BSPC();
 		RTD();
 		pumpCtrl();
@@ -25,6 +35,52 @@ void startControlTask() {
 		osDelayUntil(tick += CTRL_PERIOD);
 	}
 }
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+  if (htim->Instance == TIM2) {
+	  gu16_TIM2_OVC++;
+	  if (gu16_TIM2_OVC >= 2) {
+		  gu32_Freq = 0;
+	  }
+  }
+
+  /* USER CODE END Callback 1 */
+}
+
+
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim)
+{
+    if(gu8_State == 0)
+    {
+        gu32_T1 = TIM2->CCR1;
+        gu32_Ticks = (gu32_T1 + (gu16_TIM2_OVC * htim->Init.Period )) - gu32_T2;
+        if (gu32_Ticks != 0 && gu16_TIM2_OVC < 2) {
+        	gu32_Freq = (uint32_t)(96000000UL/gu32_Ticks);
+        }
+        gu16_TIM2_OVC = 0;
+        gu8_State = 1;
+    }
+    else if(gu8_State == 1)
+    {
+        gu32_T2 = TIM2->CCR1;
+        gu32_Ticks = (gu32_T2 + (gu16_TIM2_OVC * htim->Init.Period )) - gu32_T1;
+        if (gu32_Ticks != 0 && gu16_TIM2_OVC < 2) {
+			gu32_Freq = (uint32_t)(96000000UL/gu32_Ticks);
+		}
+        gu16_TIM2_OVC = 0;
+        gu8_State = 0;
+    }
+}
+
 
 // Brake system plausibility check
 void BSPC() {
