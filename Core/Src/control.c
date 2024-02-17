@@ -8,9 +8,9 @@
 
 #include "control.h"
 #include "APPS.h"
-#include "watchdog.h"
 #include "utils.h"
 #include "main.h"
+#include <string.h>
 
 volatile uint16_t gu16_TIM2_OVC = 0;
 volatile uint8_t gu8_State = 0;
@@ -20,14 +20,7 @@ volatile uint32_t gu32_T2 = 0;
 volatile uint32_t gu32_Ticks = 0;
 volatile uint32_t gu32_Freq = 0;
 
-Ctrl_Data_Struct Ctrl_Data = {
-	.wheelSpeed = {},
-	.motorControllerTemp = 0,
-	.accumulatorMaxTemp = 0,
-	.coolantTemp = 0,
-	.tractiveVoltage = 0,
-	.motorSpeed = 0,
-};
+Ctrl_Data_Struct Ctrl_Data;
 
 void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
@@ -93,16 +86,16 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim)
 void BSPC() {
 	if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
 		// If the BSPC is in the invalid state,
-		if (Watchdog_Data.flags & APPS_BSPC_INVALID){
-			// RULE (2023 V2): EV.5.7.2 BSPC valid again if the pedal position is <5%
+		if (APPS_Data.flags & APPS_BSPC_INVALID){
+			// Check if the pedal position is <5% to put APPS back into a valid state (EV.5.7.2)
 			if (APPS_Data.pedalPos < 5) {
-				Watchdog_Data.flags &= ~APPS_BSPC_INVALID; // Remove the invalid flag
+				APPS_Data.flags &= ~APPS_BSPC_INVALID; // Remove the invalid flag
 			}
 		}
 		// Only try to put the APPS into an invalid state if it's valid regarding the BSPC
-		// RULE (2023 V2): EV.5.7.1 BSPC invalid if over >25% travel and brakes engaged
+		// Set to invalid if over >25% travel and brakes engaged (EV.5.7.1)
 		else if (APPS_Data.pedalPos > 25 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin)) {
-			Watchdog_Data.flags |= APPS_BSPC_INVALID; // Consider APPS as invalid due to BSPC
+			APPS_Data.flags |= APPS_BSPC_INVALID; // Consider APPS as invalid due to BSPC
 		}
 		osMutexRelease(APPS_Data_MtxHandle);
 	} else {
@@ -121,16 +114,16 @@ void RTD() {
 	if(osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK) {
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
 			// If the RTD is in the invalid state,
-			if (Watchdog_Data.flags & APPS_RTD_INVALID){
+			if (APPS_Data.flags & APPS_RTD_INVALID){
 				// Check if the pedal position is <3% to put APPS back into a valid state (EV.10.4.3)				
 				if (APPS_Data.pedalPos < 3 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin) && Ctrl_Data.tractiveVoltage > RTD_TRACTIVE_VOLTAGE_ON && HAL_GPIO_ReadPin(GPIO_START_BTN_GPIO_Port, GPIO_START_BTN_Pin)) {
-					Watchdog_Data.flags &= ~APPS_RTD_INVALID; // Remove the invalid flag
+					APPS_Data.flags &= ~APPS_RTD_INVALID; // Remove the invalid flag
 					HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 1);
 					callCounts = 0;
 				}				
 			} 
 			else if (Ctrl_Data.tractiveVoltage < RTD_TRACTIVE_VOLTAGE_OFF) {
-				Watchdog_Data.flags |= RTD_INVALID; // Consider APPS as invalid due to RTD
+				APPS_Data.flags |= APPS_RTD_INVALID; // Consider APPS as invalid due to RTD
 			}
 			osMutexRelease(APPS_Data_MtxHandle);
 		} else {
@@ -174,9 +167,5 @@ void fanCtrl() {
 }
 
 void LEDCtrl() {
-	// LD1 = Green
-	// LD2 = Blue
-	// LD3 = Red
-
 
 }

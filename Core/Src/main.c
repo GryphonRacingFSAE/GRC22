@@ -92,13 +92,6 @@ const osThreadAttr_t ControlTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for watchdogTask */
-osThreadId_t watchdogTaskHandle;
-const osThreadAttr_t watchdogTask_attributes = {
-  .name = "watchdogTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityRealtime7,
-};
 /* Definitions for CANTX_Q */
 osMessageQueueId_t CANTX_QHandle;
 uint8_t CANTX_QBuffer[ 32 * sizeof( CANTXMsg ) ];
@@ -145,14 +138,6 @@ const osMutexAttr_t Torque_Map_Mtx_attributes = {
   .cb_mem = &Torque_Map_MtxControlBlock,
   .cb_size = sizeof(Torque_Map_MtxControlBlock),
 };
-/* Definitions for Watchdog_Data_Mtx */
-osMutexId_t Watchdog_Data_MtxHandle;
-osStaticMutexDef_t Watchdog_Data_MtxControlBlock;
-const osMutexAttr_t Watchdog_Data_Mtx_attributes = {
-  .name = "Watchdog_Data_Mtx",
-  .cb_mem = &Watchdog_Data_MtxControlBlock,
-  .cb_size = sizeof(Watchdog_Data_MtxControlBlock),
-};
 /* Definitions for printSem */
 osSemaphoreId_t printSemHandle;
 osStaticSemaphoreDef_t printSemControlBlock;
@@ -181,7 +166,6 @@ extern void startCANTxTask(void *argument);
 extern void startAPPSTask(void *argument);
 extern void startCANRxTask(void *argument);
 extern void startControlTask(void *argument);
-extern void startWatchdogTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -245,9 +229,6 @@ int main(void)
   /* creation of Torque_Map_Mtx */
   Torque_Map_MtxHandle = osMutexNew(&Torque_Map_Mtx_attributes);
 
-  /* creation of Watchdog_Data_Mtx */
-  Watchdog_Data_MtxHandle = osMutexNew(&Watchdog_Data_Mtx_attributes);
-
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -290,9 +271,6 @@ int main(void)
 
   /* creation of ControlTask */
   ControlTaskHandle = osThreadNew(startControlTask, NULL, &ControlTask_attributes);
-
-  /* creation of watchdogTask */
-  watchdogTaskHandle = osThreadNew(startWatchdogTask, NULL, &watchdogTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
