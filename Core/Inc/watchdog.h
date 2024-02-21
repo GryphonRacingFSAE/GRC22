@@ -7,6 +7,9 @@
 #ifndef INC_WATCHDOG_H_
 #define INC_WATCHDOG_H_
 
+#include <stdint.h>
+#include "cmsis_os.h"
+
 #define BSPC_INVALID 0x1
 #define RTD_INVALID 0x2
 // RULE (2023 V2): T.4.2.10 Sensor out of defined range

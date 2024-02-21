@@ -135,7 +135,6 @@ void startAPPSTask() {
 				CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
 			}
 		}
-		DEBUG_PRINT("APPS1:%d, APPS2:%d, APPS_POS:%d\r\n", apps1Avg, apps2Avg, appsPos);
 
 		int32_t appsPos = 0;
 		int32_t averageAppsPos = (appsPos1 + appsPos2) / 2;
@@ -147,6 +146,7 @@ void startAPPSTask() {
 			// FIXME: We better catch these mutex misses
 			CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
 		}
+		DEBUG_PRINT("APPS1:%d, APPS2:%d, APPS_POS:%d\r\n", apps1Avg, apps2Avg, appsPos);
 
 		//Used for BSPC
 		// TODO: RULE (2023 V2): EV.4.1.3 No regen < 5km/h
