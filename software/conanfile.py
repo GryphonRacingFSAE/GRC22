@@ -40,6 +40,8 @@ class GRCDash(ConanFile):
             self.requires("dbcppp/3.2.6")
         self.requires("fmt/9.0.0")
         self.requires("rapidcsv/8.69")
+        self.requires("mcap/1.3.0")
+        self.requires("protobuf/3.21.12")
 
     def layout(self):
         cmake_layout(self)
