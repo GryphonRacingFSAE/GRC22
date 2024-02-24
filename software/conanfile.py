@@ -2,6 +2,10 @@ from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 from conan.tools.layout import cmake_layout
 from conan.errors import ConanInvalidConfiguration
+import sys
+import os
+sys.path.insert(1, os.path.abspath("./DBCs"))
+from dbc_to_protobuf import 
 
 class GRCDash(ConanFile):
     name = "GRCDash"
@@ -53,6 +57,9 @@ class GRCDash(ConanFile):
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
+
+        dbc_file_paths = [os.path.join(self.recipe_folder, "DBCs", file) for file in os.listdir(os.path.join(self.recipe_folder, "DBCs")) if file.endswith(".dbc")]
+        DBCToProto(dbc_file_paths, os.path.join(self.generators_folder, "dbc_protos"))
 
     def build(self):
         cmake = CMake(self)
