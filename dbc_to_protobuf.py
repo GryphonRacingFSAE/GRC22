@@ -30,6 +30,8 @@ def CANMessageToProtoMessageText(can_msg: can.message.Message):
     return proto_message
 
 def DBCToProto(paths: [str], result_dir: str):
+    if not os.path.exists(result_dir):
+        os.mkdir(result_dir)
     for path in paths:
         can_db = cantools.database.load_file(path)
         with open(f"{result_dir}/{pathlib.Path(path).stem}.proto", "w+") as proto_file:

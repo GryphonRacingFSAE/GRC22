@@ -39,20 +39,8 @@ BU_: BMS Third_Party_Device
 BO_ 514 MSGID_0X202: 8 BMS
  SG_ Pack_DCL : 7|16@0+ (1.0,0) [0|0] "Amps"  Third_Party_Device
  SG_ Pack_CCL : 16|16@1+ (1.0,0) [0|0] "Amps"  Third_Party_Device
- SG_ Blank : 39|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 47|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 63|8@0+ (1.0,1720) [0|0] ""  Third_Party_Device
 
 BO_ 2553869184 MSGID_0X1838F380: 8 Third_Party_Device
- SG_ Blank : 7|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 15|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 23|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 31|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Unknown : 39|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Unknown : 47|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 63|8@0+ (1.0,1721) [0|0] ""  BMS
 
 BO_ 224 MSGID_0XE0: 4 BMS
  SG_ High_Temperature : 7|8@0+ (1.0,0) [0|0] "Celsius"  Third_Party_Device

@@ -41,11 +41,11 @@ BO_ 512 VCU_STATE_MSG_ID_0X200: 1 VCU
  SG_ BRAKE_SWITCH : 2|1@1+ (1,0) [0|1] "bool" Vector__XXX
  SG_ BSPC_VALID : 3|1@1+ (1,0) [0|1] "bool" Vector__XXX
  SG_ PUMP_ACTIVE : 4|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ FAN_ACTIVE : 5@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ FAN_ACTIVE : 5|1@1+ (1,0) [0|1] "bool" Vector__XXX
 
 BO_ 513 VCU_SENSORS_MSG_ID_0X201: 4 VCU
  SG_ BRAKE_PRESSURE : 0|16@1- (0.3333,0) [0|2000] "PSI" Vector__XXX
- SG_ ACCELERATOR_POSITION : 0|16@1+ (0.01,0) [0|100] "%" Vector__XXX
+ SG_ ACCELERATOR_POSITION : 16|16@1+ (0.01,0) [0|100] "%" Vector__XXX
 
 BO_ 514 VCU_TEMPS_MSG_ID_0X202: 3 VCU
  SG_ COOLANT : 0|8@1- (1,0) [-127|128] "c" Vector__XXX
