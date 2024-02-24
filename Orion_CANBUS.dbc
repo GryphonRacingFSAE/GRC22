@@ -64,15 +64,32 @@ BO_ 225 MSGID_0XE1: 8 BMS
  SG_ High_Cell_Voltage : 0|16@1+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
  SG_ Avg_Cell_Voltage : 16|16@1+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
  SG_ Low_Cell_Voltage : 32|16@1+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
- SG_ Pack_Summed_Voltage : 48|16@1+ (0.01,0) [0|0] "Volts"  Third_Party_Device
+ SG_ Pack_Inst_Voltage : 48|16@1+ (0.1,0) [0|0] "Volts"  Third_Party_Device
 
 BO_ 226 MSGID_0XE2: 8 BMS
  SG_ High_Opencell_Voltage : 0|16@1+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
- SG_ Blank : 23|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 31|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 39|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 47|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ Avg_Opencell_Voltage : 16|16@1+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
+ SG_ Low_Opencell_Voltage : 32|16@1+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
+ SG_ Pack_Open_Voltage : 48|16@1+ (0.1,0) [0|0] "Volts"  Third_Party_Device
+
+BO_ 227 MSGID_0XE3: 8 BMS
+ SG_ Pack_SOC : 0|16@1+ (0.5,0) [0|0] "Percent"  Third_Party_Device
+ SG_ Pack_Health : 16|16@1+ (1.0,0) [0|0] "Percent"  Third_Party_Device
+ SG_ Total_Pack_Cycles : 32|16@1+ (1.0,0) [0|0] "Num"  Third_Party_Device
+ SG_ Pack_Resistance : 48|16@1+ (0.001,0) [0|0] "Ohms"  Third_Party_Device
+
+BO_ 228 MSGID_0XE4: 8 BMS
+ SG_ Pack_Amphours : 0|16@1+ (0.1,0) [0|0] "Amphours"  Third_Party_Device
+ SG_ Relay_State : 16|16@1+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ Current_Limits_Status : 32|16@1+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ Failsafe_Statuses : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ Populated_Cells : 63|8@0+ (1.0,0) [0|0] "Num"  Third_Party_Device
+
+BO_ 229 MSGID_0XE5: 8 BMS
+ SG_ DTC_Flags_1 : 0|16@1+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ DTC_Flags_2 : 16|16@1+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ J1772_AC_Voltage : 32|16@1+ (0.1,0) [0|0] "Volts"  Third_Party_Device
+ SG_ J1772_Plug_State : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
  SG_ Blank : 63|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
 
 BO_ 264 MSGID_0X108_CELLBCAST: 8 BMS
@@ -86,5 +103,8 @@ CM_ BO_ 514 "This ID Transmits at 96 ms.";
 CM_ BO_ 224 "This ID Transmits at 504 ms.";
 CM_ BO_ 225 "This ID Transmits at 504 ms.";
 CM_ BO_ 226 "This ID Transmits at 504 ms.";
+CM_ BO_ 227 "This ID Transmits at 504 ms.";
+CM_ BO_ 228 "This ID Transmits at 504 ms.";
+CM_ BO_ 229 "This ID Transmits at 504 ms.";
 CM_ BO_ 264 "This ID Transmits at 100 ms.";
 CM_ SG_ 264 Checksum "Value = (0x108 + 8 + byte0 + byte1 + ... + byte6) & 0xFF";
