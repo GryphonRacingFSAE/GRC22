@@ -7,6 +7,7 @@
 #include <driver/can.h>
 #include <pb_encode.h>
 
+#include "dbc_to_cpp.h"
 #include "message.pb.h"
 
 //================================================================================
