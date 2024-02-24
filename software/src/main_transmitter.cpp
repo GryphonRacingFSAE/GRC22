@@ -8,6 +8,7 @@
 #include <pb_encode.h>
 
 #include "message.pb.h"
+#include "gr_dbc.h"
 
 //================================================================================
 // Global
