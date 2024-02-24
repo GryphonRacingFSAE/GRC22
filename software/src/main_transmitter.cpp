@@ -39,18 +39,14 @@ int16_t gx_offset, gy_offset, gz_offset;
 // BN-220
 TinyGPSPlus gps;
 HardwareSerial SerialGPS(1);
+uint64_t start_time;
+uint64_t delta_time;
 
 // CAN
 can_message_t can_message;
 can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
 can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
 can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
-
-// SD Card
-File csv_file;
-bool is_writing;
-uint64_t start_time;
-uint64_t delta_time;
 
 //================================================================================
 // nRF24L01+
@@ -86,11 +82,6 @@ void initMPU() {
 void calibrateMPU() {
     mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
     Serial.printf("\nMPU RECALIBRATED\n");
-
-    if (csv_file) {
-        csv_file.println("MPU RECALIBRATED");
-    }
-
     delay(1000);
 }
 
@@ -161,6 +152,7 @@ void readCAN() {
             }
             Serial.println();
         }
+
     } else {
         Serial.println("Failed to receive CAN message");
     }
@@ -171,72 +163,24 @@ uint64_t getSeconds() {
 }
 
 //================================================================================
-// SD Card
-//================================================================================
-
-void initFile() {
-    if (SD.begin(SD_CS)) {
-        Serial.println("SD initialized successfully");
-    } else {
-        Serial.println("Failed to initialize SD");
-    }
-
-    char file_name[32];
-    sprintf(file_name,
-            "/%d-%d-%d_%d-%d-%d.csv",
-            gps.date.year(),
-            gps.date.month(),
-            gps.date.day(),
-            gps.time.hour(),
-            gps.time.minute(),
-            gps.time.second());
-
-    csv_file = SD.open(file_name, FILE_WRITE);
-    if (csv_file) {
-        Serial.printf("CSV file created successfully: %s\n", file_name);
-    } else {
-        Serial.println("Failed to create CSV file");
-    }
-
-    is_writing = true;
-
-    csv_file.println("TIME,AX,AY,AZ,GX,GY,GZ,LAT,LNG,ALT");
-
-    delay(1000);
-}
-
-void stopWriting() {
-    if (is_writing) {
-        csv_file.close();
-        is_writing = false;
-        Serial.printf("\nSD writing disabled\n");
-    } else {
-        Serial.printf("\nSD writing is not enabled\n");
-    }
-
-    delay(1000);
-}
-
-//================================================================================
 // Setup
 //================================================================================
 
 void setup() {
     Serial.begin(115200);
+    delay(500);
 
-    while (!Serial) {
-        delay(100);
-    }
+    Serial.println();
 
     initNRF();
     initMPU();
-    initGPS();
     initCAN();
 
-    pinMode(SD_OFF, INPUT);
     pinMode(MPU_CAL, INPUT);
 
     calibrateMPU();
+
+    Serial.println();
 }
 
 //================================================================================
@@ -247,8 +191,10 @@ void loop() {
     if (start_time == 0) {
         start_time = getSeconds();
 
-        if (start_time != 0) {
-            initFile();
+        if (start_time == 0) {
+            Serial.printf("Satellites connected: %d\n", gps.satellites.value());
+            delay(5000);
+            return;
         }
     }
 
@@ -259,20 +205,6 @@ void loop() {
 
     readMPU();
     readGPS();
-
-    if (is_writing) {
-        csv_file.printf("%lu,%hd,%hd,%hd,%hd,%hd,%hd,%f,%f,%f\n",
-                        delta_time,
-                        ax,
-                        ay,
-                        az,
-                        gx,
-                        gy,
-                        gz,
-                        gps.location.lat(),
-                        gps.location.lng(),
-                        gps.altitude.meters());
-    }
 
     MyMessage msg = MyMessage_init_default;
 
@@ -296,9 +228,6 @@ void loop() {
 
     if (digitalRead(MPU_CAL) == HIGH) {
         calibrateMPU();
-    }
-    if (digitalRead(SD_OFF) == HIGH) {
-        stopWriting();
     }
 
     Serial.println();

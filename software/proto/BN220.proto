@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-message BN220_Message {
-    double longitude = 1;
-    double latitude = 2;
-    double altitude = 3;
-}
