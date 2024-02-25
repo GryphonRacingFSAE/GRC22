@@ -1,3 +1,8 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
 {
     "configurations": [
         {
@@ -239,8 +244,7 @@
                 "C:/Users/Evan/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "C:/Users/Evan/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "C:/Users/Evan/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                "",
-                "${workspaceFolder}/.pio/build/transmitter/dbcppp/generated-src/lib"
+                ""
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
