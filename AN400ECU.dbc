@@ -39,7 +39,7 @@ BO_ 1 MSGID_0X0CFFF048: 8 AN400ECU
  SG_ RPM : 0|16@0+ (1.0,0) [0|30000] "rpm"  Third_Party_Device
  SG_ TPS : 16|16@0+ (0.1,0) [0|100] "%"  Third_Party_Device
 
-BO_ 2 MSGID_0X0CFFF048: 8 AN400ECU
+BO_ 2 MSGID_0X0CFFF047: 8 AN400ECU
  SG_ MAP : 0|16@0+ (0.01,0) [0|300] "psi/kPa"  Third_Party_Device
  SG_ Lambda : 16|16@0+ (0.01,0) [0|10] "lambda"  Third_Party_Device
 
