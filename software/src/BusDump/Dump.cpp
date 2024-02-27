@@ -6,6 +6,11 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
 
+#include <foxglove/websocket/server_factory.hpp>
+#include <foxglove/websocket/websocket_notls.hpp>
+#include <foxglove/websocket/websocket_server.hpp>
+#include <foxglove/websocket/base64.hpp>
+
 #include <fmt/core.h>
 
 #include <chrono>
@@ -18,6 +23,11 @@ using namespace CAN::Interfaces;
 
 Dump::~Dump() {
     this->Interface::stopReceiving();
+    server->stop();
+}
+
+void Dump::log(foxglove::WebSocketLogLevel, char const* msg) {
+    fmt::print("Foxglove: {}\n", msg);
 }
 
 Dump::Dump(std::string dbc_folder) {
@@ -39,6 +49,20 @@ Dump::Dump(std::string dbc_folder) {
         fmt::print("Failed to open for writing!\n");
         return;
     }
+
+    foxglove::ServerOptions serverOptions;
+    server = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
+        "Gryphon Racing Foxglove Protobuf Server", Dump::log, serverOptions);
+
+    foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
+    hdlrs.subscribeHandler = [](foxglove::ChannelId channel_id, foxglove::ConnHandle) {
+        fmt::print("First client subscribed to: {}\n", channel_id);
+    };
+    hdlrs.unsubscribeHandler = [](foxglove::ChannelId channel_id, foxglove::ConnHandle) {
+        fmt::print("Last client subscribed to: {}\n", channel_id);
+    };
+    server->setHandlers(std::move(hdlrs));
+    server->start("0.0.0.0", 8765);
 
     google::protobuf::FileDescriptorSet proto_fd_set;
     std::ifstream proto_desc_file("protos.desc", std::ios::binary);
@@ -72,7 +96,16 @@ Dump::Dump(std::string dbc_folder) {
 
                 mcap::Channel channel(msg.Name(), "protobuf", schema.id);
                 mcap_writer.addChannel(channel);
-                message_to_channel_id_map[msg.Name()] = channel.id;
+                mcap_message_to_channel_id_map[msg.Name()] = channel.id;
+
+                const auto channel_ids = server->addChannels({{
+                    .topic = msg.Name(),
+                    .encoding = "protobuf",
+                    .schemaName = msg.Name(),
+                    .schema = foxglove::base64Encode(proto_fd_set.SerializeAsString()),
+                }});
+                websocket_message_to_channel_id_map[msg.Name()] = channel_ids.front();
+            
                 message_to_message_descriptor_map[msg.Name()] = message_descriptor;
             }
         }
@@ -157,7 +190,7 @@ void Dump::newFrame(const can_frame& frame) {
                 std::string serialized = actual_msg->SerializeAsString();
 
                 mcap::Message mcap_msg;
-                mcap_msg.channelId = message_to_channel_id_map[msg.Name()];
+                mcap_msg.channelId = mcap_message_to_channel_id_map[msg.Name()];
                 mcap_msg.sequence = 0; // We can assign a counter to this to measure gaps between messages
                 mcap_msg.publishTime = frame_timestamp;
                 mcap_msg.logTime = frame_timestamp;
@@ -170,6 +203,10 @@ void Dump::newFrame(const can_frame& frame) {
                     mcap_writer.terminate();
                     mcap_writer.close();
                 }
+
+                
+                server->broadcastMessage(websocket_message_to_channel_id_map[msg.Name()], frame_timestamp, reinterpret_cast<const uint8_t*>(serialized.data()),
+                             serialized.size());
 
                 return;
             }

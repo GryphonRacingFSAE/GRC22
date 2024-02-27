@@ -14,11 +14,11 @@ namespace CAN {
 class Interface {
   public:
     Interface() = default;
-    virtual ~Interface();
+    virtual ~Interface() = default;
 
   protected:
     RetCode startReceiving(const char* canbus_interface_name, can_filter* filters, const size_t num_of_filters, uint32_t read_timeout_ms);
-    void stopReceiving();
+    void stopReceiving(); // Stop receiving MUST be called in child class' destructor
 
     // As of now, newFrame, newError and newTimeout should be extremely fast functions before
     // emitting more signals
