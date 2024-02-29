@@ -20,12 +20,14 @@
 
 class FGLogger {
   public:
-    FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port);
+    FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port, std::string saving_folder);
     virtual ~FGLogger();
 
     void saveAndPublish(const can_frame& can_frame);
+    void restartSaving();
 
   private:
+    std::string saving_folder_path;
     std::vector<std::unique_ptr<dbcppp::INetwork>> dbc_networks;
     google::protobuf::DescriptorPool descriptor_pool;
     mcap::McapWriter mcap_writer;

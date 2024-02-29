@@ -11,6 +11,7 @@
 #include <foxglove/websocket/websocket_server.hpp>
 
 #include <fmt/core.h>
+#include <fmt/chrono.h>
 
 #include <chrono>
 #include <fstream>
@@ -27,7 +28,30 @@ void FGLogger::log(foxglove::WebSocketLogLevel, char const* msg) {
     fmt::print("Foxglove: {}\n", msg);
 }
 
-FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port) {
+
+void FGLogger::restartSaving() {
+    if (!fs::exists(saving_folder_path) || !fs::is_directory(saving_folder_path)) {
+        fmt::print("Saving path does not exist or isn't a folder!\n");
+        return;
+    }
+
+    auto now = std::chrono::system_clock::now();
+    uint64_t timestamp =
+        std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+    fs::create_directory(fmt::format("{}/{:%Y-%m-%d}", saving_folder_path, now));
+
+    auto options = mcap::McapWriterOptions("");
+    std::string save_path = fmt::format("{}/{:%Y-%m-%d}/{}.mcap", saving_folder_path, now, timestamp);
+    fmt::print("Saving to: {}\n", save_path);
+    const auto res = mcap_writer.open(save_path, options);
+    if (!res.ok()) {
+        fmt::print("Failed to open for writing!\n");
+        return;
+    }
+}
+
+FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port, std::string saving_folder_path): saving_folder_path(saving_folder_path) {
     if (!fs::exists(dbc_folder) || !fs::is_directory(dbc_folder)) {
         fmt::print("DBC folder does not exist or isn't a folder!\n");
     }
@@ -40,12 +64,7 @@ FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint1
         }
     }
 
-    auto options = mcap::McapWriterOptions("");
-    const auto res = mcap_writer.open("test.mcap", options);
-    if (!res.ok()) {
-        fmt::print("Failed to open for writing!\n");
-        return;
-    }
+    this->restartSaving();
 
     foxglove::ServerOptions serverOptions;
     server =
