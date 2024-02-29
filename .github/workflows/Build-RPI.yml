@@ -42,7 +42,7 @@ jobs:
           run: |
             conan remote add grc ${{ secrets.CONAN_REMOTE_URL }} --force
             conan remove "*" -f
-            conan install software -if build -pr:h software/ConanProfiles/pi4b-Release.ini -pr:b software/ConanProfiles/pi4b-Release.ini -r grc -o -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
+            conan install software -if build -pr:h software/ConanProfiles/pi4b-Release.ini -pr:b software/ConanProfiles/pi4b-Release.ini -r grc -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
             conan build software -if build
             cp -r software/build/Release/bin /artifacts
 
