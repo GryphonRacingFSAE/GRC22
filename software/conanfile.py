@@ -4,8 +4,7 @@ from conan.tools.layout import cmake_layout
 from conan.errors import ConanInvalidConfiguration
 import sys
 import os
-sys.path.insert(1, os.path.abspath("./DBCs"))
-from dbc_to_protobuf import DBCToProto
+from DBCs.dbc_to_protobuf import DBCToProto
 
 class GRCDash(ConanFile):
     name = "GRCDash"
