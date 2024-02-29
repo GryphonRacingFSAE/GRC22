@@ -11,18 +11,14 @@ on:
 
 jobs:
   build:
-    env:
-      NOT_ON_C3I: 1
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./software
 
     steps:
       - uses: actions/checkout@v3
         with:
           lfs: false
           submodules: True
+
       - uses: uraimo/run-on-arch-action@v2
         with:
           arch: aarch64
@@ -36,6 +32,7 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
+            -u root
 
           install: |
             sudo apt-get update
