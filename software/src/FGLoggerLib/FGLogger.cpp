@@ -1,6 +1,6 @@
+#define MCAP_IMPLEMENTATION
 #include <FGLogger.hpp>
 
-#define MCAP_IMPLEMENTATION
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
@@ -23,6 +23,10 @@ namespace pb = google::protobuf;
 
 FGLogger::~FGLogger() {
     server->stop();
+}
+
+void FGLogger::log(foxglove::WebSocketLogLevel, char const* msg) {
+    fmt::print("Foxglove: {}\n", msg);
 }
 
 FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port){
@@ -104,6 +108,7 @@ FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint1
                 .encoding = "protobuf",
                 .schemaName = msg.Name(),
                 .schema = foxglove::base64Encode(proto_fd_set.SerializeAsString()),
+                .schemaEncoding = "protobuf",
             }});
             websocket_message_to_channel_id_map[msg.Name()] = channel_ids.front();
 
