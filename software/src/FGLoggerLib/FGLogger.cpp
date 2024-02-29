@@ -16,8 +16,6 @@
 #include <fstream>
 #include <string>
 
-
-
 namespace fs = std::filesystem;
 namespace pb = google::protobuf;
 
@@ -29,7 +27,7 @@ void FGLogger::log(foxglove::WebSocketLogLevel, char const* msg) {
     fmt::print("Foxglove: {}\n", msg);
 }
 
-FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port){
+FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port) {
     if (!fs::exists(dbc_folder) || !fs::is_directory(dbc_folder)) {
         fmt::print("DBC folder does not exist or isn't a folder!\n");
     }
@@ -50,7 +48,8 @@ FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint1
     }
 
     foxglove::ServerOptions serverOptions;
-    server = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>("Gryphon Racing Foxglove Protobuf Server", FGLogger::log, serverOptions);
+    server =
+        foxglove::ServerFactory::createServer<websocketpp::connection_hdl>("Gryphon Racing Foxglove Protobuf Server", FGLogger::log, serverOptions);
 
     foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
     hdlrs.subscribeHandler = [](foxglove::ChannelId channel_id, foxglove::ConnHandle) { fmt::print("First client subscribed to: {}\n", channel_id); };
@@ -203,7 +202,7 @@ void FGLogger::saveAndPublish(const can_frame& can_frame) {
 
     // Send the message out via foxglove-websocket
     server->broadcastMessage(websocket_message_to_channel_id_map[message_name],
-                                frame_timestamp,
-                                reinterpret_cast<const uint8_t*>(serialized_message.data()),
-                                serialized_message.size());
+                             frame_timestamp,
+                             reinterpret_cast<const uint8_t*>(serialized_message.data()),
+                             serialized_message.size());
 }

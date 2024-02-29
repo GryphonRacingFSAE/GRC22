@@ -1,6 +1,6 @@
 #include <Dump.hpp>
-#include <tools.hpp>
 #include <fmt/core.h>
+#include <tools.hpp>
 
 using namespace CAN::Interfaces;
 
@@ -8,8 +8,7 @@ Dump::~Dump() {
     this->Interface::stopReceiving();
 }
 
-Dump::Dump(std::string dbc_folder): logger(dbc_folder, "protos.desc", 8765) {
-}
+Dump::Dump(std::string dbc_folder) : logger(dbc_folder, "protos.desc", 8765) {}
 
 void Dump::startReceiving() {
     this->Interface::startReceiving("can0", nullptr, 0, Dump::timeout_ms); // Get everything

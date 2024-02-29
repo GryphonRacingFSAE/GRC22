@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Interface.hpp>
 #include <FGLogger.hpp>
+#include <Interface.hpp>
 
 namespace CAN::Interfaces {
 

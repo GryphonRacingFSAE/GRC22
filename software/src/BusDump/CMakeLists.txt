@@ -4,14 +4,7 @@ set(HEADER_FILES Dump.hpp)
 
 add_executable(BusDump ${CODE_FILES} ${HEADER_FILES})
 set_target_properties(BusDump PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)
-target_link_libraries(
-    BusDump
-    PRIVATE dbcppp::dbcppp
-            protobuf::protobuf
-            fmt::fmt
-            Threads::Threads
-            CANLib
-            FGLoggerLib)
+target_link_libraries(BusDump PRIVATE dbcppp::dbcppp protobuf::protobuf fmt::fmt Threads::Threads CANLib FGLoggerLib)
 target_include_directories(BusDump PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_command(
@@ -22,5 +15,5 @@ add_custom_command(
 add_custom_command(
     TARGET BusDump
     PRE_BUILD
-    COMMAND ${Protobuf_PROTOC_EXECUTABLE} --include_imports --descriptor_set_out=$<TARGET_FILE_DIR:BusDump>/protos.desc
-            --proto_path=${CMAKE_SOURCE_DIR}/protos ${CMAKE_SOURCE_DIR}/protos/*.proto)
+    COMMAND ${Protobuf_PROTOC_EXECUTABLE} --include_imports --descriptor_set_out=$<TARGET_FILE_DIR:BusDump>/protos.desc --proto_path=${CMAKE_SOURCE_DIR}/protos
+            ${CMAKE_SOURCE_DIR}/protos/*.proto)

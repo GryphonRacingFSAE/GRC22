@@ -13,10 +13,10 @@
 #include <mcap/writer.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 class FGLogger {
   public:
