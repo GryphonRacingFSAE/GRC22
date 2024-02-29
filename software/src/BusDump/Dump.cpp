@@ -6,10 +6,10 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
 
+#include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/server_factory.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <foxglove/websocket/websocket_server.hpp>
-#include <foxglove/websocket/base64.hpp>
 
 #include <fmt/core.h>
 
@@ -51,13 +51,10 @@ Dump::Dump(std::string dbc_folder) {
     }
 
     foxglove::ServerOptions serverOptions;
-    server = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
-        "Gryphon Racing Foxglove Protobuf Server", Dump::log, serverOptions);
+    server = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>("Gryphon Racing Foxglove Protobuf Server", Dump::log, serverOptions);
 
     foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
-    hdlrs.subscribeHandler = [](foxglove::ChannelId channel_id, foxglove::ConnHandle) {
-        fmt::print("First client subscribed to: {}\n", channel_id);
-    };
+    hdlrs.subscribeHandler = [](foxglove::ChannelId channel_id, foxglove::ConnHandle) { fmt::print("First client subscribed to: {}\n", channel_id); };
     hdlrs.unsubscribeHandler = [](foxglove::ChannelId channel_id, foxglove::ConnHandle) {
         fmt::print("Last client subscribed to: {}\n", channel_id);
     };
@@ -105,7 +102,7 @@ Dump::Dump(std::string dbc_folder) {
                     .schema = foxglove::base64Encode(proto_fd_set.SerializeAsString()),
                 }});
                 websocket_message_to_channel_id_map[msg.Name()] = channel_ids.front();
-            
+
                 message_to_message_descriptor_map[msg.Name()] = message_descriptor;
             }
         }
@@ -121,26 +118,26 @@ void Dump::newFrame(const can_frame& frame) {
     mcap::Timestamp frame_timestamp =
         std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    fmt::print("ID: 0x{:08X}, Ext: {}, RTR: {}, Err: {}, Payload: 0x{:02X} 0x{:02X} 0x{:02X} "
-               "0x{:02X} 0x{:02X} 0x{:02X} 0x{:02X} 0x{:02X}\n",
-               CAN::frameId(frame),
-               CAN::frameFormat(frame) == CanFormat::Extended,
-               CAN::isRemoteTransmissionRequest(frame),
-               CAN::isError(frame),
-               frame.data[0],
-               frame.data[1],
-               frame.data[2],
-               frame.data[3],
-               frame.data[4],
-               frame.data[5],
-               frame.data[6],
-               frame.data[7]);
+    // fmt::print("ID: 0x{:08X}, Ext: {}, RTR: {}, Err: {}, Payload: 0x{:02X} 0x{:02X} 0x{:02X} "
+    //            "0x{:02X} 0x{:02X} 0x{:02X} 0x{:02X} 0x{:02X}\n",
+    //            CAN::frameId(frame),
+    //            CAN::frameFormat(frame) == CanFormat::Extended,
+    //            CAN::isRemoteTransmissionRequest(frame),
+    //            CAN::isError(frame),
+    //            frame.data[0],
+    //            frame.data[1],
+    //            frame.data[2],
+    //            frame.data[3],
+    //            frame.data[4],
+    //            frame.data[5],
+    //            frame.data[6],
+    //            frame.data[7]);
 
     // Take the can frame, convert it to it's protobuf analog, and then save it to mcap
     for (const std::unique_ptr<dbcppp::INetwork>& network : this->dbc_networks) {
         for (const dbcppp::IMessage& msg : network->Messages()) {
             if (msg.Id() == frame.can_id) {
-                fmt::print("Found matching network & message ({}) for ID: {}\n", msg.Name(), frame.can_id);
+                fmt::print("Found matching network & message ({}) for ID: {}\r", msg.Name(), frame.can_id);
 
                 pb::DynamicMessageFactory dmf;
 
@@ -158,21 +155,22 @@ void Dump::newFrame(const can_frame& frame) {
 
                     // Ensure we set the field with the correct type
                     switch (fd->type()) {
+                    case pb::FieldDescriptor::TYPE_BOOL:
+                        refl->SetBool(actual_msg, fd, sig.Decode(frame.data));
+                        break;
                     case pb::FieldDescriptor::TYPE_INT32:
                         refl->SetInt32(actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data)));
                         break;
                     case pb::FieldDescriptor::TYPE_INT64:
-                            // This might cut off data due to limits in the size of doubles
-                        refl->SetInt64(
-                            actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data))); 
+                        // This might cut off data due to limits in the size of doubles
+                        refl->SetInt64(actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data)));
                         break;
                     case pb::FieldDescriptor::TYPE_UINT32:
                         refl->SetUInt32(actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data)));
                         break;
                     case pb::FieldDescriptor::TYPE_UINT64:
-                            // This might cut off data due to limits in the size of doubles
-                        refl->SetUInt64(
-                            actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data))); 
+                        // This might cut off data due to limits in the size of doubles
+                        refl->SetUInt64(actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data)));
                         break;
                     case pb::FieldDescriptor::TYPE_FLOAT:
                         refl->SetFloat(actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data)));
@@ -181,7 +179,7 @@ void Dump::newFrame(const can_frame& frame) {
                         refl->SetDouble(actual_msg, fd, sig.RawToPhys(sig.Decode(frame.data)));
                         break;
                     default:
-                        fmt::print("Missing type handling for field descriptor type: {}\n", fd->type());
+                        fmt::print("Missing type handling for field: {}\n", sig.Name());
                         return;
                     }
                 }
@@ -204,9 +202,10 @@ void Dump::newFrame(const can_frame& frame) {
                     mcap_writer.close();
                 }
 
-                
-                server->broadcastMessage(websocket_message_to_channel_id_map[msg.Name()], frame_timestamp, reinterpret_cast<const uint8_t*>(serialized.data()),
-                             serialized.size());
+                server->broadcastMessage(websocket_message_to_channel_id_map[msg.Name()],
+                                         frame_timestamp,
+                                         reinterpret_cast<const uint8_t*>(serialized.data()),
+                                         serialized.size());
 
                 return;
             }
