@@ -6,7 +6,8 @@ add_executable(BusDump ${CODE_FILES} ${HEADER_FILES})
 set_target_properties(BusDump PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)
 target_link_libraries(
     BusDump
-    PRIVATE dbcppp::dbcppp
+    PRIVATE FGLoggerLib
+            dbcppp::dbcppp
             protobuf::protobuf
             mcap::mcap
             foxglove-websocket::foxglove-websocket
