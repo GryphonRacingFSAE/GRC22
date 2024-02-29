@@ -35,6 +35,7 @@ class Dump : public Interface {
     std::unordered_map<std::string, mcap::ChannelId> mcap_message_to_channel_id_map;
     std::unordered_map<std::string, const google::protobuf::Descriptor*> message_to_message_descriptor_map;
     std::unique_ptr<foxglove::ServerInterface<websocketpp::connection_hdl>> server;
+    std::unordered_map<uint64_t, const dbcppp::IMessage*> can_message_mapping;
 
     static void log(foxglove::WebSocketLogLevel, char const* msg);
 };
