@@ -10,8 +10,8 @@
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <foxglove/websocket/websocket_server.hpp>
 
-#include <fmt/core.h>
 #include <fmt/chrono.h>
+#include <fmt/core.h>
 
 #include <chrono>
 #include <fstream>
@@ -28,7 +28,6 @@ void FGLogger::log(foxglove::WebSocketLogLevel, char const* msg) {
     fmt::print("Foxglove: {}\n", msg);
 }
 
-
 void FGLogger::restartSaving() {
     if (!fs::exists(saving_folder_path) || !fs::is_directory(saving_folder_path)) {
         fmt::print("Saving path does not exist or isn't a folder!\n");
@@ -36,8 +35,7 @@ void FGLogger::restartSaving() {
     }
 
     auto now = std::chrono::system_clock::now();
-    uint64_t timestamp =
-        std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 
     fs::create_directory(fmt::format("{}/{:%Y-%m-%d}", saving_folder_path, now));
 
@@ -51,7 +49,8 @@ void FGLogger::restartSaving() {
     }
 }
 
-FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port, std::string saving_folder_path): saving_folder_path(saving_folder_path) {
+FGLogger::FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port, std::string saving_folder_path)
+    : saving_folder_path(saving_folder_path) {
     if (!fs::exists(dbc_folder) || !fs::is_directory(dbc_folder)) {
         fmt::print("DBC folder does not exist or isn't a folder!\n");
     }
