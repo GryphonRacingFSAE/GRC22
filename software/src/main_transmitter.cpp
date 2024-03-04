@@ -4,7 +4,7 @@
 #include <RF24.h>
 #include <SD.h>
 #include <TinyGPSPlus.h>
-#include <driver/can.h>
+#include <driver/twai.h>
 #include <pb_encode.h>
 
 #include "dbc_to_cpp.h"
@@ -44,10 +44,10 @@ uint64_t start_time;
 uint64_t delta_time;
 
 // CAN
-can_message_t can_message;
-can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, CAN_MODE_NORMAL);
-can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
-can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
+twai_message_t can_message;
+twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NORMAL);
+twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
+twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
 //==============================================================================
 // nRF24L01+
@@ -105,7 +105,7 @@ void readMPU() {
 //==============================================================================
 
 void initGPS() {
-    SerialGPS.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);
+    SerialGPS.begin(115200, SERIAL_8N1, GPS_TX, GPS_RX);
     Serial.println("GPS serial port initialized successfully");
 }
 
@@ -113,6 +113,22 @@ void readGPS() {
     while (SerialGPS.available() > 0) {
         if (gps.encode(SerialGPS.read())) {
             Serial.printf("LAT %f\tLNG %f\tALT %.1f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+
+            /*
+            RLM_POSITION_0XF2_t* RLM_POSITION;
+            RLM_POSITION->LATITUDE_ro = gps.location.lat();
+            RLM_POSITION->LONGITUDE_ro = gps.location.lng();
+
+            can_message.identifier =
+                Pack_RLM_POSITION_0XF2_dbc_to_cpp(RLM_POSITION, can_message.data, &can_message.data_length_code, RLM_POSITION_0XF2_IDE);
+
+            Serial.printf("ID: %d\n", can_message.identifier);
+            Serial.printf("DATA: ");
+            for (int i = 0; i < can_message.data_length_code; i++) {
+                printf("%d ", can_message.data[i]);
+            }
+            Serial.println();
+            */
             return;
         }
     }
@@ -123,13 +139,13 @@ void readGPS() {
 //==============================================================================
 
 void initCAN() {
-    if (can_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
+    if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
         Serial.println("CAN driver installed successfully");
     } else {
         Serial.println("Failed to install CAN driver");
     }
 
-    if (can_start() == ESP_OK) {
+    if (twai_start() == ESP_OK) {
         Serial.println("CAN driver started successfully");
     } else {
         Serial.println("Failed to start CAN driver");
@@ -137,23 +153,23 @@ void initCAN() {
 }
 
 void readCAN() {
-    if (can_receive(&can_message, pdMS_TO_TICKS(100)) == ESP_OK) {
+    if (twai_receive(&can_message, pdMS_TO_TICKS(100)) == ESP_OK) {
         Serial.println("CAN message received");
 
-        if (can_message.flags & CAN_MSG_FLAG_EXTD)
-            printf("Message is in Extended Format\n");
-        else
-            printf("Message is in Standard Format\n");
+        if (can_message.extd) {
+            Serial.println("Message is in Extended Format");
+        } else {
+            Serial.println("Message is in Stamdard Format");
+        }
 
         Serial.printf("ID: %d\n", can_message.identifier);
-        if (!(can_message.flags & CAN_MSG_FLAG_RTR)) {
+        if (!(can_message.rtr)) {
             Serial.printf("Data: ");
             for (int i = 0; i < can_message.data_length_code; i++) {
                 printf("%d ", can_message.data[i]);
             }
             Serial.println();
         }
-
     } else {
         Serial.println("Failed to receive CAN message");
     }
@@ -175,6 +191,7 @@ void setup() {
 
     initNRF();
     initMPU();
+    initGPS();
     initCAN();
 
     pinMode(MPU_CAL, INPUT);
@@ -191,12 +208,6 @@ void setup() {
 void loop() {
     if (start_time == 0) {
         start_time = getSeconds();
-
-        if (start_time == 0) {
-            Serial.printf("Satellites connected: %d\n", gps.satellites.value());
-            delay(5000);
-            return;
-        }
     }
 
     delta_time = getSeconds() - start_time;
