@@ -10,4 +10,4 @@ DBCToProto(dbc_file_paths, os.path.join(os.getcwd(), "protos"))
 
 # Generate descriptor set
 env.Execute(f"protoc --include_imports --descriptor_set_out={os.path.join(os.getcwd(), 'protos', 'protos.desc')} --proto_path={os.path.join(os.getcwd(), 'protos')} {os.path.join(os.getcwd(), 'protos', '*.proto')}")
-env.Execute(f"protoc --include_imports --python_out={os.path.join(os.getcwd(), 'protos')} --proto_path={os.path.join(os.getcwd(), 'protos')} {os.path.join(os.getcwd(), 'protos', 'CAN.proto')}")
+env.Execute(f"protoc --include_imports --python_out={os.path.join(os.getcwd(), 'protos')} --proto_path={os.path.join(os.getcwd(), 'protos')} {os.path.join(os.getcwd(), 'protos', 'CAN_2.proto')}")
