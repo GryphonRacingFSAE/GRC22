@@ -14,7 +14,6 @@ RF24 radio(4, 5); // CE, CSN
 const byte address[6] = "00001";
 
 const char* ssid = "GRC22-RLM";
-const char* password = "burnt accumulator";
 
 AsyncWebServer server(8765);
 AsyncWebSocket ws("/ws");
@@ -45,7 +44,7 @@ void setup() {
     // radio.openReadingPipe(0, address);
     // radio.startListening();
 
-    WiFi.softAP(ssid, password);
+    WiFi.softAP(ssid);
 
     IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
@@ -62,11 +61,16 @@ void setup() {
     server.begin();
 }
 
+uint16_t a = 0;
+
 void loop() {
     CAN msg = CAN_init_default;
-    msg.address = 0x177;
+    msg.address = 0xa5;
     msg.data.size = 8;
-    msg.data.bytes[7] = 0x72;
+    msg.data.bytes[0] = a & 0xFF;
+    msg.data.bytes[1] = (a >> 8) & 0xFF;
+
+    a = (a + 10) % 3600;
 
 
     uint8_t buffer[128];
@@ -96,7 +100,7 @@ void loop() {
     Serial.print("\r\n");
 
     // Encode protobuf into base64 encoded string
-    uint8_t encoded_can_message[CAN_size];
+    uint8_t encoded_can_message[128];
     pb_ostream_t encoder_ostream = pb_ostream_from_buffer(encoded_can_message, sizeof(encoded_can_message));
     if (!pb_encode(&encoder_ostream, CAN_fields, &msg)) {
         Serial.println("Failed to encode");
@@ -106,10 +110,10 @@ void loop() {
     size_t bytes_written_for_serialization = encoder_ostream.bytes_written;
     Serial.printf("Serialization bytes written: %d\n", bytes_written_for_serialization);
 
-    unsigned char base64_message[24];
+    unsigned char base64_message[128] = {};
     size_t outlen;
 
-    mbedtls_base64_encode(base64_message, 24, &outlen, encoded_can_message, bytes_written_for_serialization);
+    mbedtls_base64_encode(base64_message, 128, &outlen, encoded_can_message, bytes_written_for_serialization);
     ws.textAll((char*)base64_message);
     delay(100);
 }
