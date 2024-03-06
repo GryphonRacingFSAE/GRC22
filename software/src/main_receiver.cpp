@@ -2,7 +2,7 @@
 #include <RF24.h>
 #include <pb_decode.h>
 
-#include "message.pb.h"
+#include "CAN.pb.h"
 
 RF24 radio(4, 5); // CE, CSN
 
@@ -23,6 +23,7 @@ void setup() {
 }
 
 void loop() {
+    /*
     if (radio.available()) {
         uint8_t buffer[128];
         radio.read(&buffer, sizeof(buffer));
@@ -43,4 +44,5 @@ void loop() {
                       msg.longitude,
                       msg.altitude);
     }
+    */
 }

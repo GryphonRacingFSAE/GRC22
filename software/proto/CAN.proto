@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+message CAN {
+    uint32 address = 1;
+    bytes data = 2 [(nanopb).max_size = 8];
+}

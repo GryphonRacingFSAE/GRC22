@@ -7,7 +7,7 @@
 #include <driver/twai.h>
 #include <pb_encode.h>
 
-#include "message.pb.h"
+#include "CAN.pb.h"
 
 //==============================================================================
 // Global
@@ -152,13 +152,13 @@ void initCAN() {
 }
 
 void readCAN() {
-    if (twai_receive(&can_message, pdMS_TO_TICKS(100)) == ESP_OK) {
+    if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
         Serial.println("CAN message received");
 
         if (can_message.extd) {
             Serial.println("Message is in Extended Format");
         } else {
-            Serial.println("Message is in Stamdard Format");
+            Serial.println("Message is in Standard Format");
         }
 
         Serial.printf("ID: %d\n", can_message.identifier);
@@ -205,6 +205,7 @@ void setup() {
 //==============================================================================
 
 void loop() {
+    /*
     if (start_time == 0) {
         start_time = getSeconds();
     }
@@ -216,7 +217,22 @@ void loop() {
 
     readMPU();
     readGPS();
+    */
 
+    readCAN();
+
+    CAN msg = CAN_init_default;
+    msg.address = can_message.identifier;
+    msg.data.size = can_message.data_length_code;
+    memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
+
+    byte buffer[128];
+
+    pb_ostream_t output_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+    pb_encode(&output_stream, CAN_fields, &msg);
+    radio.write(buffer, output_stream.bytes_written);
+
+    /*
     MyMessage msg = MyMessage_init_default;
 
     msg.acceleration_x = ax;
@@ -234,12 +250,15 @@ void loop() {
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
     pb_encode(&stream, MyMessage_fields, &msg);
     radio.write(buffer, stream.bytes_written);
+    */
 
     // readCAN();
 
+    /*
     if (digitalRead(MPU_CAL) == HIGH) {
         calibrateMPU();
     }
+    */
 
     Serial.println();
 }
