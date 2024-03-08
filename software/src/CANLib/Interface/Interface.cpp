@@ -97,7 +97,3 @@ RetCode Interface::read(can_frame& frame) {
     }
     return RetCode::Success;
 }
-
-Interface::~Interface() {
-    this->stopReceiving();
-}

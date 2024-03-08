@@ -1,11 +1,14 @@
 #pragma once
 
+#include <FGLogger.hpp>
 #include <Interface.hpp>
 
 namespace CAN::Interfaces {
 
 class Dump : public Interface {
   public:
+    Dump(std::string dbc_folder = "DBCs");
+    virtual ~Dump();
     void startReceiving();
 
   private:
@@ -17,6 +20,7 @@ class Dump : public Interface {
 
   private:
     static constexpr uint32_t timeout_ms = 500;
+    FGLogger logger;
 };
 
 } // namespace CAN::Interfaces

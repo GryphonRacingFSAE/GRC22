@@ -1,6 +1,7 @@
 add_subdirectory(Interfaces)
 
 if(${BUILD_BACKEND})
+    add_subdirectory(FGLoggerLib)
     add_subdirectory(CANLib)
     add_subdirectory(BusDump)
 endif()
