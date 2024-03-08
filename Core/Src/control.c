@@ -26,16 +26,16 @@ volatile uint8_t TIM4_State = 0;
 
 //rising edge and falling edge variables for each sensor
 volatile uint32_t TIM2_rising = 0;
-volatile uint32_t TIM2_falling = 0;
+volatile uint32_t TIM2_rising2 = 0;
 
 volatile uint32_t TIM3_CH1_rising = 0;
-volatile uint32_t TIM3_CH1_falling = 0;
+volatile uint32_t TIM3_CH1_rising2 = 0;
 
 volatile uint32_t TIM3_CH2_rising = 0;
-volatile uint32_t TIM3_CH2_falling = 0;
+volatile uint32_t TIM3_CH2_rising2 = 0;
 
 volatile uint32_t TIM4_rising = 0;
-volatile uint32_t TIM4_falling = 0;
+volatile uint32_t TIM4_rising2 = 0;
 
 //frequency values for each wheel speed sensor
 volatile uint32_t TIM2_freq = 0;
@@ -130,13 +130,13 @@ void OverflowCheck(TIM_HandleTypeDef * htim){
  *
  * 		if state 0:
  * 			store timer value within rising edge variable
- * 			calculate time interval between rising and falling edge
+ * 			calculate time interval between 2 rising edges at the same sensor
  * 			if ticks is not zero and overflow counter is less than 2, calculate frequency
  * 			store frequency within corresponding wheel frequency index in array
  * 			reset overflow counter, set state to 1
  * 		if state 1:
  * 			store timer value within falling edge variable
- * 			calculate time interval between rising and falling edge
+ * 			calculate time interval between 2 rising edges at the same sensor
  * 			if ticks is not zero and overflow counter is less than 2, calculate frequency
  * 			store frequency within corresponding wheel frequency index in array
  * 			reset overflow counter, set state to 0
@@ -156,7 +156,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			//state 0
 			if (TIM2_State == 0){
 				TIM2_rising = TIM2 -> CCR1;
-				uint32_t ticks_TIM2 = (TIM2_rising + (TIM2_OVC * htim->Init.Period)) - TIM2_falling;
+				uint32_t ticks_TIM2 = (TIM2_rising + (TIM2_OVC * htim->Init.Period)) - TIM2_rising2;
 				if(ticks_TIM2 != 0 && TIM2_OVC < 2){
 					TIM2_freq = (uint32_t)(96000000UL/ticks_TIM2);
 					wheelFreq[0] = TIM2_freq;
@@ -166,8 +166,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			}
 			//state 1
 			if (TIM2_State == 1){
-				TIM2_falling = TIM2 -> CCR1;
-				uint32_t ticks_TIM2 = (TIM2_falling + (TIM2_OVC * htim->Init.Period)) - TIM2_rising;
+				TIM2_rising2 = TIM2 -> CCR1;
+				uint32_t ticks_TIM2 = (TIM2_rising2 + (TIM2_OVC * htim->Init.Period)) - TIM2_rising;
 				if(ticks_TIM2 != 0 && TIM2_OVC < 2){
 					TIM2_freq = (uint32_t)(96000000UL/ticks_TIM2);
 					wheelFreq[0] = TIM2_freq;
@@ -185,7 +185,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			//state 0
 			if(TIM3_CH1_State == 0){
 				TIM3_CH1_rising = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH1 = (TIM3_CH1_rising + (TIM3_CH1_OVC * htim -> Init.Period)) - TIM3_CH1_falling;
+				uint32_t ticks_TIM3_CH1 = (TIM3_CH1_rising + (TIM3_CH1_OVC * htim -> Init.Period)) - TIM3_CH1_rising2;
 				if(ticks_TIM3_CH1 != 0 && TIM3_CH1_OVC < 2){
 					TIM3_CH1_freq = (uint32_t)(96000000UL/ticks_TIM3_CH1);
 					wheelFreq[1] = TIM3_CH1_freq;
@@ -195,8 +195,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			}
 			//state 1
 			if(TIM3_CH1_State == 1){
-				TIM3_CH1_falling = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH1 = (TIM3_CH1_falling + (TIM3_CH1_OVC * htim -> Init.Period)) - TIM3_CH1_rising;
+				TIM3_CH1_rising2 = TIM3 -> CCR1;
+				uint32_t ticks_TIM3_CH1 = (TIM3_CH1_rising2 + (TIM3_CH1_OVC * htim -> Init.Period)) - TIM3_CH1_rising;
 				if(ticks_TIM3_CH1 != 0 && TIM3_CH1_OVC < 2){
 					TIM3_CH1_freq = (uint32_t)(96000000UL/ticks_TIM3_CH1);
 					wheelFreq[1] = TIM3_CH1_freq;
@@ -210,7 +210,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			//state 0
 			if(TIM3_CH2_State == 0){
 				TIM3_CH2_rising = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH2 = (TIM3_CH2_rising + (TIM3_CH2_OVC * htim -> Init.Period)) - TIM3_CH2_falling;
+				uint32_t ticks_TIM3_CH2 = (TIM3_CH2_rising + (TIM3_CH2_OVC * htim -> Init.Period)) - TIM3_CH2_rising2;
 				if(ticks_TIM3_CH2 != 0 && TIM3_CH2_OVC < 2){
 					TIM3_CH2_freq = (uint32_t)(96000000UL/ticks_TIM3_CH2);
 					wheelFreq[2] = TIM3_CH2_freq;
@@ -220,8 +220,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			}
 			//state 1
 			if(TIM3_CH2_State == 1){
-				TIM3_CH2_falling = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH2 = (TIM3_CH2_falling + (TIM3_CH2_OVC * htim -> Init.Period)) - TIM3_CH2_rising;
+				TIM3_CH2_rising2 = TIM3 -> CCR1;
+				uint32_t ticks_TIM3_CH2 = (TIM3_CH2_rising2 + (TIM3_CH2_OVC * htim -> Init.Period)) - TIM3_CH2_rising;
 				if(ticks_TIM3_CH2 != 0 && TIM3_CH2_OVC < 2){
 					TIM3_CH2_freq = (uint32_t)(96000000UL/ticks_TIM3_CH2);
 					wheelFreq[2] = TIM3_CH2_freq;
@@ -237,7 +237,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			//state 0
 			if(TIM4_State == 0){
 				TIM4_rising = TIM4 -> CCR1;
-				uint32_t ticks_TIM4 = (TIM4_rising + (TIM4_OVC * htim -> Init.Period) - TIM4_falling);
+				uint32_t ticks_TIM4 = (TIM4_rising + (TIM4_OVC * htim -> Init.Period) - TIM4_rising2);
 				if(ticks_TIM4 != 0 && TIM4_OVC <2){
 					TIM4_freq = (uint32_t)(96000000UL/ticks_TIM4);
 					wheelFreq[3] = TIM4_freq;
@@ -247,8 +247,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
 			}
 			//state 1
 			if(TIM4_State == 1){
-				TIM4_rising = TIM4 -> CCR1;
-				uint32_t ticks_TIM4 = (TIM4_falling + (TIM4_OVC * htim -> Init.Period) - TIM4_rising);
+				TIM4_rising2 = TIM4 -> CCR1;
+				uint32_t ticks_TIM4 = (TIM4_rising2 + (TIM4_OVC * htim -> Init.Period) - TIM4_rising);
 				if(ticks_TIM4 != 0 && TIM4_OVC <2){
 					TIM4_freq = (uint32_t)(96000000UL/ticks_TIM4);
 					wheelFreq[3] = TIM4_freq;
