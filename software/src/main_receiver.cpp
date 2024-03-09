@@ -14,6 +14,7 @@ RF24 radio(4, 5); // CE, CSN
 const byte address[6] = "00001";
 
 const char* ssid = "GRC22-RLM";
+const char* password = "burnt accumulator";
 
 AsyncWebServer server(8765);
 AsyncWebSocket ws("/ws");
@@ -39,8 +40,7 @@ void setup() {
     Serial.begin(115200);
     delay(500);
 
-    while (!Serial)
-        delay(100);
+    Serial.println();
 
     if (radio.begin()) {
         Serial.println("Radio initialized successfully");
@@ -69,18 +69,23 @@ void setup() {
 uint16_t a = 0;
 
 void loop() {
-    /*
     if (radio.available()) {
         uint8_t buffer[128];
         radio.read(&buffer, sizeof(buffer));
-    CAN msg = CAN_init_default;
-    msg.address = 0xa5;
-    msg.data.size = 8;
-    msg.data.bytes[0] = a & 0xFF;
-    msg.data.bytes[1] = (a >> 8) & 0xFF;
 
-    a = (a + 10) % 3600;
+        CAN msg = CAN_init_default;
 
+        pb_istream_t input_stream = pb_istream_from_buffer(buffer, sizeof(buffer));
+        pb_decode(&input_stream, CAN_fields, &msg);
+
+        Serial.printf("[0x%X] ", msg.address);
+        for (int i = 0; i < msg.data.size; i++) {
+            Serial.printf("%02X ", msg.data.bytes[i]);
+        }
+        Serial.println();
+    }
+
+    /*
 
     uint8_t buffer[128];
     pb_ostream_t ostream = pb_ostream_from_buffer(buffer, sizeof(buffer));
@@ -88,7 +93,6 @@ void loop() {
         Serial.println("Failed to encode");
         return;
     }
-    */
 
     Serial.printf("bytes written: %d\n", ostream.bytes_written);
 
@@ -123,4 +127,6 @@ void loop() {
     mbedtls_base64_encode(base64_message, 128, &outlen, encoded_can_message, bytes_written_for_serialization);
     ws.textAll((char*)base64_message);
     delay(100);
+
+    */
 }

@@ -152,27 +152,27 @@ void initCAN() {
 }
 
 void readCAN() {
-    if (!twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
-        Serial.println("Failed to receive CAN message");
-    }
+    if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+        if (!can_message.rtr) {
+            CAN msg = CAN_init_default;
+            msg.address = can_message.identifier;
+            msg.data.size = can_message.data_length_code;
+            memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
 
-    if (!can_message.rtr) {
-        CAN msg = CAN_init_default;
-        msg.address = can_message.identifier;
-        msg.data.size = can_message.data_length_code;
-        memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
+            Serial.printf("[0x%X] ", msg.address);
+            for (int i = 0; i < msg.data.size; i++) {
+                Serial.printf("%02X ", msg.data.bytes[i]);
+            }
+            Serial.println();
 
-        Serial.printf("[0x%X] ", msg.address);
-        for (int i = 0; i < msg.data.size; i++) {
-            Serial.printf("%02X ", msg.data.bytes[i]);
+            byte buffer[128];
+
+            pb_ostream_t output_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+            pb_encode(&output_stream, CAN_fields, &msg);
+            radio.write(buffer, output_stream.bytes_written);
         }
-        Serial.println();
-
-        byte buffer[128];
-
-        pb_ostream_t output_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        pb_encode(&output_stream, CAN_fields, &msg);
-        radio.write(buffer, output_stream.bytes_written);
+    } else {
+        Serial.println("Failed to receive CAN message");
     }
 }
 
