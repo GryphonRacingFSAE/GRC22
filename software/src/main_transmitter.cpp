@@ -28,6 +28,7 @@
 // nRF24L01+
 RF24 radio(NRF_CE, NRF_CSN);
 const byte address[6] = "00001";
+uint8_t nrf_buffer[128];
 
 // MPU-6050
 MPU6050 mpu;
@@ -62,7 +63,11 @@ void initNRF() {
     radio.stopListening();
 }
 
-void sendMessage() {}
+void sendProto(CAN msg) {
+    pb_ostream_t output_stream = pb_ostream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
+    pb_encode(&output_stream, CAN_fields, &msg);
+    radio.write(nrf_buffer, output_stream.bytes_written);
+}
 
 //==============================================================================
 // MPU-6050
@@ -165,11 +170,7 @@ void readCAN() {
             }
             Serial.println();
 
-            byte buffer[128];
-
-            pb_ostream_t output_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-            pb_encode(&output_stream, CAN_fields, &msg);
-            radio.write(buffer, output_stream.bytes_written);
+            sendProto(msg);
         }
     } else {
         Serial.println("Failed to receive CAN message");

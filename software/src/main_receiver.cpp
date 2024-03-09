@@ -66,16 +66,15 @@ void setup() {
     server.begin();
 }
 
-uint16_t a = 0;
+uint8_t nrf_buffer[128];
 
 void loop() {
     if (radio.available()) {
-        uint8_t buffer[128];
-        radio.read(&buffer, sizeof(buffer));
+        radio.read(&nrf_buffer, sizeof(nrf_buffer));
 
         CAN msg = CAN_init_default;
 
-        pb_istream_t input_stream = pb_istream_from_buffer(buffer, sizeof(buffer));
+        pb_istream_t input_stream = pb_istream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
         pb_decode(&input_stream, CAN_fields, &msg);
 
         Serial.printf("[0x%X] ", msg.address);
@@ -83,50 +82,23 @@ void loop() {
             Serial.printf("%02X ", msg.data.bytes[i]);
         }
         Serial.println();
+
+        // Encode protobuf into base64 encoded string
+        uint8_t encoded_can_message[128];
+        pb_ostream_t encoder_ostream = pb_ostream_from_buffer(encoded_can_message, sizeof(encoded_can_message));
+        if (!pb_encode(&encoder_ostream, CAN_fields, &msg)) {
+            Serial.println("Failed to encode");
+            return;
+        }
+
+        size_t bytes_written_for_serialization = encoder_ostream.bytes_written;
+        Serial.printf("Serialization bytes written: %d\n", bytes_written_for_serialization);
+
+        unsigned char base64_message[128] = {};
+        size_t outlen;
+
+        mbedtls_base64_encode(base64_message, 128, &outlen, encoded_can_message, bytes_written_for_serialization);
+        ws.textAll((char*)base64_message);
+        delay(100);
     }
-
-    /*
-
-    uint8_t buffer[128];
-    pb_ostream_t ostream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    if (!pb_encode(&ostream, CAN_fields, &msg)) {
-        Serial.println("Failed to encode");
-        return;
-    }
-
-    Serial.printf("bytes written: %d\n", ostream.bytes_written);
-
-    // radio.read(&buffer, sizeof(buffer));
-
-    pb_istream_t stream = pb_istream_from_buffer(buffer, sizeof(buffer));
-    pb_decode(&stream, CAN_fields, &msg);
-    Serial.printf("bytes left: %d\n", stream.bytes_left);
-
-    Serial.printf("Message: 0x%08x, DLC: %d, Data: ", msg.address, msg.data.size);
-
-    for (uint32_t i = 0; i < msg.data.size; i++) {
-        Serial.printf("0x%02x, ", msg.data.bytes[i]);
-    }
-
-    Serial.print("\r\n");
-
-    // Encode protobuf into base64 encoded string
-    uint8_t encoded_can_message[128];
-    pb_ostream_t encoder_ostream = pb_ostream_from_buffer(encoded_can_message, sizeof(encoded_can_message));
-    if (!pb_encode(&encoder_ostream, CAN_fields, &msg)) {
-        Serial.println("Failed to encode");
-        return;
-    }
-
-    size_t bytes_written_for_serialization = encoder_ostream.bytes_written;
-    Serial.printf("Serialization bytes written: %d\n", bytes_written_for_serialization);
-
-    unsigned char base64_message[128] = {};
-    size_t outlen;
-
-    mbedtls_base64_encode(base64_message, 128, &outlen, encoded_can_message, bytes_written_for_serialization);
-    ws.textAll((char*)base64_message);
-    delay(100);
-
-    */
 }
