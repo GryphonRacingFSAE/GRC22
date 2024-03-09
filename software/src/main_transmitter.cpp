@@ -105,7 +105,7 @@ void readMPU() {
 
 void initGPS() {
     SerialGPS.begin(115200, SERIAL_8N1, GPS_TX, GPS_RX);
-    Serial.println("GPS serial port initialized successfully");
+    Serial.println("GPS serial initialized successfully");
 }
 
 void readGPS() {
@@ -152,25 +152,27 @@ void initCAN() {
 }
 
 void readCAN() {
-    if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
-        Serial.println("CAN message received");
-
-        if (can_message.extd) {
-            Serial.println("Message is in Extended Format");
-        } else {
-            Serial.println("Message is in Standard Format");
-        }
-
-        Serial.printf("ID: %d\n", can_message.identifier);
-        if (!(can_message.rtr)) {
-            Serial.printf("Data: ");
-            for (int i = 0; i < can_message.data_length_code; i++) {
-                printf("%d ", can_message.data[i]);
-            }
-            Serial.println();
-        }
-    } else {
+    if (!twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
         Serial.println("Failed to receive CAN message");
+    }
+
+    if (!can_message.rtr) {
+        CAN msg = CAN_init_default;
+        msg.address = can_message.identifier;
+        msg.data.size = can_message.data_length_code;
+        memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
+
+        Serial.printf("[0x%X] ", msg.address);
+        for (int i = 0; i < msg.data.size; i++) {
+            Serial.printf("%02X ", msg.data.bytes[i]);
+        }
+        Serial.println();
+
+        byte buffer[128];
+
+        pb_ostream_t output_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+        pb_encode(&output_stream, CAN_fields, &msg);
+        radio.write(buffer, output_stream.bytes_written);
     }
 }
 
@@ -221,44 +223,9 @@ void loop() {
 
     readCAN();
 
-    CAN msg = CAN_init_default;
-    msg.address = can_message.identifier;
-    msg.data.size = can_message.data_length_code;
-    memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
-
-    byte buffer[128];
-
-    pb_ostream_t output_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    pb_encode(&output_stream, CAN_fields, &msg);
-    radio.write(buffer, output_stream.bytes_written);
-
-    /*
-    MyMessage msg = MyMessage_init_default;
-
-    msg.acceleration_x = ax;
-    msg.acceleration_y = ay;
-    msg.acceleration_z = az;
-    msg.rotation_x = gx;
-    msg.rotation_y = gy;
-    msg.rotation_z = gz;
-    msg.latitude = gps.location.lat();
-    msg.longitude = gps.location.lng();
-    msg.altitude = gps.altitude.meters();
-
-    uint8_t buffer[128];
-
-    pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    pb_encode(&stream, MyMessage_fields, &msg);
-    radio.write(buffer, stream.bytes_written);
-    */
-
-    // readCAN();
-
     /*
     if (digitalRead(MPU_CAL) == HIGH) {
         calibrateMPU();
     }
     */
-
-    Serial.println();
 }

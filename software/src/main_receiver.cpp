@@ -15,11 +15,13 @@ void setup() {
     while (!Serial)
         delay(100);
 
-    Serial.println("\nInitializing radio...");
-    radio.begin();
+    if (radio.begin()) {
+        Serial.println("Radio initialized successfully");
+    } else {
+        Serial.println("Failed to initialize radio");
+    }
     radio.openReadingPipe(0, address);
     radio.startListening();
-    Serial.println("Done\n");
 }
 
 void loop() {
