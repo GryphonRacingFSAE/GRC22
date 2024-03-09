@@ -3,3 +3,8 @@
 .clang_complete
 .gcc-flags.json
 .pio
+.vscode
+
+protos/*
+!protos/CAN.proto
+!protos/__init__.py
