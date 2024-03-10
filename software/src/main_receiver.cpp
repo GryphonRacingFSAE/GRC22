@@ -24,7 +24,6 @@ uint8_t nrf_buffer[128];
 
 // WiFi
 const char* ssid = "GRC22-RLM";
-const char* password = "burnt accumulator";
 
 // AsyncWebServer
 AsyncWebServer server(8765);
