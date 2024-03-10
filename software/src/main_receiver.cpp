@@ -9,15 +9,44 @@
 
 #include "CAN.pb.h"
 
-RF24 radio(4, 5); // CE, CSN
+//==============================================================================
+// Global
+//==============================================================================
 
+// GPIO
+#define NRF_CE GPIO_NUM_4
+#define NRF_CSN GPIO_NUM_5
+
+// nRF24L01+
+RF24 radio(NRF_CE, NRF_CSN);
 const byte address[6] = "00001";
+uint8_t nrf_buffer[128];
 
+// WiFi
 const char* ssid = "GRC22-RLM";
 const char* password = "burnt accumulator";
 
+// AsyncWebServer
 AsyncWebServer server(8765);
 AsyncWebSocket ws("/ws");
+
+//==============================================================================
+// nRF24L01+
+//==============================================================================
+
+void initNRF() {
+    if (radio.begin()) {
+        Serial.println("Radio initialized successfully");
+    } else {
+        Serial.println("Failed to initialize radio");
+    }
+    radio.openReadingPipe(0, address);
+    radio.startListening();
+}
+
+//==============================================================================
+// AsyncWebServer
+//==============================================================================
 
 void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
     switch (type) {
@@ -36,19 +65,17 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
     }
 }
 
+//==============================================================================
+// Setup
+//==============================================================================
+
 void setup() {
     Serial.begin(115200);
     delay(500);
 
     Serial.println();
 
-    if (radio.begin()) {
-        Serial.println("Radio initialized successfully");
-    } else {
-        Serial.println("Failed to initialize radio");
-    }
-    radio.openReadingPipe(0, address);
-    radio.startListening();
+    initNRF();
 
     WiFi.softAP(ssid);
 
@@ -66,7 +93,9 @@ void setup() {
     server.begin();
 }
 
-uint8_t nrf_buffer[128];
+//==============================================================================
+// Loop
+//==============================================================================
 
 void loop() {
     if (radio.available()) {
