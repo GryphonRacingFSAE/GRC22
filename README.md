@@ -36,7 +36,7 @@ For the receiver module:
 
 ## DBC to CPP
 
-To generate CPP files for DBC pack/unpack functions:
+Generate CPP files for DBC pack/unpack functions:
 
 ```bash
 python3 -m pip install cantools
