@@ -36,8 +36,6 @@ For the receiver module:
 
 ## DBC to CPP
 
-Generate CPP files for DBC pack/unpack functions:
-
 ```bash
 python3 -m pip install cantools
 pip install python-can==4.2.2 # downgrade required
