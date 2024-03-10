@@ -19,6 +19,7 @@ extern osMutexId_t APPS_Data_MtxHandle;
 
 typedef struct {
 	uint16_t torque;
+	uint32_t flags;
 	uint16_t pedalPos;
 	uint32_t flags;
 } APPS_Data_Struct;
