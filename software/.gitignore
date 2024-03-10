@@ -6,5 +6,5 @@
 .vscode
 
 protos/*
-!protos/CAN.proto
+!protos/CAN_2.proto
 !protos/__init__.py
