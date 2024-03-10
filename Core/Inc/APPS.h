@@ -21,7 +21,6 @@ typedef struct {
 	uint16_t torque;
 	uint32_t flags;
 	uint16_t pedalPos;
-	uint32_t flags;
 } APPS_Data_Struct;
 
 #define APPS_BSPC_INVALID 0x1
