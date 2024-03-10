@@ -34,6 +34,16 @@ For the receiver module:
 
 `PLATFORMIO > PROJECT TASKS > receiver > Upload and Monitor`
 
+## DBC to CPP
+
+To generate CPP files for DBC pack/unpack functions:
+
+```bash
+python3 -m pip install cantools
+pip install python-can==4.2.2 # downgrade required
+python3 -m cantools generate_c_source DBCs/example.dbc -o /include
+```
+
 ## Resources
 
 **Datasheets**
