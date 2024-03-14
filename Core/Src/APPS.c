@@ -26,11 +26,7 @@ int16_t interpolate(int16_t xdiff, int16_t ydiff, int16_t yoffset, int16_t xoffs
 	return yoffset + xoffset_from_x1 * ydiff / xdiff;
 }
 
-APPS_Data_Struct APPS_Data = {
-	.torque = 0,
-	.pedalPos = 0,
-	.flags = APPS_RTD_INVALID | APPS_BSPC_INVALID // Start in invalid states, let system sort itself out
-};
+APPS_Data_Struct APPS_Data;
 // Columns are RPM in increments of 500 (0-6500), Rows are pedal percent in increments of 10% (0-100%)
 Torque_Map_Struct Torque_Map_Data = { {
     { -6, -20, -22, -22, -22, -22, -22, -22, -22, -22, -21, -17, -19, -22 },
@@ -56,16 +52,17 @@ Torque_Map_Struct Torque_Map_Data = { {
     {117, 116, 116, 123, 121, 125, 118, 115, 111, 105, 88, 88, 44, 0},
     {126, 125, 124, 127, 126, 127, 123, 120, 115, 106, 104, 88, 44, 0},
     {129, 130, 130, 129, 129, 130, 130, 130, 120, 108, 97, 86, 43, 0}
-}, Torque_Map_Data.map2 };
+}, Torque_Map_Data.map1 };
 
-// Buffer for DMA
+//Buffer from DMA
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN] = {};
 
-
-
-// TODO: T.4.2.5
-// TODO: T.4.3.3
 void startAPPSTask() {
+
+	//used for averaging the apps signal
+	int32_t apps1Avg = 0;
+	int32_t apps2Avg = 0;
+
 	// Circular buffer of previous results of each apps signal
 	uint8_t circBuffPos = 0;
 	uint32_t apps1PrevMesurments[AVG_WINDOW] = {};
@@ -75,31 +72,29 @@ void startAPPSTask() {
 	uint32_t tick = osKernelGetTickCount();
 
 	while (1) {
-		// Averages all samples in entire DMA buffer
-		uint32_t DMAAvg[ADC1_CHANNELS] = {};
+
+		//Averages samples in DMA buffer
+		uint32_t apps1AvgDMA = 0;
+		uint32_t apps2AvgDMA = 0;
 		for (int i = 0; i < ADC1_BUFF_LEN;) {
-			for (int32_t chan = 0; chan < ADC1_CHANNELS; chan++) {
-				DMAAvg[chan] += ADC1_buff[i++];
-			}
-		}
-		for (int32_t chan = 0; chan < ADC1_CHANNELS; chan++) {
-			DMAAvg[chan] /= ADC1_CHANNEL_BUFF_LEN;
+			apps1AvgDMA += ADC1_buff[i++];
+			apps2AvgDMA += ADC1_buff[i++];
 		}
 
-		uint32_t apps1AvgDMA = DMAAvg[0];
-		uint32_t apps2AvgDMA = DMAAvg[1];
+		apps1AvgDMA = apps1AvgDMA / (ADC1_BUFF_LEN / 2); // Calculate the average
+		apps2AvgDMA = apps2AvgDMA / (ADC1_BUFF_LEN / 2);
+
 
 		//Calculates moving average of previous measurements
 		if(++circBuffPos == AVG_WINDOW){
 			circBuffPos = 0;
 		}
-
 		//Circular for moving average
 		apps1PrevMesurments[circBuffPos] = apps1AvgDMA;
 		apps2PrevMesurments[circBuffPos] = apps2AvgDMA;
 
-		uint32_t apps1Avg = 0;
-		uint32_t apps2Avg = 0;
+		apps1Avg = 0;
+		apps2Avg = 0;
 		for (int i = 0; i < AVG_WINDOW; i++) {
 			apps1Avg += apps1PrevMesurments[i];
 			apps2Avg += apps2PrevMesurments[i];
@@ -109,47 +104,32 @@ void startAPPSTask() {
 		apps1Avg = apps1Avg/AVG_WINDOW;
 		apps2Avg = apps2Avg/AVG_WINDOW;
 
-		// RULE (2023 V2): T.4.2.10 Sensor out of defined range
-		if (apps1Avg < APPS1_MIN || apps1Avg > APPS1_MAX || apps2Avg < APPS2_MIN || apps2Avg > APPS2_MAX) {
-			if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
-				// The rules don't state a way for the sensors to recover from this error
-				APPS_Data.flags |= APPS_SENSOR_OUT_OF_RANGE_INVALID;
-				osMutexRelease(APPS_Data_MtxHandle);
-			} else {
-				// FIXME: We better catch these mutex misses
-				CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
-			}
-		}
-
 		int32_t appsPos1 = (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
 		int32_t appsPos2 = (apps2Avg - APPS2_MIN) * 100 /(APPS2_MAX - APPS2_MIN);
 
 		// RULE (2023 V2): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
+		// TODO: T.4.2.5
+		// TODO?: T.4.2.9
+		// TODO?: T.4.2.10
+		// TODO: T.4.3.3
+		// TODO: T.4.3.4
+		int32_t appsPos = 0;
 		if (ABS(appsPos1 - appsPos2) <= 10) {
-			if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
-				// The rules don't state a way for the sensors to recover from this error
-				APPS_Data.flags |= APPS_SENSOR_CONFLICT_INVALID;
-				osMutexRelease(APPS_Data_MtxHandle);
-			} else {
-				// FIXME: We better catch these mutex misses
-				CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
-			}
+			int32_t averageAppsPos = (appsPos1 + appsPos2) / 2;
+			appsPos = MAX(MIN(averageAppsPos, 100),0); // Clamp to between 0-100%
+		} else {
+			// FAULT
 		}
 
-		int32_t appsPos = 0;
-		int32_t averageAppsPos = (appsPos1 + appsPos2) / 2;
-		appsPos = MAX(MIN(averageAppsPos, 100),0); // Clamp to between 0-100%
+		//Used for BSPC
+		// TODO: RULE (2023 V2): EV.4.1.3 No regen < 5km/h
 		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
 			APPS_Data.pedalPos = appsPos;
 			osMutexRelease(APPS_Data_MtxHandle);
 		} else {
-			// FIXME: We better catch these mutex misses
 			CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
 		}
 		DEBUG_PRINT("APPS1:%d, APPS2:%d, APPS_POS:%d\r\n", apps1Avg, apps2Avg, appsPos);
-
-		//Used for BSPC
-		// TODO: RULE (2023 V2): EV.4.1.3 No regen < 5km/h
 
 		int32_t pedalPercent = MIN(appsPos, 99); // NOTE: Cap values at slightly less then our max % for easier math
 		int32_t rpm = 0;

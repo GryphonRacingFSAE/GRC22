@@ -38,6 +38,7 @@ void startWatchdogTask() {
 			flags &= ~(1 << flag_index);
 		}
 
-		osDelayUntil(tick += WATCHDOG_PERIOD);
+		//commented out for error (WATCHDOG_PERIOD does not exist)
+		//osDelayUntil(tick += WATCHDOG_PERIOD);
 	}
 }

@@ -13,8 +13,6 @@
 
 extern osMessageQueueId_t CANTX_QHandle;
 extern osMessageQueueId_t CANRX_QHandle;
-extern CAN_HandleTypeDef hcan1;
-extern CAN_HandleTypeDef hcan2;
 
 
 typedef struct {
