@@ -10,7 +10,10 @@
 
 #include "main.h"
 #include "cmsis_os.h"
-
+#include "utils.h"
+#include "main.h"
+#include <string.h>
+#define NUM_WHEELS 4
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
 // Turn on Pump if tractive voltage > 450v
@@ -31,10 +34,13 @@ typedef struct {
 	int32_t coolantTemp; // 10:1 conversion
 	int32_t tractiveVoltage; // 10:1 conversion
 	int32_t motorSpeed; // 1:1
+	volatile uint32_t wheelRPM[NUM_WHEELS];   // Array to store final wheel RPMs
+	volatile uint32_t wheelFreq[NUM_WHEELS];  // Array to store final wheel frequencies
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
 extern osMutexId_t Ctrl_Data_MtxHandle;
+
 
 void startControlTask();
 

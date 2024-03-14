@@ -8,22 +8,13 @@
 
 #include "control.h"
 #include "APPS.h"
-#include "utils.h"
-#include "main.h"
-#include <string.h>
-#define NUM_WHEELS 4
 
-//wheel frequency array (stores each wheel's frequency)
-//volatile uint32_t wheelFreq[4];
-//volatile uint32_t wheelRPM[4];
 
-static volatile uint32_t TIM_rising[NUM_WHEELS] = {0};     // Array to store rising edge times for each wheel
-static volatile uint32_t TIM_rising2[NUM_WHEELS] = {0};    // Array to store the second rising edge times for each wheel
+
+static volatile uint32_t TIM_rising[NUM_WHEELS][2] = {{0}};  // 2D array to store rising edge times for each wheel
 static volatile uint32_t TIM_freq[NUM_WHEELS] = {0};       // Array to store frequencies for each wheel
 static volatile uint32_t TIM_OVC[NUM_WHEELS] = {0};        // Array to store overflow counters for each wheel
 static volatile uint8_t TIM_State[NUM_WHEELS] = {0};       // Array to store state (0 or 1) for each wheel
-static volatile uint32_t wheelRPM[NUM_WHEELS] = {0};       // Array to store final wheel RPMs
-static volatile uint32_t wheelFreq[NUM_WHEELS] = {0};      // Array to store final wheel frequencies
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
@@ -41,10 +32,9 @@ void startControlTask(){
 	while(1){
 
 		for(int i = 0; i < 4; i++){
-			GRCprintf("Frequency %d= %d\n\r", (i+1), wheelFreq[i]);
+			GRCprintf("Frequency %d= %d\n\r", (i+1), Ctrl_Data.wheelFreq[i]);
 		}
 
-		RPMConversion();
 		BSPC();
 		RTD();
 		pumpCtrl();
@@ -53,6 +43,7 @@ void startControlTask(){
 		osDelayUntil(tick += CTRL_PERIOD);
 	}
 }
+
 
 /*
  * runs checks for period overflow, after 2 overflows the wheel is not moving
@@ -80,7 +71,8 @@ TIM_HandleTypeDef* timers[NUM_WHEELS] = {&htim2, &htim3, &htim4};
 
 
 // Function to handle overflow checks for each wheel's timer
-void OverflowCheck(TIM_HandleTypeDef * htim) {
+// Function to manage overflow conditions for each wheel's timer
+void ManageTimerOverflow(TIM_HandleTypeDef * htim) {
     // Loop through each wheel
     for (int i = 0; i < NUM_WHEELS; i++) {
         // Check if the instance of the timer handler matches the current wheel's timer handler
@@ -94,6 +86,7 @@ void OverflowCheck(TIM_HandleTypeDef * htim) {
         }
     }
 }
+
 /*
  * Called when an input capture event occurs
  * using if statements (subject to change if more efficient method is found):
@@ -122,46 +115,31 @@ void OverflowCheck(TIM_HandleTypeDef * htim) {
 
 // Function called when an input capture event occurs
 // Function called when an input capture event occurs
+// Function called when an input capture event occurs
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
     // Loop through each wheel
     for (int i = 0; i < NUM_WHEELS; i++) {
         // Check if the instance of the timer handler matches the current wheel's timer handler
         if (htim->Instance == timers[i]->Instance) {
-            // Check if the event occurs at the first channel of the timer
-            if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-                // Handle state 0
-                if (TIM_State[i] == 0) {
-                    // Store timer value within rising edge variable
-                    TIM_rising[i] = htim->Instance->CCR1;
-                }
-                // Handle state 1
-                else if (TIM_State[i] == 1) {
-                    // Store timer value within second rising edge variable
-                    TIM_rising2[i] = htim->Instance->CCR1;
-                }
-            }
+            // Store timer value within rising edge variable
+            TIM_rising[i][TIM_State[i]] = htim->Instance->CCR1;
+
             // Calculate time interval between two rising edges at the same sensor
-            uint32_t ticks_TIM = (TIM_rising2[i] + (TIM_OVC[i] * htim->Init.Period)) - TIM_rising[i];
-            // Calculate frequency if ticks is not zero and overflow counter is less than 2
+            uint32_t ticks_TIM = (TIM_rising[i][1] + (TIM_OVC[i] * htim->Init.Period)) - TIM_rising[i][0];
+            // Calculate frequency and RPM if ticks is not zero and overflow counter is less than 2
             if (ticks_TIM != 0 && TIM_OVC[i] < 2) {
+                // Calculate frequency
                 TIM_freq[i] = (uint32_t)(96000000UL / ticks_TIM);
-                // Store frequency within corresponding wheel frequency index in array
-                wheelFreq[i] = TIM_freq[i];
+                // Store frequency within corresponding wheel frequency index in Ctrl_Data structure
+                Ctrl_Data.wheelFreq[i] = TIM_freq[i];
+                // Calculate RPM and store in Ctrl_Data.wheelRPM array
+                Ctrl_Data.wheelRPM[i] = (Ctrl_Data.wheelFreq[i] * 60) / numTeeth; // assuming numTeeth is defined elsewhere
             }
             // Reset overflow counter
             TIM_OVC[i] = 0;
             // Toggle state (0 to 1, or 1 to 0)
             TIM_State[i] = !TIM_State[i];
         }
-    }
-}
-
-// Function to convert frequencies to RPM
-void RPMConversion() {
-    // Loop through each wheel
-    for(int i = 0; i < NUM_WHEELS; i++){
-        // Calculate RPM and store in wheelRPM array
-        wheelRPM[i] = (wheelFreq[i] * 60) / numTeeth; // assuming numTeeth is defined elsewhere
     }
 }
 
@@ -252,4 +230,3 @@ void fanCtrl() {
 void LEDCtrl() {
 
 }
-
