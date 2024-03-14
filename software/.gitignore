@@ -8,3 +8,7 @@
 protos/*
 !protos/CAN_2.proto
 !protos/__init__.py
+
+include
+
+__pycache__

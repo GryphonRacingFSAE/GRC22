@@ -75,25 +75,37 @@ async def main():
         async def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("Last client unsubscribed from", channel_id)
 
-    async with FoxgloveServer("0.0.0.0", 8765, "Gryphon Racing Base Station") as fg_server, websockets.connect("ws://192.168.4.1:8765/ws") as websocket:
+    async with FoxgloveServer("0.0.0.0", 8765, "Gryphon Racing Base Station") as fg_server:
         fg_server.set_listener(Listener())
+
         channel_id_mapping, message_descriptor_dict_pb = await gen("protos/protos.desc", fg_server)
         message_dbc = gendbc()
 
-        # client connection handlerasync with t:
-        async for message in websocket:
-            can_protobuf_msg = CAN_2_pb2.CAN()
-            can_protobuf_msg.ParseFromString(b64decode(message))
-            msg = can.Message(arbitration_id=can_protobuf_msg.address, dlc=len(can_protobuf_msg.data), data=can_protobuf_msg.data)
-            print(msg)
-            try:
-                decoded_msg = message_dbc.decode_message(msg.arbitration_id, msg.data, decode_containers=True)
-                dbc_msg = message_dbc.get_message_by_frame_id(msg.arbitration_id)
-                pb_msg = pack_protobuf_msg(decoded_msg, dbc_msg.name, message_descriptor_dict_pb)
-                asyncio.create_task(fg_server.send_message(channel_id_mapping[dbc_msg.name], time.time_ns(), pb_msg.SerializeToString()))
-            except Exception as e:
-                print("unable to decode...", e)
-                return
+        while True:
+            async with websockets.connect("ws://192.168.4.1:8765/ws") as websocket:
+
+                # client connection handlerasync with t:
+                try:
+                    async for message in websocket:
+                        print(message)
+                        can_protobuf_msg = CAN_2_pb2.CAN()
+                        can_protobuf_msg.ParseFromString(b64decode(message))
+                        msg = can.Message(arbitration_id=can_protobuf_msg.address, dlc=len(can_protobuf_msg.data), data=can_protobuf_msg.data)
+                        print(msg)
+                        try:
+                            decoded_msg = message_dbc.decode_message(msg.arbitration_id, msg.data, decode_containers=True)
+                            dbc_msg = message_dbc.get_message_by_frame_id(msg.arbitration_id)
+                            pb_msg = pack_protobuf_msg(decoded_msg, dbc_msg.name, message_descriptor_dict_pb)
+                            asyncio.create_task(fg_server.send_message(channel_id_mapping[dbc_msg.name], time.time_ns(), pb_msg.SerializeToString()))
+                        except Exception as e:
+                            print("unable to decode...", e)
+                            return
+                except websockets.exceptions.ConnectionClosedError:
+                    # Handle the connection closed error gracefully
+                    print("Connection closed unexpectedly")
+                except websockets.exceptions.IncompleteReadError as e:
+                    # Handle incomplete read error gracefully
+                    print("Incomplete read error:", e.partial)
 
 if __name__ == "__main__":
     run_cancellable(main())
