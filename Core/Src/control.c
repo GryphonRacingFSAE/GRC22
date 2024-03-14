@@ -11,44 +11,28 @@
 #include "utils.h"
 #include "main.h"
 #include <string.h>
-
-//overflow counters for wheel speed sensors
-volatile uint16_t TIM2_OVC = 0;
-volatile uint16_t TIM3_CH1_OVC = 0;
-volatile uint16_t TIM3_CH2_OVC = 0;
-volatile uint16_t TIM4_OVC = 0;
-
-//state variables for wheel speed (refer to rising or falling edge of each read iteration)
-volatile uint8_t TIM2_State = 0;
-volatile uint8_t TIM3_CH1_State = 0;
-volatile uint8_t TIM3_CH2_State = 0;
-volatile uint8_t TIM4_State = 0;
-
-//rising edge and falling edge variables for each sensor
-volatile uint32_t TIM2_rising = 0;
-volatile uint32_t TIM2_rising2 = 0;
-
-volatile uint32_t TIM3_CH1_rising = 0;
-volatile uint32_t TIM3_CH1_rising2 = 0;
-
-volatile uint32_t TIM3_CH2_rising = 0;
-volatile uint32_t TIM3_CH2_rising2 = 0;
-
-volatile uint32_t TIM4_rising = 0;
-volatile uint32_t TIM4_rising2 = 0;
-
-//frequency values for each wheel speed sensor
-volatile uint32_t TIM2_freq = 0;
-volatile uint32_t TIM3_CH1_freq = 0;
-volatile uint32_t TIM3_CH2_freq = 0;
-volatile uint32_t TIM4_freq = 0;
+#define NUM_WHEELS 4
 
 //wheel frequency array (stores each wheel's frequency)
-volatile uint32_t wheelFreq[4];
-volatile uint32_t wheelRPM[4];
+//volatile uint32_t wheelFreq[4];
+//volatile uint32_t wheelRPM[4];
+
+static volatile uint32_t TIM_rising[NUM_WHEELS] = {0};     // Array to store rising edge times for each wheel
+static volatile uint32_t TIM_rising2[NUM_WHEELS] = {0};    // Array to store the second rising edge times for each wheel
+static volatile uint32_t TIM_freq[NUM_WHEELS] = {0};       // Array to store frequencies for each wheel
+static volatile uint32_t TIM_OVC[NUM_WHEELS] = {0};        // Array to store overflow counters for each wheel
+static volatile uint8_t TIM_State[NUM_WHEELS] = {0};       // Array to store state (0 or 1) for each wheel
+static volatile uint32_t wheelRPM[NUM_WHEELS] = {0};       // Array to store final wheel RPMs
+static volatile uint32_t wheelFreq[NUM_WHEELS] = {0};      // Array to store final wheel frequencies
+
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 
 //number of teeth on wheel hub
 volatile uint16_t numTeeth = 32;
+
+
 
 Ctrl_Data_Struct Ctrl_Data;
 
@@ -89,39 +73,27 @@ void startControlTask(){
 
  */
 
-void OverflowCheck(TIM_HandleTypeDef * htim){
+// Arrays to store various data for each wheel
 
-	//instance for tim2
-	if(htim -> Instance == TIM2){
-		TIM2_OVC++;
-		if(TIM2_OVC >= 2){
-			TIM2_freq = 0;
-		}
-	}
-	//instance for tim3 (channel checks)
-	if (htim -> Instance == TIM3){
-		if(htim -> Channel == HAL_TIM_ACTIVE_CHANNEL_1){
-			TIM3_CH1_OVC ++;
-			if(TIM3_CH1_OVC >= 2){
-				TIM3_CH1_freq = 0;
-			}
-		}
-		if(htim -> Channel == HAL_TIM_ACTIVE_CHANNEL_2){
-			TIM3_CH2_OVC ++;
-			if(TIM3_CH2_OVC >= 2){
-				TIM3_CH2_freq = 0;
-			}
-		}
-	}
-	//instance for tim4
-	if(htim -> Instance == TIM4){
-		TIM4_OVC ++;
-		if(TIM4_OVC >= 2){
-			TIM4_freq = 0;
-		}
-	}
+// Array of timer handlers for each wheel
+TIM_HandleTypeDef* timers[NUM_WHEELS] = {&htim2, &htim3, &htim4};
+
+
+// Function to handle overflow checks for each wheel's timer
+void OverflowCheck(TIM_HandleTypeDef * htim) {
+    // Loop through each wheel
+    for (int i = 0; i < NUM_WHEELS; i++) {
+        // Check if the instance of the timer handler matches the current wheel's timer handler
+        if (htim->Instance == timers[i]->Instance) {
+            // Increment overflow counter for the current wheel
+            TIM_OVC[i]++;
+            // Reset frequency to 0 if overflow counter exceeds 2
+            if (TIM_OVC[i] >= 2) {
+                TIM_freq[i] = 0;
+            }
+        }
+    }
 }
-
 /*
  * Called when an input capture event occurs
  * using if statements (subject to change if more efficient method is found):
@@ -148,134 +120,50 @@ void OverflowCheck(TIM_HandleTypeDef * htim){
  * 		TIM4 = 3
  */
 
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim){
-
-	//timer 2 input
-	if(htim -> Instance == TIM2){
-		if(htim -> Channel == HAL_TIM_ACTIVE_CHANNEL_1){
-			//state 0
-			if (TIM2_State == 0){
-				TIM2_rising = TIM2 -> CCR1;
-				uint32_t ticks_TIM2 = (TIM2_rising + (TIM2_OVC * htim->Init.Period)) - TIM2_rising2;
-				if(ticks_TIM2 != 0 && TIM2_OVC < 2){
-					TIM2_freq = (uint32_t)(96000000UL/ticks_TIM2);
-					wheelFreq[0] = TIM2_freq;
-				}
-				TIM2_OVC = 0;
-				TIM2_State = 1;
-			}
-			//state 1
-			if (TIM2_State == 1){
-				TIM2_rising2 = TIM2 -> CCR1;
-				uint32_t ticks_TIM2 = (TIM2_rising2 + (TIM2_OVC * htim->Init.Period)) - TIM2_rising;
-				if(ticks_TIM2 != 0 && TIM2_OVC < 2){
-					TIM2_freq = (uint32_t)(96000000UL/ticks_TIM2);
-					wheelFreq[0] = TIM2_freq;
-				}
-				TIM2_OVC = 0;
-				TIM2_State = 0;
-			}
-		}
-	}
-
-	//timer 3 input
-	if(htim -> Instance == TIM3){
-		//channel 1
-		if(htim -> Channel == HAL_TIM_ACTIVE_CHANNEL_1){
-			//state 0
-			if(TIM3_CH1_State == 0){
-				TIM3_CH1_rising = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH1 = (TIM3_CH1_rising + (TIM3_CH1_OVC * htim -> Init.Period)) - TIM3_CH1_rising2;
-				if(ticks_TIM3_CH1 != 0 && TIM3_CH1_OVC < 2){
-					TIM3_CH1_freq = (uint32_t)(96000000UL/ticks_TIM3_CH1);
-					wheelFreq[1] = TIM3_CH1_freq;
-				}
-				TIM3_CH1_OVC = 0;
-				TIM3_CH1_State = 0;
-			}
-			//state 1
-			if(TIM3_CH1_State == 1){
-				TIM3_CH1_rising2 = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH1 = (TIM3_CH1_rising2 + (TIM3_CH1_OVC * htim -> Init.Period)) - TIM3_CH1_rising;
-				if(ticks_TIM3_CH1 != 0 && TIM3_CH1_OVC < 2){
-					TIM3_CH1_freq = (uint32_t)(96000000UL/ticks_TIM3_CH1);
-					wheelFreq[1] = TIM3_CH1_freq;
-				}
-				TIM3_CH1_OVC = 0;
-				TIM3_CH1_State = 0;
-			}
-		}
-	//channel 2
-		if(htim -> Channel == HAL_TIM_ACTIVE_CHANNEL_2){
-			//state 0
-			if(TIM3_CH2_State == 0){
-				TIM3_CH2_rising = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH2 = (TIM3_CH2_rising + (TIM3_CH2_OVC * htim -> Init.Period)) - TIM3_CH2_rising2;
-				if(ticks_TIM3_CH2 != 0 && TIM3_CH2_OVC < 2){
-					TIM3_CH2_freq = (uint32_t)(96000000UL/ticks_TIM3_CH2);
-					wheelFreq[2] = TIM3_CH2_freq;
-				}
-				TIM3_CH2_OVC = 0;
-				TIM3_CH2_State = 0;
-			}
-			//state 1
-			if(TIM3_CH2_State == 1){
-				TIM3_CH2_rising2 = TIM3 -> CCR1;
-				uint32_t ticks_TIM3_CH2 = (TIM3_CH2_rising2 + (TIM3_CH2_OVC * htim -> Init.Period)) - TIM3_CH2_rising;
-				if(ticks_TIM3_CH2 != 0 && TIM3_CH2_OVC < 2){
-					TIM3_CH2_freq = (uint32_t)(96000000UL/ticks_TIM3_CH2);
-					wheelFreq[2] = TIM3_CH2_freq;
-				}
-				TIM3_CH2_OVC = 0;
-				TIM3_CH2_State = 1;
-			}
-		}
-	}
-	//timer 4 input
-	if(htim -> Instance == TIM4){
-		if (htim -> Channel == HAL_TIM_ACTIVE_CHANNEL_1){
-			//state 0
-			if(TIM4_State == 0){
-				TIM4_rising = TIM4 -> CCR1;
-				uint32_t ticks_TIM4 = (TIM4_rising + (TIM4_OVC * htim -> Init.Period) - TIM4_rising2);
-				if(ticks_TIM4 != 0 && TIM4_OVC <2){
-					TIM4_freq = (uint32_t)(96000000UL/ticks_TIM4);
-					wheelFreq[3] = TIM4_freq;
-				}
-				TIM4_OVC = 0;
-				TIM4_State = 1;
-			}
-			//state 1
-			if(TIM4_State == 1){
-				TIM4_rising2 = TIM4 -> CCR1;
-				uint32_t ticks_TIM4 = (TIM4_rising2 + (TIM4_OVC * htim -> Init.Period) - TIM4_rising);
-				if(ticks_TIM4 != 0 && TIM4_OVC <2){
-					TIM4_freq = (uint32_t)(96000000UL/ticks_TIM4);
-					wheelFreq[3] = TIM4_freq;
-				}
-				TIM4_OVC = 0;
-				TIM4_State = 0;
-			}
-		}
-	}
-
+// Function called when an input capture event occurs
+// Function called when an input capture event occurs
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
+    // Loop through each wheel
+    for (int i = 0; i < NUM_WHEELS; i++) {
+        // Check if the instance of the timer handler matches the current wheel's timer handler
+        if (htim->Instance == timers[i]->Instance) {
+            // Check if the event occurs at the first channel of the timer
+            if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+                // Handle state 0
+                if (TIM_State[i] == 0) {
+                    // Store timer value within rising edge variable
+                    TIM_rising[i] = htim->Instance->CCR1;
+                }
+                // Handle state 1
+                else if (TIM_State[i] == 1) {
+                    // Store timer value within second rising edge variable
+                    TIM_rising2[i] = htim->Instance->CCR1;
+                }
+            }
+            // Calculate time interval between two rising edges at the same sensor
+            uint32_t ticks_TIM = (TIM_rising2[i] + (TIM_OVC[i] * htim->Init.Period)) - TIM_rising[i];
+            // Calculate frequency if ticks is not zero and overflow counter is less than 2
+            if (ticks_TIM != 0 && TIM_OVC[i] < 2) {
+                TIM_freq[i] = (uint32_t)(96000000UL / ticks_TIM);
+                // Store frequency within corresponding wheel frequency index in array
+                wheelFreq[i] = TIM_freq[i];
+            }
+            // Reset overflow counter
+            TIM_OVC[i] = 0;
+            // Toggle state (0 to 1, or 1 to 0)
+            TIM_State[i] = !TIM_State[i];
+        }
+    }
 }
 
-/*
- * Convert frequencies to rpm
- * 		run for loop for 4 iterations to parse through each wheel
- * 		multiply frequency by 60, divide by number of teeth on hub
- */
-
-void RPMConversion(){
-	for(int i = 0; i < 4; i++){
-		wheelFreq[i];
-
-		wheelRPM[i] = (wheelFreq[i] * 60)/ numTeeth;
-	}
+// Function to convert frequencies to RPM
+void RPMConversion() {
+    // Loop through each wheel
+    for(int i = 0; i < NUM_WHEELS; i++){
+        // Calculate RPM and store in wheelRPM array
+        wheelRPM[i] = (wheelFreq[i] * 60) / numTeeth; // assuming numTeeth is defined elsewhere
+    }
 }
-
-
 
 // Brake system plausibility check
 void BSPC() {
