@@ -26,6 +26,8 @@
 #define RTD_TRACTIVE_VOLTAGE_OFF 200
 // Turn off flag when tractive voltage > 450
 #define RTD_TRACTIVE_VOLTAGE_ON 4500
+//number of teeth on wheel hub
+#define numTeeth 32;
 
 typedef struct {
 	uint32_t wheelSpeed[4];
@@ -34,8 +36,8 @@ typedef struct {
 	int32_t coolantTemp; // 10:1 conversion
 	int32_t tractiveVoltage; // 10:1 conversion
 	int32_t motorSpeed; // 1:1
-	volatile uint32_t wheelRPM[NUM_WHEELS];   // Array to store final wheel RPMs
-	volatile uint32_t wheelFreq[NUM_WHEELS];  // Array to store final wheel frequencies
+	volatile uint32_t wheel_rpm[NUM_WHEELS];  // Array to store final wheel RPMs
+	volatile uint32_t wheel_freq[NUM_WHEELS];  // Array to store final wheel frequencies
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
