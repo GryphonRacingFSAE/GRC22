@@ -9,10 +9,8 @@
 #include "control.h"
 #include "APPS.h"
 
-
-
-
-static volatile uint32_t tim_ovc[NUM_WHEELS] = {0};        // Array to store overflow counters for each wheel
+// Array to store overflow counters for each wheel
+static volatile uint32_t tim_ovc[NUM_WHEELS] = {0};
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
@@ -20,7 +18,7 @@ extern TIM_HandleTypeDef htim4;
 
 Ctrl_Data_Struct Ctrl_Data;
 
-
+// Task to manage control operations
 void startControlTask(){
     uint32_t tick = osKernelGetTickCount();
     while(1){
@@ -37,34 +35,11 @@ void startControlTask(){
     }
 }
 
-
-/*
- * runs checks for period overflow, after 2 overflows the wheel is not moving
- * 	if the instance is equal to TIM1, hal tick is incremented in order to keep all timing accurate and synchronized
- *
- * 	if instance is equal to TIM2
- * 		increment tim2 overflow count
- * 			if overflow is greater than or equal to 2, set tim2 frequency to 0
- *
- * 	if instance is equal to TIM3
- * 		check if CH1 or CH2 is the active channel (same pattern of work for each channel just using channel specific variables)
- * 			increment overflow count
- * 				if overflow count is greater than or equal to 2, set wheel frequency to 0
- *
- * 	if instance is equal to TIM2
- * 		increment tim2 overflow count
- * 			if overflow is greater than or equal to 2, set tim2 frequency to 0
-
- */
+// Array mapping each wheel to its corresponding timer
+const TIM_HandleTypeDef* wheel_to_timer_mapping[NUM_WHEELS] = {&htim2, &htim3, &htim3, &htim4};
 
 
-
-
-const TIM_HandleTypeDef* wheel_to_timer_mapping[NUM_WHEELS] = {&htim2, &htim3, &htim3, &htim4}; // Note: TIM3 is repeated for both channels CH1 and CH2
-
-// Function to manage overflow conditions for each wheel's timer
-void ManageTimerOverflow(TIM_HandleTypeDef * htim) {
-    // Loop through each wheel
+void manageWheelSpeedTimerOverflow(const TIM_HandleTypeDef * htim) {
     for (int i = 0; i < NUM_WHEELS; i++) {
         // Check if the instance of the timer handler matches the current wheel's timer handler
     	if (htim == wheel_to_timer_mapping[i]) {
@@ -79,39 +54,11 @@ void ManageTimerOverflow(TIM_HandleTypeDef * htim) {
 }
 
 
-/*
- * Called when an input capture event occurs
- * using if statements (subject to change if more efficient method is found):
- * 		Check to see which timer the event occurs at (TIM2, TIM3 (need to also check which channel (CH1, CH2), TIM4)
- * for each instance the same algorithm is applied:
- *
- * 		if state 0:
- * 			store timer value within rising edge variable
- * 			calculate time interval between 2 rising edges at the same sensor
- * 			if ticks is not zero and overflow counter is less than 2, calculate frequency
- * 			store frequency within corresponding wheel frequency index in array
- * 			reset overflow counter, set state to 1
- * 		if state 1:
- * 			store timer value within falling edge variable
- * 			calculate time interval between 2 rising edges at the same sensor
- * 			if ticks is not zero and overflow counter is less than 2, calculate frequency
- * 			store frequency within corresponding wheel frequency index in array
- * 			reset overflow counter, set state to 0
- *
- * 	TIMER to array index correspondence:
- * 		TIM2 = 0
- * 		TIM3_CH1 = 1
- * 		TIM3_CH2 = 2
- * 		TIM4 = 3
- */
-
-
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
-
 	static volatile uint32_t tim_rising[NUM_WHEELS][NUM_WHEELS] = {{0}};  // 2D array to store rising edge times for each wheel
 	static volatile uint8_t tim_state[NUM_WHEELS] = {0};       // Array to store state (0 or 1) for each wheel
 
-	// Loop through each wheel
+
     for (int i = 0; i < NUM_WHEELS; i++) {
         // Check if the instance of the timer handler matches the current wheel's timer handler
         if (htim == wheel_to_timer_mapping[i]) {
@@ -125,9 +72,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
                 // Calculate frequency
             	Ctrl_Data.wheel_freq[i] = (uint32_t)(96000000UL / ticks_TIM);
                 // Calculate RPM and store in Ctrl_Data.wheel_rpm array
-                Ctrl_Data.wheel_rpm[i] = (Ctrl_Data.wheel_freq[i] * 60) / numTeeth; // assuming numTeeth is defined elsewhere
+                Ctrl_Data.wheel_rpm[i] = (Ctrl_Data.wheel_freq[i] * 60) / NUM_TEETH; // assuming NUM_TEETH is defined elsewhere
             }
-            // Reset overflow counter
+
             tim_ovc[i] = 0;
             // Toggle state (0 to 1, or 1 to 0)
             tim_state[i] = !tim_state[i];

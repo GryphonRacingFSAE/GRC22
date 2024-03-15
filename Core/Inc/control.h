@@ -27,7 +27,7 @@
 // Turn off flag when tractive voltage > 450
 #define RTD_TRACTIVE_VOLTAGE_ON 4500
 //number of teeth on wheel hub
-#define numTeeth 32;
+#define NUM_TEETH 32;
 
 typedef struct {
 	uint32_t wheelSpeed[4];
