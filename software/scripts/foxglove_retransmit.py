@@ -8,7 +8,7 @@ from google.protobuf import reflection
 from google.protobuf import symbol_database
 from google.protobuf import message_factory
 from foxglove_websocket import run_cancellable
-from protos import CAN_2_pb2
+from protos import CAN_pb2
 import can
 import cantools
 import time

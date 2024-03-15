@@ -5,8 +5,7 @@
 .pio
 .vscode
 
-protos/*
-!protos/CAN_2.proto
-!protos/__init__.py
+scripts/protos/*
+!scripts/protos/CAN.proto
 
 include
