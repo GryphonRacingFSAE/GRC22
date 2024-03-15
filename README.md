@@ -39,7 +39,7 @@ For the receiver module:
 ```bash
 python3 -m pip install cantools
 pip install python-can==4.2.2 # downgrade required
-python3 -m cantools generate_c_source DBCs/example.dbc -o /include
+python3 -m cantools generate_c_source DBCs/example.dbc -o include
 ```
 
 ## Resources
