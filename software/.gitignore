@@ -10,5 +10,3 @@ protos/*
 !protos/__init__.py
 
 include
-
-__pycache__
