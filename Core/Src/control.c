@@ -55,11 +55,6 @@ Ctrl_Data_Struct Ctrl_Data;
 void startControlTask(){
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
-
-		for(int i = 0; i < 4; i++){
-			GRCprintf("Frequency %d= %d\n\r", (i+1), wheelFreq[i]);
-		}
-
 		RPMConversion();
 		BSPC();
 		RTD();

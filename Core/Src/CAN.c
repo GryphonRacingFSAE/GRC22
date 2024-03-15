@@ -13,6 +13,65 @@
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 
+// This task handles scheduling all of the different CAN messages that should be transmitted
+void startCANTransmitTask() {
+	uint32_t tick = osKernelGetTickCount();
+
+	while (1) {
+		// Send messages that should be transmitted every 3ms
+		if (tick % 3 == 0) {
+			sendTorque();
+		}
+
+		// Send messages that should be transmitted every 1 second
+		if (tick % 1000 == 0) {
+
+		}
+
+		osDelayUntil(tick += CAN_TRANSMIT_PERIOD);
+	}
+}
+
+void sendTorque() {
+	DEBUG_PRINT("Requesting: %dN.m\r\n", requestedTorque);
+	requestedTorque *= 10; // Scaling is 10:1, requested torque is what is requested, it needs to be sent as 10 this value
+
+	// Format is defined in CM200DZ CAN protocol V6.1 section 2.2
+	CANTXMsg tx_message;
+	tx_msg.header.IDE = CAN_ID_STD;
+	tx_msg.header.RTR = CAN_RTR_DATA;
+	tx_message.header.StdId = 0x0C0;
+	tx_message.header.DLC = 8;
+	tx_message.to = &hcan2;
+
+
+	// Bytes 0 & 1 is the requested torque
+	uint16_t bitwise_requested_torque = *(uint16_t*)&requestedTorque;
+	tx_msg.data[0] = bitwiseRequestedTorque & 0xFF;
+	tx_msg.data[1] = bitwiseRequestedTorque >> 8;
+
+	// Bytes 2 & 3 is the requested RPM (if not in torque mode)
+	tx_msg.data[2] = 0;
+	tx_message.data[3] = 0;
+
+	// Byte 4 is Forward/Reverse
+	tx_msg.data[4] = 1; // 1 is Forward
+
+	// Byte 5 is Configuration
+	tx_msg.data[5] = 0;
+		// | 0x1 // Inverter Enable
+		// | 0x2 // Inverter Discharge
+		// | 0x4 // Speed Mode override
+
+	// Byte 6 & 7 sets torque limits
+	tx_message.data[6] = 0;
+	tx_message.data[7] = 0;
+
+	// Send over CAN2
+	osMessageQueuePut(CANTX_QHandle, &tx_msg, 0, 5);
+}
+
+
 void startCANTxTask() {
 	CANTXMsg txMsg;
 

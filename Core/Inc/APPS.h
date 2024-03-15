@@ -11,7 +11,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-#define ADC1_BUFF_LEN 64
+#define ADC1_BUFF_LEN (4096 * 2)
 
 extern volatile uint16_t ADC1_buff[ADC1_BUFF_LEN];
 

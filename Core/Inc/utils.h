@@ -13,11 +13,13 @@
 
 #define MAX(a,b) (a>b ? a:b)
 #define MIN(a,b) (a<b ? a:b)
+// b is the variable to be clamped, a is the minimum, and c is the maximum
+#define CLAMP(a, b, c) (MIN(c, MAX(b, a)))
 #define ABS(a) ((a)<0 ? ((a)*-1):a)
 
 int GRCprintf(const char *format, ...);
 
-#define DEBUG_PRINT_LEVEL 4
+#define DEBUG_PRINT_LEVEL 2
 
 #if DEBUG_PRINT_LEVEL == 1
 	#define TRACE_PRINT(...)

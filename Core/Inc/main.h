@@ -45,6 +45,8 @@ extern "C" {
 //Task periods in system ticks (each tick is 1ms)
 #define APPS_PERIOD 20U
 #define CTRL_PERIOD 100U
+#define WATCHDOG_PERIOD 100U
+#define CAN_TRANSMIT_PERIOD 1U
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

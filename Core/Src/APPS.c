@@ -11,12 +11,10 @@
 #include "control.h"
 #include <string.h>
 
-#define AVG_WINDOW			3
-#define APPS1_MIN 			410
-#define APPS1_MAX			1230
-#define APPS2_MIN 			410
-#define APPS2_MAX			1230
-
+#define APPS1_MIN 1440
+#define APPS1_MAX 1375
+#define APPS2_MIN (APPS1_MIN * 2)
+#define APPS2_MAX (APPS1_MAX * 2)
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -58,54 +56,24 @@ Torque_Map_Struct Torque_Map_Data = { {
 volatile uint16_t ADC1_buff[ADC1_BUFF_LEN] = {};
 
 void startAPPSTask() {
-
-	//used for averaging the apps signal
-	int32_t apps1Avg = 0;
-	int32_t apps2Avg = 0;
-
-	// Circular buffer of previous results of each apps signal
-	uint8_t circBuffPos = 0;
-	uint32_t apps1PrevMesurments[AVG_WINDOW] = {};
-	uint32_t apps2PrevMesurments[AVG_WINDOW] = {};
-
-
 	uint32_t tick = osKernelGetTickCount();
 
 	while (1) {
 
 		//Averages samples in DMA buffer
-		uint32_t apps1AvgDMA = 0;
-		uint32_t apps2AvgDMA = 0;
+		int32_t apps1_adc_avg = 0;
+		int32_t apps2_adc_avg = 0;
 		for (int i = 0; i < ADC1_BUFF_LEN;) {
-			apps1AvgDMA += ADC1_buff[i++];
-			apps2AvgDMA += ADC1_buff[i++];
+			apps1_adc_avg += ADC1_buff[i++];
+			apps2_adc_avg += ADC1_buff[i++];
 		}
 
-		apps1AvgDMA = apps1AvgDMA / (ADC1_BUFF_LEN / 2); // Calculate the average
-		apps2AvgDMA = apps2AvgDMA / (ADC1_BUFF_LEN / 2);
+		apps1_adc_avg = apps1_adc_avg / (ADC1_BUFF_LEN / 2);
+		apps2_adc_avg = apps2_adc_avg / (ADC1_BUFF_LEN / 2);
 
-
-		//Calculates moving average of previous measurements
-		if(++circBuffPos == AVG_WINDOW){
-			circBuffPos = 0;
-		}
-		//Circular for moving average
-		apps1PrevMesurments[circBuffPos] = apps1AvgDMA;
-		apps2PrevMesurments[circBuffPos] = apps2AvgDMA;
-
-		apps1Avg = 0;
-		apps2Avg = 0;
-		for (int i = 0; i < AVG_WINDOW; i++) {
-			apps1Avg += apps1PrevMesurments[i];
-			apps2Avg += apps2PrevMesurments[i];
-		}
-
-		//Moving average of raw analog value
-		apps1Avg = apps1Avg/AVG_WINDOW;
-		apps2Avg = apps2Avg/AVG_WINDOW;
-
-		int32_t appsPos1 = (apps1Avg - APPS1_MIN) * 100 /(APPS1_MAX - APPS1_MIN);
-		int32_t appsPos2 = (apps2Avg - APPS2_MIN) * 100 /(APPS2_MAX - APPS2_MIN);
+		int32_t apps1_pos = CLAMP(0, (apps1AvgDMA - APPS1_MIN) * 1000 /(APPS1_MAX - APPS1_MIN), 1000);
+		int32_t apps2_pos = CLAMP(0, (apps2AvgDMA - APPS2_MIN) * 1000 /(APPS2_MAX - APPS2_MIN), 1000);
+		CRITICAL_PRINT("APPS1:%d, APPS1 ADC: %d, APPS2:%d, APPS2 ADC: %d\r\n", apps1_pos, apps1_adc_avg, apps2_pos, apps2_adc_avg);
 
 		// RULE (2023 V2): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
 		// TODO: T.4.2.5
@@ -113,7 +81,7 @@ void startAPPSTask() {
 		// TODO?: T.4.2.10
 		// TODO: T.4.3.3
 		// TODO: T.4.3.4
-		int32_t appsPos = 0;
+		int32_t appsPos = apps1_pos;
 		if (ABS(appsPos1 - appsPos2) <= 10) {
 			int32_t averageAppsPos = (appsPos1 + appsPos2) / 2;
 			appsPos = MAX(MIN(averageAppsPos, 100),0); // Clamp to between 0-100%
@@ -123,24 +91,12 @@ void startAPPSTask() {
 
 		//Used for BSPC
 		// TODO: RULE (2023 V2): EV.4.1.3 No regen < 5km/h
-		if (osMutexAcquire(APPS_Data_MtxHandle, 5) == osOK){
-			APPS_Data.pedalPos = appsPos;
-			osMutexRelease(APPS_Data_MtxHandle);
-		} else {
-			CRITICAL_PRINT("Missed osMutexAcquire(APPS_Data_MtxHandle): APPS.c:startAPPSTask\n");
-		}
-		DEBUG_PRINT("APPS1:%d, APPS2:%d, APPS_POS:%d\r\n", apps1Avg, apps2Avg, appsPos);
+		APPS_Data.pedalPos = appsPos;
 
 		int32_t pedalPercent = MIN(appsPos, 99); // NOTE: Cap values at slightly less then our max % for easier math
 		int32_t rpm = 0;
 
-		if(osMutexAcquire(Ctrl_Data_MtxHandle, osWaitForever) == osOK) {
-			rpm = MIN(Ctrl_Data.motorSpeed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
-			osMutexRelease(Ctrl_Data_MtxHandle);
-		} else {
-			CRITICAL_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): APPS.c:startAPPSTask\n");
-		}
-
+		rpm = MIN(Ctrl_Data.motorSpeed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
 
 		// Integer division - rounds down (use this to our advantage)
 		int32_t pedalOffset = pedalPercent % 10;
@@ -149,65 +105,20 @@ void startAPPSTask() {
 		int32_t rpmOffset = rpm % 500;
 		int32_t rpmLowIndex = rpm / 500;
 		int32_t rpmHighIndex = rpmLowIndex + 1;
-		if (osMutexAcquire(Torque_Map_MtxHandle, osWaitForever) == osOK) {
-			// Grab data points early then release mutex immediately.
-			// NOTE: because we capped our values, both lower indexes will never read the maximum index
-			// this always leaves one column left for the high index.
-			int16_t torque_pedallow_rpmlow = Torque_Map_Data.activeMap[pedalLowIndex][rpmLowIndex];
-			int16_t torque_pedallow_rpmhigh = Torque_Map_Data.activeMap[pedalLowIndex][rpmHighIndex];
-			int16_t torque_pedalhigh_rpmlow = Torque_Map_Data.activeMap[pedalHighIndex][rpmLowIndex];
-			int16_t torque_pedalhigh_rpmhigh = Torque_Map_Data.activeMap[pedalHighIndex][rpmHighIndex];
+		// NOTE: because we capped our values, both lower indexes will never read the maximum index
+		// this always leaves one column left for the high index.
+		int16_t torque_pedallow_rpmlow = Torque_Map_Data.activeMap[pedalLowIndex][rpmLowIndex];
+		int16_t torque_pedallow_rpmhigh = Torque_Map_Data.activeMap[pedalLowIndex][rpmHighIndex];
+		int16_t torque_pedalhigh_rpmlow = Torque_Map_Data.activeMap[pedalHighIndex][rpmLowIndex];
+		int16_t torque_pedalhigh_rpmhigh = Torque_Map_Data.activeMap[pedalHighIndex][rpmHighIndex];
 
-			osMutexRelease(Torque_Map_MtxHandle);
+		// Interpolating across rpm values
+		int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
+		int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
+		int16_t requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
 
-			// Interpolating across rpm values
-			int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
-			int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
-			int16_t requestedTorque = interpolate(10, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset);
-
-			requestTorque(requestedTorque); // Transmitting scales by 10 due to Limits of motor controller
-		} else {
-			CRITICAL_PRINT("Missed osMutexAcquire(Torque_Map_MtxHandle): APPS.c:startAPPSTask\n");
-		}
+//		requestTorque(requestedTorque); // Transmitting scales by 10 due to Limits of motor controller
 
 		osDelayUntil(tick += APPS_PERIOD);
 	}
-}
-
-void requestTorque(int16_t requestedTorque) {
-	DEBUG_PRINT("Requesting: %dN.m\r\n", requestedTorque);
-	requestedTorque *= 10; // Scaling is 10:1, requested torque is what is requested, it needs to be sent as 10 this value
-	uint16_t bitwiseRequestedTorque = *(uint16_t*)&requestedTorque;
-
-	// Format is defined in CM200DZ CAN protocol V6.1 section 2.2
-	CANTXMsg txMsg;
-	txMsg.header.IDE = CAN_ID_STD;
-	txMsg.header.RTR = CAN_RTR_DATA;
-	txMsg.header.StdId = 0x0C0;
-	txMsg.header.DLC = 8;
-	txMsg.to = &hcan2;
-
-	// Bytes 0 & 1 is the requested torque
-	txMsg.data[0] = bitwiseRequestedTorque & 0xFF;
-	txMsg.data[1] = bitwiseRequestedTorque >> 8;
-
-	// Bytes 2 & 3 is the requested RPM (if not in torque mode)
-	txMsg.data[2] = 0;
-	txMsg.data[3] = 0;
-
-	// Byte 4 is Forward/Reverse
-	txMsg.data[4] = 1; // 1 is Forward
-
-	// Byte 5 is Configuration
-	txMsg.data[5] = 0;
-		// | 0x1 // Inverter Enable
-		// | 0x2 // Inverter Discharge
-		// | 0x4 // Speed Mode override
-
-	// Byte 6 & 7 sets torque limits
-	txMsg.data[6] = 0;
-	txMsg.data[7] = 0;
-
-	// Send over CAN2
-	osMessageQueuePut(CANTX_QHandle, &txMsg, 0, 5);
 }
