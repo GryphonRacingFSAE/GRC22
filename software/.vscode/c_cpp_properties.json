@@ -8,7 +8,6 @@
         {
             "name": "PlatformIO",
             "includePath": [
-                "/home/evanrutten/Documents/Code/Remote-Logging-Module/software/include",
                 "/home/evanrutten/Documents/Code/Remote-Logging-Module/software/src",
                 "/home/evanrutten/.platformio/packages/framework-arduinoespressif32/libraries/SD/src",
                 "/home/evanrutten/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
@@ -245,7 +244,6 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
-                    "/home/evanrutten/Documents/Code/Remote-Logging-Module/software/include",
                     "/home/evanrutten/Documents/Code/Remote-Logging-Module/software/src",
                     "/home/evanrutten/.platformio/packages/framework-arduinoespressif32/libraries/SD/src",
                     "/home/evanrutten/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",

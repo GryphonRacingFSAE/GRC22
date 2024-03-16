@@ -31,6 +31,21 @@ RF24 radio(NRF_CE, NRF_CSN);
 const byte address[6] = "00001";
 uint8_t nrf_buffer[128];
 
+// CAN
+twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NO_ACK);
+twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
+twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+
+rlm_rlm_accel_0_xf0_t rlm_accel;
+rlm_rlm_gyro_0_xf1_t rlm_gyro;
+
+rlm_rlm_position_0_xf2_t rlm_position;
+rlm_rlm_trajectory_0_xf3_t rlm_trajectory;
+rlm_rlm_time_0_xf4_t rlm_time;
+
+#define CAN_FRAME_MAX_SIZE 64
+uint8_t can_frame[CAN_FRAME_MAX_SIZE];
+
 // MPU-6050
 MPU6050 mpu;
 int16_t ax, ay, az;
@@ -41,14 +56,6 @@ int16_t gx_offset, gy_offset, gz_offset;
 // BN-220
 TinyGPSPlus gps;
 HardwareSerial SerialGPS(1);
-uint64_t start_time;
-uint64_t delta_time;
-
-// CAN
-twai_message_t can_message;
-twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NORMAL);
-twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
-twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
 //==============================================================================
 // nRF24L01+
@@ -68,6 +75,78 @@ void sendProto(CAN msg) {
     pb_ostream_t output_stream = pb_ostream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
     pb_encode(&output_stream, CAN_fields, &msg);
     radio.write(nrf_buffer, output_stream.bytes_written);
+}
+
+//==============================================================================
+// CAN
+//==============================================================================
+
+void initCAN() {
+    if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
+        Serial.println("CAN driver installed successfully");
+    } else {
+        Serial.println("Failed to install CAN driver");
+    }
+
+    if (twai_start() == ESP_OK) {
+        Serial.println("CAN driver started successfully");
+    } else {
+        Serial.println("Failed to start CAN driver");
+    }
+}
+
+void readCAN() {
+    twai_message_t can_message;
+
+    if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+        if (!can_message.rtr) {
+            CAN msg = CAN_init_default;
+            msg.address = can_message.identifier;
+            msg.data.size = can_message.data_length_code;
+            memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
+
+            Serial.printf("\e[0;34m[0x%X] \e[0m", msg.address);
+            for (int i = 0; i < msg.data.size; i++) {
+                Serial.printf("\e[0;34m%02X \e[0m", msg.data.bytes[i]);
+            }
+            Serial.println();
+
+            sendProto(msg);
+        }
+    } else {
+        Serial.println("Failed to receive CAN message");
+    }
+}
+
+void sendCAN(uint32_t address, uint8_t* can_frame, int length) {
+    twai_message_t can_message;
+
+    can_message.identifier = address;
+    can_message.data_length_code = length;
+    for (int i = 0; i < length; i++) {
+        can_message.data[i] = can_frame[i];
+    }
+
+    if (twai_transmit(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+        CAN msg = CAN_init_default;
+        msg.address = can_message.identifier;
+        msg.data.size = can_message.data_length_code;
+        memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
+
+        Serial.printf("\e[0;32m[0x%X] \e[0m", msg.address);
+        for (int i = 0; i < msg.data.size; i++) {
+            Serial.printf("\e[0;32m%02X \e[0m", msg.data.bytes[i]);
+        }
+        Serial.println();
+
+        sendProto(msg);
+    } else {
+        printf("Failed to send CAN message\n");
+    }
+}
+
+uint64_t getSeconds() {
+    return (gps.time.hour() * 3600 + gps.time.minute() * 60 + gps.time.second());
 }
 
 //==============================================================================
@@ -101,8 +180,27 @@ void readMPU() {
     gy -= gy_offset;
     gz -= gz_offset;
 
-    Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", 4 * (float(ax) / 32768), 4 * (float(ay) / 32768), 4 * (float(az) / 32768));
-    Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", 250 * (float(gx) / 32768), 250 * (float(gy) / 32768), 250 * (float(gz) / 32768));
+    ax = 4 * ((float)ax / 32768);
+    ay = 4 * ((float)ay / 32768);
+    az = 4 * ((float)az / 32768);
+    gx = 250 * ((float)gx / 32768);
+    gy = 250 * ((float)gx / 32768);
+    gz = 250 * ((float)gx / 32768);
+
+    // Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", ax, ay, az);
+    // Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", gx, gy, gz);
+
+    rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax);
+    rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay);
+    rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az);
+    rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_FRAME_MAX_SIZE);
+    sendCAN(RLM_RLM_ACCEL_0_XF0_FRAME_ID, can_frame, RLM_RLM_ACCEL_0_XF0_LENGTH);
+
+    rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx);
+    rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy);
+    rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz);
+    rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_FRAME_MAX_SIZE);
+    sendCAN(RLM_RLM_GYRO_0_XF1_FRAME_ID, can_frame, RLM_RLM_GYRO_0_XF1_LENGTH);
 }
 
 //==============================================================================
@@ -117,69 +215,21 @@ void initGPS() {
 void readGPS() {
     while (SerialGPS.available() > 0) {
         if (gps.encode(SerialGPS.read())) {
-            Serial.printf("LAT %f\tLNG %f\tALT %.1f\n", gps.location.lat(), gps.location.lng(), gps.altitude.meters());
+            // Serial.printf("LAT %f\tLNG %f\n", gps.location.lat(), gps.location.lng());
 
-            /*
-            RLM_POSITION_0XF2_t* RLM_POSITION;
-            RLM_POSITION->LATITUDE_ro = gps.location.lat();
-            RLM_POSITION->LONGITUDE_ro = gps.location.lng();
+            rlm_position.latitude = rlm_rlm_position_0_xf2_latitude_encode(gps.location.lat());
+            rlm_position.longitude = rlm_rlm_position_0_xf2_longitude_encode(gps.location.lng());
+            rlm_rlm_position_0_xf2_pack(can_frame, &rlm_position, CAN_FRAME_MAX_SIZE);
+            sendCAN(RLM_RLM_POSITION_0_XF2_FRAME_ID, can_frame, RLM_RLM_POSITION_0_XF2_LENGTH);
 
-            can_message.identifier =
-                Pack_RLM_POSITION_0XF2_dbc_to_cpp(RLM_POSITION, can_message.data, &can_message.data_length_code, RLM_POSITION_0XF2_IDE);
+            rlm_trajectory.direction = rlm_rlm_trajectory_0_xf3_direction_encode(gps.course.deg());
+            rlm_trajectory.speed = rlm_rlm_trajectory_0_xf3_speed_encode(gps.speed.mps());
+            rlm_rlm_trajectory_0_xf3_pack(can_frame, &rlm_trajectory, CAN_FRAME_MAX_SIZE);
+            sendCAN(RLM_RLM_TRAJECTORY_0_XF3_FRAME_ID, can_frame, RLM_RLM_TRAJECTORY_0_XF3_LENGTH);
 
-            Serial.printf("ID: %d\n", can_message.identifier);
-            Serial.printf("DATA: ");
-            for (int i = 0; i < can_message.data_length_code; i++) {
-                printf("%d ", can_message.data[i]);
-            }
-            Serial.println();
-            */
             return;
         }
     }
-}
-
-//==============================================================================
-// CAN
-//==============================================================================
-
-void initCAN() {
-    if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
-        Serial.println("CAN driver installed successfully");
-    } else {
-        Serial.println("Failed to install CAN driver");
-    }
-
-    if (twai_start() == ESP_OK) {
-        Serial.println("CAN driver started successfully");
-    } else {
-        Serial.println("Failed to start CAN driver");
-    }
-}
-
-void readCAN() {
-    if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
-        if (!can_message.rtr) {
-            CAN msg = CAN_init_default;
-            msg.address = can_message.identifier;
-            msg.data.size = can_message.data_length_code;
-            memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
-
-            Serial.printf("[0x%X] ", msg.address);
-            for (int i = 0; i < msg.data.size; i++) {
-                Serial.printf("%02X ", msg.data.bytes[i]);
-            }
-            Serial.println();
-
-            sendProto(msg);
-        }
-    } else {
-        Serial.println("Failed to receive CAN message");
-    }
-}
-
-uint64_t getSeconds() {
-    return (gps.time.hour() * 3600 + gps.time.minute() * 60 + gps.time.second());
 }
 
 //==============================================================================
@@ -208,20 +258,17 @@ void setup() {
 // Loop
 //==============================================================================
 
+uint32_t delta_time;
+
 void loop() {
-    /*
-    if (start_time == 0) {
-        start_time = getSeconds();
-    }
+    delta_time = millis();
 
-    delta_time = getSeconds() - start_time;
-
-    Serial.printf("TIME %lu\n", delta_time);
-    Serial.printf("SATs %d\n", gps.satellites.value());
+    rlm_time.time = delta_time;
+    rlm_rlm_time_0_xf4_pack(can_frame, &rlm_time, CAN_FRAME_MAX_SIZE);
+    sendCAN(RLM_RLM_TIME_0_XF4_FRAME_ID, can_frame, RLM_RLM_TIME_0_XF4_LENGTH);
 
     readMPU();
     readGPS();
-    */
 
     readCAN();
 
