@@ -52,7 +52,7 @@ BO_ 242 RLM_POSITION_0XF2: 8 Vector__XXX
  
 BO_ 243 RLM_TRAJECTORY_0XF3: 4 Vector__XXX
  SG_ SPEED : 0|16@1- (0.01,0) [0|0] "m/s" Vector__XXX
- SG_ DIRECTION : 16|16@1- (0.01,0) [0|0] "degree" Vector__XXX
+ SG_ DIRECTION : 16|16@1- (0.01,0) [0|360] "degree" Vector__XXX
 
 BO_ 244 RLM_TIME_0XF4: 4 Vector__XXX
- SG_ TIME : 0|32@1+ (0.01,0) [0|360] "s" Vector__XXX
+ SG_ TIME : 0|32@1+ (1,0) [0|0] "ms" Vector__XXX
