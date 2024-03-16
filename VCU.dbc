@@ -35,41 +35,31 @@ BS_:
 
 BU_: VCU
 
-BO_ 512 VCU_STATE_MSG_ID_0X200: 1 VCU
- SG_ RTD_ACTIVE : 0|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ RTD_BUTTON : 1|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ BRAKE_SWITCH : 2|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ BSPC_VALID : 3|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ PUMP_ACTIVE : 4|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ FAN_ACTIVE : 5|1@1+ (1,0) [0|1] "bool" Vector__XXX
+BO_ 512 VCU_STATE_MSG_ID_0X200: 2 VCU
+ SG_ BSPC_INVALID : 0|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ APPS_OUT_OF_RANGE : 1|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ APPS_SENSOR_CONFLICT : 2|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ BRAKE_OUT_OF_RANGE : 3|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ RTD_INVALID : 4|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ RTD_BUTTON : 5|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ BRAKE_SWITCH : 6|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ PUMP_ACTIVE : 7|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ ACCUMULATOR_FAN_ACTIVE : 8@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ RADIATOR_FAN_ACTIVE : 8@1+ (1,0) [0|1] "bool" Vector__XXX
 
 BO_ 513 VCU_SENSORS_MSG_ID_0X201: 4 VCU
- SG_ BRAKE_PRESSURE : 0|16@1- (0.3333,0) [0|2000] "PSI" Vector__XXX
- SG_ ACCELERATOR_POSITION : 16|16@1+ (0.01,0) [0|100] "%" Vector__XXX
+ SG_ BRAKE_PRESSURE : 0|16@1+ (0.1,0) [0|2000] "PSI" Vector__XXX
+ SG_ ACCELERATOR_POSITION : 16|16@1+ (0.1,0) [0|100] "%" Vector__XXX
 
-BO_ 514 VCU_TEMPS_MSG_ID_0X202: 3 VCU
- SG_ COOLANT : 0|8@1- (1,0) [-127|128] "c" Vector__XXX
- SG_ COOLANT_PRESSURE : 8|8@1- (1,0) [-127|128] "PSI" Vector__XXX
- SG_ COOLANT_PRESSURE_2 : 16|8@1- (1,0) [-127|128] "PSI" Vector__XXX
+BO_ 514 VCU_COOLANT_PRESSURE_MSG_ID_0X202: 2 VCU
+ SG_ COOLANT_PRESSURE : 0|8@1- (1,0) [-127|128] "PSI" Vector__XXX
+ SG_ COOLANT_PRESSURE_2 : 8|8@1- (1,0) [-127|128] "PSI" Vector__XXX
 
 BO_ 515 VCU_WHEEL_SPEED_MSG_ID_0X203: 6 VCU
  SG_ FRONT_LEFT : 0|12@1+ (1,0) [0|1] "rpm" Vector__XXX
  SG_ FRONT_RIGHT : 12|12@1- (1,0) [0|1] "rpm" Vector__XXX
  SG_ REAR_LEFT : 24|12@1- (1,0) [0|1] "rpm" Vector__XXX
  SG_ REAR_RIGHT : 36|12@1- (1,0) [0|1] "rpm" Vector__XXX
-
-BO_ 768 VCU_TRIM_0X300: 8 Vector__XXX
- SG_ TRIM_ID : 0|8@1+ (1,0) [0|255] "" VCU
-
-BO_ 769 VCU_RECIEVE_TORQUE_VALUES_MSG_ID_0X301: 8 Vector__XXX
- SG_ TORQUE_MAP_BASE_INDEX : 0|8@1+ (1,0) [0|146] "" VCU
- SG_ TORQUE_MAP_VALUE_0 : 8|8@1+ (1,-22) [-22|233] "Nm" VCU
- SG_ TORQUE_MAP_VALUE_1 : 16|8@1+ (1,-22) [-22|233] "Nm" VCU
- SG_ TORQUE_MAP_VALUE_2 : 24|8@1+ (1,-22) [-22|233] "Nm" VCU
- SG_ TORQUE_MAP_VALUE_3 : 32|8@1+ (1,-22) [-22|233] "Nm" VCU
- SG_ TORQUE_MAP_VALUE_4 : 40|8@1+ (1,-22) [-22|233] "Nm" VCU
- SG_ TORQUE_MAP_VALUE_5 : 48|8@1+ (1,-22) [-22|233] "Nm" VCU
- SG_ TORQUE_MAP_VALUE_6 : 56|8@1+ (1,-22) [-22|233] "Nm" VCU
 
 BA_DEF_  "MultiplexExtEnabled" ENUM  "No","Yes";
 BA_DEF_  "BusType" STRING ;
