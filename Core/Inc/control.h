@@ -46,6 +46,7 @@ extern osMutexId_t Ctrl_Data_MtxHandle;
 
 void startControlTask();
 
+void calculateWheelSpeedFrequency(uint8_t wheel_index);
 void OverflowCheck(TIM_HandleTypeDef * htim);
 void RPMConversion(); //frequency to RPM conversion for wheel speed sensors
 void BSPC(); // Brake system plausibility check

@@ -671,7 +671,9 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
-
+  HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
+  HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_2);
   /* USER CODE END TIM3_Init 2 */
 
 }
@@ -729,6 +731,8 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM4_Init 2 */
+  HAL_TIM_Base_Start_IT(&htim4);
+  HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
 
   /* USER CODE END TIM4_Init 2 */
 
@@ -968,7 +972,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  void OverflowCheck(TIM_HandleTypeDef * htim);
+  manageWheelSpeedTimerOverflow(htim);
   /* USER CODE END Callback 1 */
 }
 
