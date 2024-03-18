@@ -35,12 +35,12 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifndef EINVAL
-#    define EINVAL 22
+#define EINVAL 22
 #endif
 
 /* Frame ids. */
@@ -66,9 +66,7 @@ extern "C" {
 
 /* Frame cycle times in milliseconds. */
 
-
 /* Signal choices. */
-
 
 /* Frame Names. */
 #define RLM_RLM_ACCEL_0_XF0_NAME "RLM_ACCEL_0XF0"
@@ -211,10 +209,7 @@ struct rlm_rlm_time_0_xf4_t {
  *
  * @return Size of packed data, or negative error code.
  */
-int rlm_rlm_accel_0_xf0_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_accel_0_xf0_t *src_p,
-    size_t size);
+int rlm_rlm_accel_0_xf0_pack(uint8_t* dst_p, const struct rlm_rlm_accel_0_xf0_t* src_p, size_t size);
 
 /**
  * Unpack message RLM_ACCEL_0XF0.
@@ -225,10 +220,7 @@ int rlm_rlm_accel_0_xf0_pack(
  *
  * @return zero(0) or negative error code.
  */
-int rlm_rlm_accel_0_xf0_unpack(
-    struct rlm_rlm_accel_0_xf0_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
+int rlm_rlm_accel_0_xf0_unpack(struct rlm_rlm_accel_0_xf0_t* dst_p, const uint8_t* src_p, size_t size);
 
 /**
  * Init message fields to default values from RLM_ACCEL_0XF0.
@@ -237,7 +229,7 @@ int rlm_rlm_accel_0_xf0_unpack(
  *
  * @return zero(0) on success or (-1) in case of nullptr argument.
  */
-int rlm_rlm_accel_0_xf0_init(struct rlm_rlm_accel_0_xf0_t *msg_p);
+int rlm_rlm_accel_0_xf0_init(struct rlm_rlm_accel_0_xf0_t* msg_p);
 
 /**
  * Encode given signal by applying scaling and offset.
@@ -329,10 +321,7 @@ bool rlm_rlm_accel_0_xf0_z_accel_is_in_range(int16_t value);
  *
  * @return Size of packed data, or negative error code.
  */
-int rlm_rlm_gyro_0_xf1_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_gyro_0_xf1_t *src_p,
-    size_t size);
+int rlm_rlm_gyro_0_xf1_pack(uint8_t* dst_p, const struct rlm_rlm_gyro_0_xf1_t* src_p, size_t size);
 
 /**
  * Unpack message RLM_GYRO_0XF1.
@@ -343,10 +332,7 @@ int rlm_rlm_gyro_0_xf1_pack(
  *
  * @return zero(0) or negative error code.
  */
-int rlm_rlm_gyro_0_xf1_unpack(
-    struct rlm_rlm_gyro_0_xf1_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
+int rlm_rlm_gyro_0_xf1_unpack(struct rlm_rlm_gyro_0_xf1_t* dst_p, const uint8_t* src_p, size_t size);
 
 /**
  * Init message fields to default values from RLM_GYRO_0XF1.
@@ -355,7 +341,7 @@ int rlm_rlm_gyro_0_xf1_unpack(
  *
  * @return zero(0) on success or (-1) in case of nullptr argument.
  */
-int rlm_rlm_gyro_0_xf1_init(struct rlm_rlm_gyro_0_xf1_t *msg_p);
+int rlm_rlm_gyro_0_xf1_init(struct rlm_rlm_gyro_0_xf1_t* msg_p);
 
 /**
  * Encode given signal by applying scaling and offset.
@@ -447,10 +433,7 @@ bool rlm_rlm_gyro_0_xf1_z_rot_is_in_range(int16_t value);
  *
  * @return Size of packed data, or negative error code.
  */
-int rlm_rlm_position_0_xf2_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_position_0_xf2_t *src_p,
-    size_t size);
+int rlm_rlm_position_0_xf2_pack(uint8_t* dst_p, const struct rlm_rlm_position_0_xf2_t* src_p, size_t size);
 
 /**
  * Unpack message RLM_POSITION_0XF2.
@@ -461,10 +444,7 @@ int rlm_rlm_position_0_xf2_pack(
  *
  * @return zero(0) or negative error code.
  */
-int rlm_rlm_position_0_xf2_unpack(
-    struct rlm_rlm_position_0_xf2_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
+int rlm_rlm_position_0_xf2_unpack(struct rlm_rlm_position_0_xf2_t* dst_p, const uint8_t* src_p, size_t size);
 
 /**
  * Init message fields to default values from RLM_POSITION_0XF2.
@@ -473,7 +453,7 @@ int rlm_rlm_position_0_xf2_unpack(
  *
  * @return zero(0) on success or (-1) in case of nullptr argument.
  */
-int rlm_rlm_position_0_xf2_init(struct rlm_rlm_position_0_xf2_t *msg_p);
+int rlm_rlm_position_0_xf2_init(struct rlm_rlm_position_0_xf2_t* msg_p);
 
 /**
  * Encode given signal by applying scaling and offset.
@@ -538,10 +518,7 @@ bool rlm_rlm_position_0_xf2_longitude_is_in_range(int32_t value);
  *
  * @return Size of packed data, or negative error code.
  */
-int rlm_rlm_trajectory_0_xf3_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_trajectory_0_xf3_t *src_p,
-    size_t size);
+int rlm_rlm_trajectory_0_xf3_pack(uint8_t* dst_p, const struct rlm_rlm_trajectory_0_xf3_t* src_p, size_t size);
 
 /**
  * Unpack message RLM_TRAJECTORY_0XF3.
@@ -552,10 +529,7 @@ int rlm_rlm_trajectory_0_xf3_pack(
  *
  * @return zero(0) or negative error code.
  */
-int rlm_rlm_trajectory_0_xf3_unpack(
-    struct rlm_rlm_trajectory_0_xf3_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
+int rlm_rlm_trajectory_0_xf3_unpack(struct rlm_rlm_trajectory_0_xf3_t* dst_p, const uint8_t* src_p, size_t size);
 
 /**
  * Init message fields to default values from RLM_TRAJECTORY_0XF3.
@@ -564,7 +538,7 @@ int rlm_rlm_trajectory_0_xf3_unpack(
  *
  * @return zero(0) on success or (-1) in case of nullptr argument.
  */
-int rlm_rlm_trajectory_0_xf3_init(struct rlm_rlm_trajectory_0_xf3_t *msg_p);
+int rlm_rlm_trajectory_0_xf3_init(struct rlm_rlm_trajectory_0_xf3_t* msg_p);
 
 /**
  * Encode given signal by applying scaling and offset.
@@ -629,10 +603,7 @@ bool rlm_rlm_trajectory_0_xf3_direction_is_in_range(int16_t value);
  *
  * @return Size of packed data, or negative error code.
  */
-int rlm_rlm_time_0_xf4_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_time_0_xf4_t *src_p,
-    size_t size);
+int rlm_rlm_time_0_xf4_pack(uint8_t* dst_p, const struct rlm_rlm_time_0_xf4_t* src_p, size_t size);
 
 /**
  * Unpack message RLM_TIME_0XF4.
@@ -643,10 +614,7 @@ int rlm_rlm_time_0_xf4_pack(
  *
  * @return zero(0) or negative error code.
  */
-int rlm_rlm_time_0_xf4_unpack(
-    struct rlm_rlm_time_0_xf4_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
+int rlm_rlm_time_0_xf4_unpack(struct rlm_rlm_time_0_xf4_t* dst_p, const uint8_t* src_p, size_t size);
 
 /**
  * Init message fields to default values from RLM_TIME_0XF4.
@@ -655,7 +623,7 @@ int rlm_rlm_time_0_xf4_unpack(
  *
  * @return zero(0) on success or (-1) in case of nullptr argument.
  */
-int rlm_rlm_time_0_xf4_init(struct rlm_rlm_time_0_xf4_t *msg_p);
+int rlm_rlm_time_0_xf4_init(struct rlm_rlm_time_0_xf4_t* msg_p);
 
 /**
  * Encode given signal by applying scaling and offset.
@@ -683,7 +651,6 @@ double rlm_rlm_time_0_xf4_time_decode(uint32_t value);
  * @return true if in range, false otherwise.
  */
 bool rlm_rlm_time_0_xf4_time_is_in_range(uint32_t value);
-
 
 #ifdef __cplusplus
 }
