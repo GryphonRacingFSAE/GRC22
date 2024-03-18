@@ -67,6 +67,10 @@ void initNRF() {
     } else {
         Serial.println("Failed to initialize radio");
     }
+
+    radio.setDataRate(RF24_1MBPS);
+    radio.setPALevel(RF24_PA_MAX);
+
     radio.openWritingPipe(address);
     radio.stopListening();
 }
@@ -180,25 +184,25 @@ void readMPU() {
     gy -= gy_offset;
     gz -= gz_offset;
 
-    ax = 4 * ((float)ax / 32768);
-    ay = 4 * ((float)ay / 32768);
-    az = 4 * ((float)az / 32768);
-    gx = 250 * ((float)gx / 32768);
-    gy = 250 * ((float)gx / 32768);
-    gz = 250 * ((float)gx / 32768);
+    float ax_real = 4 * ((float)ax / 32768);
+    float ay_real = 4 * ((float)ay / 32768);
+    float az_real = 4 * ((float)az / 32768);
+    float gx_real = 250 * ((float)gx / 32768);
+    float gy_real = 250 * ((float)gx / 32768);
+    float gz_real = 250 * ((float)gx / 32768);
 
-    // Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", ax, ay, az);
-    // Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", gx, gy, gz);
+    // Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", ax_real, ay_real, az_real);
+    // Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", gx_real, gy_real, gz_real);
 
-    rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax);
-    rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay);
-    rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az);
+    rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax_real);
+    rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay_real);
+    rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az_real);
     rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_FRAME_MAX_SIZE);
     sendCAN(RLM_RLM_ACCEL_0_XF0_FRAME_ID, can_frame, RLM_RLM_ACCEL_0_XF0_LENGTH);
 
-    rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx);
-    rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy);
-    rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz);
+    rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx_real);
+    rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy_real);
+    rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz_real);
     rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_FRAME_MAX_SIZE);
     sendCAN(RLM_RLM_GYRO_0_XF1_FRAME_ID, can_frame, RLM_RLM_GYRO_0_XF1_LENGTH);
 }
@@ -268,9 +272,9 @@ void loop() {
     sendCAN(RLM_RLM_TIME_0_XF4_FRAME_ID, can_frame, RLM_RLM_TIME_0_XF4_LENGTH);
 
     readMPU();
-    readGPS();
+    // readGPS();
 
-    readCAN();
+    // readCAN();
 
     /*
     if (digitalRead(MPU_CAL) == HIGH) {
