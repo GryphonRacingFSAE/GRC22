@@ -44,8 +44,8 @@ BO_ 512 VCU_STATE_MSG_ID_0X200: 2 VCU
  SG_ RTD_BUTTON : 5|1@1+ (1,0) [0|1] "bool" Vector__XXX
  SG_ BRAKE_SWITCH : 6|1@1+ (1,0) [0|1] "bool" Vector__XXX
  SG_ PUMP_ACTIVE : 7|1@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ ACCUMULATOR_FAN_ACTIVE : 8@1+ (1,0) [0|1] "bool" Vector__XXX
- SG_ RADIATOR_FAN_ACTIVE : 8@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ ACCUMULATOR_FAN_ACTIVE : 8|1@1+ (1,0) [0|1] "bool" Vector__XXX
+ SG_ RADIATOR_FAN_ACTIVE : 9|1@1+ (1,0) [0|1] "bool" Vector__XXX
 
 BO_ 513 VCU_SENSORS_MSG_ID_0X201: 4 VCU
  SG_ BRAKE_PRESSURE : 0|16@1+ (0.1,0) [0|2000] "PSI" Vector__XXX
