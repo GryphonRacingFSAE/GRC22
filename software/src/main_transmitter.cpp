@@ -272,7 +272,7 @@ void loop() {
     sendCAN(RLM_RLM_TIME_0_XF4_FRAME_ID, can_frame, RLM_RLM_TIME_0_XF4_LENGTH);
 
     readMPU();
-    // readGPS();
+    readGPS();
 
     // readCAN();
 

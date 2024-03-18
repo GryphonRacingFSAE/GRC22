@@ -39,6 +39,10 @@ void initNRF() {
     } else {
         Serial.println("Failed to initialize radio");
     }
+
+    radio.setDataRate(RF24_1MBPS);
+    radio.setPALevel(RF24_PA_MAX);
+
     radio.openReadingPipe(0, address);
     radio.startListening();
 }
@@ -81,6 +85,7 @@ void setup() {
     IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(IP);
+    delay(1000);
 
     ws.onEvent(onEvent);
     server.addHandler(&ws);
@@ -105,13 +110,11 @@ void loop() {
         pb_istream_t input_stream = pb_istream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
         pb_decode(&input_stream, CAN_fields, &msg);
 
-        /*
         Serial.printf("[0x%X] ", msg.address);
         for (int i = 0; i < msg.data.size; i++) {
             Serial.printf("%02X ", msg.data.bytes[i]);
         }
         Serial.println();
-        */
 
         // Encode protobuf into base64 encoded string
         uint8_t encoded_can_message[128];

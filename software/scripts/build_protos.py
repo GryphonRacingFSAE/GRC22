@@ -3,8 +3,8 @@ from dbc_to_protobuf import DBCToProto
 import os
 
 # Generate protobuf files from DBCs
-dbc_file_paths = [os.path.join(os.getcwd(), "DBCs", file) for file in os.listdir(os.path.join(os.getcwd(), "DBCs")) if file.endswith(".dbc")]
-DBCToProto(dbc_file_paths, os.path.join(os.getcwd(), "scripts/protos"))
+dbc_file_paths = [os.path.join(os.getcwd(), "../DBCs", file) for file in os.listdir(os.path.join(os.getcwd(), "../DBCs")) if file.endswith(".dbc")]
+DBCToProto(dbc_file_paths, os.path.join(os.getcwd(), "protos"))
 
 # Generate descriptor set
 os.system(f"protoc --include_imports --descriptor_set_out={os.path.join(os.getcwd(), 'protos', 'protos.desc')} --proto_path={os.path.join(os.getcwd(), 'protos')} {os.path.join(os.getcwd(), 'protos', '*.proto')}")
