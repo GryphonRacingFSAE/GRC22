@@ -88,7 +88,7 @@ async def main():
                 try:
                     async for message in websocket:
                         print(message)
-                        can_protobuf_msg = CAN_2_pb2.CAN()
+                        can_protobuf_msg = CAN_pb2.CAN()
                         can_protobuf_msg.ParseFromString(b64decode(message))
                         msg = can.Message(arbitration_id=can_protobuf_msg.address, dlc=len(can_protobuf_msg.data), data=can_protobuf_msg.data)
                         print(msg)
