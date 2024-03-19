@@ -30,7 +30,6 @@
 #define NUM_TEETH 32;
 
 typedef struct {
-	uint32_t wheelSpeed[4];
 	int32_t motorControllerTemp; // 10:1 conversion
 	int32_t accumulatorMaxTemp; // 10:1 conversion?
 	int32_t coolantTemp; // 10:1 conversion
@@ -46,9 +45,8 @@ extern osMutexId_t Ctrl_Data_MtxHandle;
 
 void startControlTask();
 
-void calculateWheelSpeedFrequency(uint8_t wheel_index);
-void OverflowCheck(TIM_HandleTypeDef * htim);
-void RPMConversion(); //frequency to RPM conversion for wheel speed sensors
+void calculateWheelSpeedFrequency(uint8_t wheel_index, TIM_HandleTypeDef *htim);
+void manageWheelSpeedTimerOverflow(const TIM_HandleTypeDef * htim);
 void BSPC(); // Brake system plausibility check
 void RTD(); // Ready to drive
 void pumpCtrl(); // Motor & Motor controller cooling pump control

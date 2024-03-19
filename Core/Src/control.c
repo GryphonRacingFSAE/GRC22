@@ -8,13 +8,18 @@
 
 #include "control.h"
 #include "APPS.h"
-
+#include "main.h"
 // Array to store overflow counters for each wheel
 volatile uint32_t tim_ovc[NUM_WHEELS] = { 0 };
+
+
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+
+// Array mapping each wheel to its corresponding timer
+const TIM_HandleTypeDef* wheel_to_timer_mapping[NUM_WHEELS] = {&htim2, &htim3, &htim4, &htim3 };
 
 Ctrl_Data_Struct Ctrl_Data;
 
@@ -35,77 +40,78 @@ void startControlTask() {
 	}
 }
 
-// Array mapping each wheel to its corresponding timer
-const TIM_HandleTypeDef *wheel_to_timer_mapping[NUM_WHEELS] = { &htim2, &htim3, &htim4, &htim3 };
-
 void manageWheelSpeedTimerOverflow(const TIM_HandleTypeDef *htim) {
-	for (int i = 0; i < NUM_WHEELS; i++) {
-		// Check if the instance of the timer handler matches the current wheel's timer handler
-		if (htim == wheel_to_timer_mapping[i]) {
-			if (i == 1 || i == 3) {
-				if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-					tim_ovc[1]++;
-					if (tim_ovc[1] >= 2) {
-						Ctrl_Data.wheel_freq[1] = 0;
-					}
-				} else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
-					tim_ovc[3]++;
-					if (tim_ovc[3] >= 2) {
-						Ctrl_Data.wheel_freq[3] = 0;
-					}
-				}
-			} else {
-				// Increment overflow counter for the current wheel
-				tim_ovc[i]++;
-				// Reset frequency to 0 if overflow counter exceeds 2
-				if (tim_ovc[i] >= 2) {
-					Ctrl_Data.wheel_freq[i] = 0;
-				}
-			}
+	// Check if the instance of the timer handler matches the current wheel's timer handler
+	if (htim == &htim2) {
+		// Increment overflow counter for the current wheel
+		tim_ovc[0]++;
+		// Reset frequency to 0 if overflow counter exceeds 2
+		if (tim_ovc[0] >= 2) {
+			Ctrl_Data.wheel_freq[0] = 0;
+		}
+	} else if (htim == &htim3) {
+		tim_ovc[1]++;
+		if (tim_ovc[1] >= 2) {
+			Ctrl_Data.wheel_freq[1] = 0;
+		}
+		tim_ovc[3]++;
+		if (tim_ovc[3] >= 2) {
+			Ctrl_Data.wheel_freq[3] = 0;
+		}
+	} else if (htim == &htim4) {
+		tim_ovc[2]++;
+		if (tim_ovc[2] >= 2) {
+			Ctrl_Data.wheel_freq[2] = 0;
 		}
 	}
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-	for (int i = 0; i < NUM_WHEELS; i++) {
-		// Check if the instance of the timer handler matches the current wheel's timer handler
-		if (htim == wheel_to_timer_mapping[i]) {
-			if (i == 1 || i == 3) {
-				if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-					calculateWheelSpeedFrequency(1);
-				} else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
-					calculateWheelSpeedFrequency(3);
-				}
-			} else {
-				calculateWheelSpeedFrequency(i);
-			}
-		}
-	}
+    if (htim->Instance == TIM2) {
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+            calculateWheelSpeedFrequency(0, htim);
+        }
+    } else if (htim->Instance == TIM3) {
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+            calculateWheelSpeedFrequency(1, htim);
+        } else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
+            calculateWheelSpeedFrequency(3, htim);
+        }
+    } else if (htim->Instance == TIM4) {
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+            calculateWheelSpeedFrequency(2, htim);
+        }
+    }
 }
-
-void calculateWheelSpeedFrequency(uint8_t wheel_index) {
-	static volatile uint32_t tim_rising[NUM_WHEELS][NUM_WHEELS] = { {} }; // 2D array to store rising edge times for each wheel
-	static volatile uint8_t tim_state[NUM_WHEELS] = {}; // Array to store state (0 or 1) for each wheel
-
-	const TIM_HandleTypeDef* htim = wheel_to_timer_mapping[wheel_index];
+void calculateWheelSpeedFrequency(uint8_t wheel_index, TIM_HandleTypeDef *htim) {
+    static volatile uint32_t tim_rising[NUM_WHEELS][2] = { {0} }; // 2D array to store rising edge times for each wheel
+    static volatile uint32_t tim_state[NUM_WHEELS] = {0};
 
 	// Store timer value within rising edge variable
-	tim_rising[wheel_index][tim_state[wheel_index]] = htim->Instance->CCR1; // Changed tim_rising2 to tim_rising
 
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+    	tim_rising[wheel_index][tim_state[wheel_index]] = htim->Instance->CCR1;
+    } else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
+    	tim_rising[wheel_index][tim_state[wheel_index]] = htim->Instance->CCR2;
+    }
 	// Calculate time interval between two rising edges at the same sensor
 	uint32_t ticks_TIM = (tim_rising[wheel_index][tim_state[wheel_index]] + (tim_ovc[wheel_index] * htim->Init.Period)) - tim_rising[wheel_index][!tim_state[wheel_index]];
 	// Calculate frequency and RPM if ticks is not zero and overflow counter is less than 2
 	if (ticks_TIM != 0 && tim_ovc[wheel_index] < 2) {
 		// Calculate frequency
-		Ctrl_Data.wheel_freq[wheel_index] = (uint32_t) (96000000UL / ticks_TIM);
+		Ctrl_Data.wheel_freq[wheel_index] = (uint32_t) (96000000UL / (htim->Init.Prescaler + 1) / ticks_TIM);
 		// Calculate RPM and store in Ctrl_Data.wheel_rpm array
 		Ctrl_Data.wheel_rpm[wheel_index] = (Ctrl_Data.wheel_freq[wheel_index] * 60) / NUM_TEETH;
 	}
 
+	// Reset overflow counter for the current wheel
 	tim_ovc[wheel_index] = 0;
-	// Toggle state (0 to 1, or 1 to 0)
+
+	// Toggle state for the current wheel
 	tim_state[wheel_index] = !tim_state[wheel_index];
 }
+
+
 
 
 // Brake system plausibility check
