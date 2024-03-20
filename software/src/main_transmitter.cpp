@@ -188,8 +188,8 @@ void readMPU() {
     float ay_real = 4 * ((float)ay / 32768);
     float az_real = 4 * ((float)az / 32768);
     float gx_real = 250 * ((float)gx / 32768);
-    float gy_real = 250 * ((float)gx / 32768);
-    float gz_real = 250 * ((float)gx / 32768);
+    float gy_real = 250 * ((float)gy / 32768);
+    float gz_real = 250 * ((float)gz / 32768);
 
     // Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", ax_real, ay_real, az_real);
     // Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", gx_real, gy_real, gz_real);

@@ -55,10 +55,11 @@ def pack_protobuf_msg(cantools_dict: dict, msg_name: str, message_classes):
             setattr(pb_msg, key, cantools_dict[key])
     return pb_msg
 
-    
 
 def gendbc():
-    dbfiles = glob.glob("DBCs/*.dbc")
+    files_to_ignore = ["Dash.dbc"]
+    all_files = glob.glob("../DBCs/*.dbc")
+    dbfiles = [file for file in all_files if file not in files_to_ignore]
 
     db = cantools.database.Database()
 
