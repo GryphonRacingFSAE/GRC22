@@ -12,7 +12,7 @@
 #include "main.h"
 
 Watchdog_Data_Struct Watchdog_Data = {
-	.flags = BSPC_INVALID | RTD_INVALID, // This must contain all errors that can be reset
+	.flags = 0, // This must contain all errors that can be reset
 	.tick_stamp = {},
 	.tick_limit = {}
 };

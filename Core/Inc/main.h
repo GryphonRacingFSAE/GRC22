@@ -72,10 +72,6 @@ void Error_Handler(void);
 #define ADC3_AUX5_GPIO_Port GPIOF
 #define ADC3_AUX6_Pin GPIO_PIN_7
 #define ADC3_AUX6_GPIO_Port GPIOF
-#define ADC3_AUX7_Pin GPIO_PIN_8
-#define ADC3_AUX7_GPIO_Port GPIOF
-#define ADC3_AUX8_Pin GPIO_PIN_9
-#define ADC3_AUX8_GPIO_Port GPIOF
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOH
 #define ADC2_DMPR2_Pin GPIO_PIN_1

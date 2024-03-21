@@ -1,10 +1,3 @@
-/*
- * CAN1.h
- *
- *  Created on: Jan 16, 2023
- *      Author: Matt
- */
-
 #ifndef INC_CAN_H_
 #define INC_CAN_H_
 
@@ -29,6 +22,11 @@ typedef struct {
 void startCAN1TxTask();
 void startCAN2TxTask();
 void startCANRxTask();
-void canMsgHandler(CANRXMsg* rxMsg);
+void startCANTransmitTask();
+void canMsgHandler(CANRXMsg* rx_msg);
+
+void sendTorque();
+void sendState();
+void sendPedals();
 
 #endif /* INC_CAN_H_ */
