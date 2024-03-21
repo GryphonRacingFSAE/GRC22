@@ -82,7 +82,7 @@ async def main():
         channel_id_mapping, message_descriptor_dict_pb = await gen("protos/protos.desc", fg_server)
         message_dbc = gendbc()
 
-        async with websockets.connect("ws://192.168.4.1:8765/ws") as websocket:
+        async with websockets.connect("ws://192.168.4.1:8765/ws", ping_interval=None) as websocket:
 
             # client connection handlerasync with t:
             try:
