@@ -29,7 +29,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticQueue_t osStaticMessageQDef_t;
-typedef StaticSemaphore_t osStaticMutexDef_t;
 typedef StaticSemaphore_t osStaticSemaphoreDef_t;
 /* USER CODE BEGIN PTD */
 
@@ -46,7 +45,9 @@ typedef StaticSemaphore_t osStaticSemaphoreDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc3;
 DMA_HandleTypeDef hdma_adc1;
+DMA_HandleTypeDef hdma_adc3;
 
 CAN_HandleTypeDef hcan1;
 CAN_HandleTypeDef hcan2;
@@ -94,6 +95,13 @@ const osThreadAttr_t ControlTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for CANTransmit */
+osThreadId_t CANTransmitHandle;
+const osThreadAttr_t CANTransmit_attributes = {
+  .name = "CANTransmit",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityRealtime7,
+};
 /* Definitions for CANTX_Q */
 osMessageQueueId_t CANTX_QHandle;
 uint8_t CANTX_QBuffer[ 32 * sizeof( CANTXMsg ) ];
@@ -115,30 +123,6 @@ const osMessageQueueAttr_t CANRX_Q_attributes = {
   .cb_size = sizeof(CANRX_QControlBlock),
   .mq_mem = &CANRX_QBuffer,
   .mq_size = sizeof(CANRX_QBuffer)
-};
-/* Definitions for Ctrl_Data_Mtx */
-osMutexId_t Ctrl_Data_MtxHandle;
-osStaticMutexDef_t Ctrl_Data_MtxControlBlock;
-const osMutexAttr_t Ctrl_Data_Mtx_attributes = {
-  .name = "Ctrl_Data_Mtx",
-  .cb_mem = &Ctrl_Data_MtxControlBlock,
-  .cb_size = sizeof(Ctrl_Data_MtxControlBlock),
-};
-/* Definitions for APPS_Data_Mtx */
-osMutexId_t APPS_Data_MtxHandle;
-osStaticMutexDef_t APPS_Data_MtxControlBlock;
-const osMutexAttr_t APPS_Data_Mtx_attributes = {
-  .name = "APPS_Data_Mtx",
-  .cb_mem = &APPS_Data_MtxControlBlock,
-  .cb_size = sizeof(APPS_Data_MtxControlBlock),
-};
-/* Definitions for Torque_Map_Mtx */
-osMutexId_t Torque_Map_MtxHandle;
-osStaticMutexDef_t Torque_Map_MtxControlBlock;
-const osMutexAttr_t Torque_Map_Mtx_attributes = {
-  .name = "Torque_Map_Mtx",
-  .cb_mem = &Torque_Map_MtxControlBlock,
-  .cb_size = sizeof(Torque_Map_MtxControlBlock),
 };
 /* Definitions for printSem */
 osSemaphoreId_t printSemHandle;
@@ -165,11 +149,13 @@ static void MX_USART3_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_ADC3_Init(void);
 void StartDefaultTask(void *argument);
 extern void startCANTxTask(void *argument);
 extern void startAPPSTask(void *argument);
 extern void startCANRxTask(void *argument);
 extern void startControlTask(void *argument);
+extern void startCANTransmitTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -218,6 +204,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -225,15 +212,6 @@ int main(void)
 
   /* Init scheduler */
   osKernelInitialize();
-  /* Create the mutex(es) */
-  /* creation of Ctrl_Data_Mtx */
-  Ctrl_Data_MtxHandle = osMutexNew(&Ctrl_Data_Mtx_attributes);
-
-  /* creation of APPS_Data_Mtx */
-  APPS_Data_MtxHandle = osMutexNew(&APPS_Data_Mtx_attributes);
-
-  /* creation of Torque_Map_Mtx */
-  Torque_Map_MtxHandle = osMutexNew(&Torque_Map_Mtx_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -277,6 +255,9 @@ int main(void)
 
   /* creation of ControlTask */
   ControlTaskHandle = osThreadNew(startControlTask, NULL, &ControlTask_attributes);
+
+  /* creation of CANTransmit */
+  CANTransmitHandle = osThreadNew(startCANTransmitTask, NULL, &CANTransmit_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -420,10 +401,64 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN ADC1_Init 2 */
-  if(HAL_ADC_Start_DMA(&hadc1, (uint32_t *)ADC1_buff, ADC1_BUFF_LEN) != HAL_OK){
+  if(HAL_ADC_Start_DMA(&hadc1, (uint32_t *)apps_dma_buffer, APPS_DMA_BUFFER_LEN) != HAL_OK){
 	Error_Handler();
   }
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief ADC3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC3_Init(void)
+{
+
+  /* USER CODE BEGIN ADC3_Init 0 */
+
+  /* USER CODE END ADC3_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC3_Init 1 */
+
+  /* USER CODE END ADC3_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc3.Instance = ADC3;
+  hadc3.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc3.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc3.Init.ContinuousConvMode = ENABLE;
+  hadc3.Init.DiscontinuousConvMode = DISABLE;
+  hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc3.Init.NbrOfConversion = 1;
+  hadc3.Init.DMAContinuousRequests = ENABLE;
+  hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC3_Init 2 */
+  if(HAL_ADC_Start_DMA(&hadc3, (uint32_t *)brake_pressure_dma_buffer, BRAKE_PRESSURE_DMA_BUFFER_LEN) != HAL_OK){
+	Error_Handler();
+  }
+  /* USER CODE END ADC3_Init 2 */
 
 }
 
@@ -803,6 +838,9 @@ static void MX_DMA_Init(void)
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA2_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream4_IRQn);
 
 }
 
@@ -847,25 +885,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ADC3_AUX4_Pin ADC3_AUX4F5_Pin ADC3_AUX5_Pin ADC3_AUX6_Pin
-                           ADC3_AUX7_Pin ADC3_AUX8_Pin */
-  GPIO_InitStruct.Pin = ADC3_AUX4_Pin|ADC3_AUX4F5_Pin|ADC3_AUX5_Pin|ADC3_AUX6_Pin
-                          |ADC3_AUX7_Pin|ADC3_AUX8_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
   /*Configure GPIO pins : PC0 ADC2_DMPR2_Pin PC2 PC3 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|ADC2_DMPR2_Pin|GPIO_PIN_2|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA2 ADC3_AUX2_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|ADC3_AUX2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
   GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
