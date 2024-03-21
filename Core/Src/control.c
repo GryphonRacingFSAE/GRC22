@@ -12,6 +12,8 @@
 #include "main.h"
 #include <string.h>
 
+extern TIM_HandleTypeDef htim1;
+
 //overflow counters for wheel speed sensors
 volatile uint16_t TIM2_OVC = 0;
 volatile uint16_t TIM3_CH1_OVC = 0;
@@ -333,6 +335,10 @@ void RTD() {
 
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
+
+
+	pumpCycle(4);
+
 	if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK){
 		// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin,
@@ -342,6 +348,31 @@ void pumpCtrl() {
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Turn on pump if cannot acquire mutex
 		ERROR_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:pumpCtrl\n");
 	}
+}
+
+void pumpCycle(uint8_t cycle_value){
+	switch(cycle_value){
+	case 1: //stop
+		TIM1 -> CCR1 = 0;
+		break;
+
+	case 2: //Emergency run
+		TIM1 -> CCR1 = 200;
+		break;
+
+	case 3: // reset
+		TIM1 -> CCR1 = 400;
+		break;
+
+	case 4: //min to max (controlled operation)
+		TIM1 -> CCR1 = 2000;
+		break;
+
+	case 5: //Emergency Run and wake mo
+		TIM1 -> CCR1 = 4000;
+		break;
+	}
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 }
 
 // Motor controller cooling fan control

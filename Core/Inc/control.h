@@ -11,6 +11,8 @@
 #include "main.h"
 #include "cmsis_os.h"
 
+// pump control power supply value (may need to be changed depending on the amount of power we plan on using)
+#define INPUT_POWER 8
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
 // Turn on Pump if tractive voltage > 450v
@@ -43,6 +45,7 @@ void RPMConversion(); //frequency to RPM conversion for wheel speed sensors
 void BSPC(); // Brake system plausibility check
 void RTD(); // Ready to drive
 void pumpCtrl(); // Motor & Motor controller cooling pump control
+void pumpCycle(uint8_t cycle_value); //cooling pump cooling cycles
 void fanCtrl(); // Accumulator cooling fan control
 void LEDCtrl(); // Info
 
