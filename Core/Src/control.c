@@ -21,7 +21,6 @@ Ctrl_Data_Struct Ctrl_Data = {
 void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
-		RPMConversion();
 		RTD();
 		pumpCtrl();
 		fanCtrl();
