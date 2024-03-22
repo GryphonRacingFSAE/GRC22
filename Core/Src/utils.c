@@ -47,3 +47,8 @@ int GRCprintf(const char *format, ...) {
 	osSemaphoreRelease(printSemHandle);
 	return ret;
 }
+
+
+int32_t kmphToRPM(int32_t kmph) {
+	return kmph * 4500/99/10;
+}

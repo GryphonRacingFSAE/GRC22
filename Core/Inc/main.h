@@ -45,12 +45,16 @@ extern "C" {
 //Task periods in system ticks (each tick is 1ms)
 #define APPS_PERIOD 20U
 #define CTRL_PERIOD 100U
+#define WATCHDOG_PERIOD 100U
+#define CAN_TRANSMIT_PERIOD 1U
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
 /* USER CODE END EM */
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
@@ -70,10 +74,6 @@ void Error_Handler(void);
 #define ADC3_AUX5_GPIO_Port GPIOF
 #define ADC3_AUX6_Pin GPIO_PIN_7
 #define ADC3_AUX6_GPIO_Port GPIOF
-#define ADC3_AUX7_Pin GPIO_PIN_8
-#define ADC3_AUX7_GPIO_Port GPIOF
-#define ADC3_AUX8_Pin GPIO_PIN_9
-#define ADC3_AUX8_GPIO_Port GPIOF
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOH
 #define ADC2_DMPR2_Pin GPIO_PIN_1
@@ -90,8 +90,6 @@ void Error_Handler(void);
 #define GPIO_D1_GPIO_Port GPIOE
 #define GPIO_D2_Pin GPIO_PIN_8
 #define GPIO_D2_GPIO_Port GPIOE
-#define GPIO_D3_Pin GPIO_PIN_9
-#define GPIO_D3_GPIO_Port GPIOE
 #define GPIO_D4_Pin GPIO_PIN_10
 #define GPIO_D4_GPIO_Port GPIOE
 #define GPIO_D9_Pin GPIO_PIN_11
