@@ -56,7 +56,13 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
     - $(Time Interval =(Current Timer Value + ( Overflow Counter × Timer Period ) ) − Previous Timer Value)$
     - NOTE: The timer will be registering 0 at half of this frequency (ie: traveling below 0.5km/h registers 0 rpm with the sensors)
     - The formula used to calculate RPM (Revolutions Per Minute) based on wheel speed frequency is as follows: $(RPM= Wheel Frequency(60)/Number of Teeth on the Wheel)$
-    - 
+    - Timer channels:
+    -  htim2, index 0, timer 2 channel 1, WSS 1
+    -  htim3, index 1, timer 3 channel 1, Wss 2
+    -  htim4, index 2, timer 4 channel 1, WSS 3
+    -  htim3, index 3, timer 3 channel 2, WSS 4
+    - WSS data sheet: https://prod-edam.honeywell.com/content/dam/honeywell-edam/sps/siot/en-us/products/sensors/magnetic-sensors/value-added-packaged-sensors/sr16-sr17-series/documents/sps-siot-005844-1-ciid-50354.pdf?download=false
+    -  
     - NOTE: The timer will be registering 0 at half of this frequency (ie: travelling below 0.5km/h registers 0 rpm with the sensors)
 
 
