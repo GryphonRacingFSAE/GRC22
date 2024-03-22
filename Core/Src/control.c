@@ -57,11 +57,6 @@ Ctrl_Data_Struct Ctrl_Data;
 void startControlTask(){
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
-
-		for(int i = 0; i < 4; i++){
-			GRCprintf("Frequency %d= %d\n\r", (i+1), wheelFreq[i]);
-		}
-
 		RPMConversion();
 		BSPC();
 		RTD();
@@ -336,9 +331,8 @@ void RTD() {
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
 
-
-	pumpCycle(4);
-
+	//pump off
+	pumpCycle(0);
 	if (osMutexAcquire(Ctrl_Data_MtxHandle, 5) == osOK){
 		// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin,
@@ -350,27 +344,16 @@ void pumpCtrl() {
 	}
 }
 
-void pumpCycle(uint8_t cycle_value){
-	switch(cycle_value){
-	case 1: //stop
-		TIM1 -> CCR1 = 0;
-		break;
+// Cooling pump duty cycles based on input of desired pump speed in percentage
+void pumpCycle(uint8_t pump_speed){
 
-	case 2: //Emergency run
-		TIM1 -> CCR1 = 200;
-		break;
-
-	case 3: // reset
-		TIM1 -> CCR1 = 400;
-		break;
-
-	case 4: //min to max (controlled operation)
-		TIM1 -> CCR1 = 2000;
-		break;
-
-	case 5: //Emergency Run and wake mo
-		TIM1 -> CCR1 = 4000;
-		break;
+	if(pump_speed == 0){			//pump off
+		TIM1 -> CCR1 = 0;			//duty cycle between 0-12%
+	} else if (pump_speed == 100){	//max speed
+		TIM1 -> CCR1 = 3600;		//duty cycle between 86-97%
+	} else{							//between 1-99% pump speed, 13-85% duty cycle
+		uint32_t duty_cycle = (((pump_speed-1)/(99-1))*(85-13))+13;
+		TIM1 -> CCR1 = (duty_cycle*4000)/100;	//divide by 100 since duty cycle is in percentage not decimal value
 	}
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 }

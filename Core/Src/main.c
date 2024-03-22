@@ -222,8 +222,7 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  //TIM1 -> CCR1 = 2000;
-  //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -581,7 +580,7 @@ static void MX_TIM1_Init(void)
   htim1.Init.Prescaler = 240-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 4000-1;
-  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
@@ -605,7 +604,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 3600;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -717,10 +716,10 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 256-1;
+  htim3.Init.Prescaler = 64-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 55408;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
@@ -779,10 +778,10 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 256-1;
+  htim4.Init.Prescaler = 64-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 55408;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
@@ -914,8 +913,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_D1_Pin|GPIO_D2_Pin|GPIO_D9_Pin|GPIO_D7_Pin
-                          |GPIO_D10_Pin|GPIO_D8_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_D1_Pin|GPIO_D2_Pin|GPIO_D4_Pin|GPIO_D9_Pin
+                          |GPIO_D7_Pin|GPIO_D10_Pin|GPIO_D8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_D5_Pin|GPIO_D6_Pin, GPIO_PIN_RESET);
@@ -957,10 +956,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_D1_Pin GPIO_D2_Pin GPIO_D9_Pin GPIO_D7_Pin
-                           GPIO_D10_Pin GPIO_D8_Pin */
-  GPIO_InitStruct.Pin = GPIO_D1_Pin|GPIO_D2_Pin|GPIO_D9_Pin|GPIO_D7_Pin
-                          |GPIO_D10_Pin|GPIO_D8_Pin;
+  /*Configure GPIO pins : GPIO_D1_Pin GPIO_D2_Pin GPIO_D4_Pin GPIO_D9_Pin
+                           GPIO_D7_Pin GPIO_D10_Pin GPIO_D8_Pin */
+  GPIO_InitStruct.Pin = GPIO_D1_Pin|GPIO_D2_Pin|GPIO_D4_Pin|GPIO_D9_Pin
+                          |GPIO_D7_Pin|GPIO_D10_Pin|GPIO_D8_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
