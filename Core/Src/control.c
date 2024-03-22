@@ -4,6 +4,8 @@
 #include "main.h"
 #include <string.h>
 
+extern TIM_HandleTypeDef htim1;
+
 //overflow counters for wheel speed sensors
 volatile uint16_t TIM2_OVC = 0;
 volatile uint16_t TIM3_CH1_OVC = 0;
@@ -287,14 +289,31 @@ void RTD() {
 
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
+
+	//pump off
+	pumpCycle(0);
 	// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
 	if (Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD) {
 		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET);
 	} else {
-		CLEAR_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
-		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Turn on pump if cannot acquire mutex
+		ERROR_PRINT("Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:pumpCtrl\n");
 	}
+}
+
+// Cooling pump duty cycles based on input of desired pump speed in percentage
+void pumpCycle(uint8_t pump_speed){
+
+	if(pump_speed == 0){			//pump off
+		TIM1 -> CCR1 = 0;			//duty cycle between 0-12%
+	} else if (pump_speed == 100){	//max speed
+		TIM1 -> CCR1 = 3600;		//duty cycle between 86-97%
+	} else{							//between 1-99% pump speed, 13-85% duty cycle
+		uint32_t duty_cycle = (((pump_speed-1)/(99-1))*(85-13))+13;
+		TIM1 -> CCR1 = (duty_cycle*4000)/100;	//divide by 100 since duty cycle is in percentage not decimal value
+	}
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 }
 
 // Motor controller cooling fan control

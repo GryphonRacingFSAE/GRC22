@@ -53,3 +53,34 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
         - This value allows us to find that the freuency at 1km/h is equal to 6.768Hz
     - Since the onboard timer has a clock configuration of 96MHz, dividing that value with the frequency at 1km/h yields a max period of 14,184,397
     - NOTE: The timer will be registering 0 at half of this frequency (ie: travelling below 0.5km/h registers 0 rpm with the sensors)
+
+
+
+* Pump control frequency and duty cycle calculations:
+    - Based on the data sheet for the [cooling pump](https://www.tecomotive.com/download/PWMinfo_EN.pdf), the pump:
+        - Requires an input frequency between 50-1000Hz
+        - Needs an uninterupted high pulse for 3ms to ensure it is woken up properly
+        - Has certain ranges of functionality depending on the duty cycle of the PWM generation, of those features the following are being used:
+            - Pump stop -> 0-12% duty cycle
+            - Controlled Operation -> 13-85% duty cycle
+            - Max speed -> 86-97% duty cycle
+    - The PWM is set to generate a frequency of 100Hz, the Auto Reload Register (ARR) is set to 4000, since this is also the period of each pulse this ensures that the motor can be woken up properly at 75% duty cycle. The overall prescaler is divided by 4. In order to find the prescale value the formula that was used is:
+        $`Frequency = chip clock /(ARR*Prescaler)`$
+        $`100 = 96MHz/(4000*Prescaler)`$
+        $`Prescaler = 240`$
+
+    - Since the pump cycle function takes an input of the desired pump speed (percentage value), a linear operation is done to ensure that the correct duty cycle value is being selected for the desired speed. 
+        - Knowing that the original bounds (pump speed) are from 1 - 99% and that they need to be converted to 13 - 85%, the following linear mapping is chosen [(more information can be found here)](https://stackoverflow.com/questions/345187/math-mapping-numbers):
+            $`duty cycle = (((X - A)/(B - A)) * (D - C)) + C`$
+            Where A = lower bound of old value (1)
+                  B = upper bound of old value (99)
+                  C = lower bound of new value (13)
+                  D = upper bound of new value (99)
+                  X = input value (pump speed)
+            Yielding:
+            $`duty cycle = (((pump speed - 1)/(99 - 1)) * (85 - 13)) + 13`$
+        
+        - With the duty cycle value updated, the pulse value for PWM (CCR1) needs to be updated using the following formula:
+            $`duty cycle = (CCR1 / ARR)`$
+            $`CCR1 = (duty cycle * ARR)`$
+            $`CCR1 = (duty cycle * 4000)`$

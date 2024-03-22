@@ -4,6 +4,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 
+
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
 // Turn on Pump if tractive voltage > 450v
@@ -43,6 +44,7 @@ void OverflowCheck(TIM_HandleTypeDef * htim);
 void RPMConversion(); //frequency to RPM conversion for wheel speed sensors
 void RTD(); // Ready to drive
 void pumpCtrl(); // Motor & Motor controller cooling pump control
+void pumpCycle(uint8_t pump_speed); //cooling pump cooling cycles
 void fanCtrl(); // Accumulator cooling fan control
 void LEDCtrl(); // Info
 
