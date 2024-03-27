@@ -22,6 +22,7 @@
 //number of teeth on wheel hub
 #define NUM_TEETH 32;
 
+
 // FLags
 #define CTRL_RTD_INVALID 0x1
 #define RTD_BUTTON 0x2
@@ -39,6 +40,7 @@ typedef struct {
 	uint32_t flags;
 	volatile uint32_t wheel_rpm[NUM_WHEELS];  // Array to store final wheel RPMs
 	volatile uint32_t wheel_freq[NUM_WHEELS];  // Array to store final wheel frequencies
+	volatile float pressure_readings[2];  // Array to store Pressure values (in bar)
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
@@ -53,5 +55,6 @@ void pumpCtrl(); // Motor & Motor controller cooling pump control
 void pumpCycle(uint8_t pump_speed); //cooling pump cooling cycles
 void fanCtrl(); // Accumulator cooling fan control
 void LEDCtrl(); // Info
+void pressureSensorConversion(); //cooling pressure sensors
 
 #endif /* INC_CONTROL_H_ */

@@ -3,12 +3,15 @@
 #include "main.h"
 // Array to store overflow counters for each wheel
 volatile uint32_t tim_ovc[NUM_WHEELS] = { 0 };
-
+// DMA array for pressure sensor ADC readings
+uint32_t adc_readings[2] = { 0 };
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern ADC_HandleTypeDef hadc3;
+
 
 // Array mapping each wheel to its corresponding timer
 const TIM_HandleTypeDef* wheel_to_timer_mapping[NUM_WHEELS] = {&htim2, &htim3, &htim4, &htim3 };
@@ -26,6 +29,7 @@ void startControlTask() {
 		fanCtrl();
 		LEDCtrl();
 		osDelayUntil(tick += CTRL_PERIOD);
+		pressureSensorConversion();
 	}
 }
 
@@ -173,6 +177,24 @@ void fanCtrl() {
 		CLEAR_FLAG(Ctrl_Data.flags, ACCUMULATOR_FAN_ACTIVE);
 		HAL_GPIO_WritePin(GPIO_ACC_FAN_GPIO_Port, GPIO_ACC_FAN_Pin, GPIO_PIN_RESET);
 	}
+}
+
+//pressure sensor, analog readings to pressure value
+void pressureSensorConversion(){
+	//constants used for digital -> pressure conversion
+	float min_pressure = 0.25;
+	int8_t max_pressure = 40;
+	//2^12 - 1
+	int16_t adc_res = 4095;
+
+	//pressure resolution
+	float pressure_res = (max_pressure - min_pressure)/adc_res;
+	//start conversion
+	HAL_ADC_Start_DMA(&hadc3, adc_readings, 2);
+
+	//pressure value for
+	Ctrl_Data.pressure_readings[0] = adc_readings[0]*pressure_res;
+	Ctrl_Data.pressure_readings[1] = adc_readings[1]*pressure_res;
 }
 
 void LEDCtrl() {
