@@ -3,15 +3,11 @@
 #include "main.h"
 // Array to store overflow counters for each wheel
 volatile uint32_t tim_ovc[NUM_WHEELS] = { 0 };
-// DMA array for pressure sensor ADC readings
-uint32_t adc_readings[2] = { 0 };
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
-extern ADC_HandleTypeDef hadc3;
-
 
 // Array mapping each wheel to its corresponding timer
 const TIM_HandleTypeDef* wheel_to_timer_mapping[NUM_WHEELS] = {&htim2, &htim3, &htim4, &htim3 };
@@ -20,16 +16,17 @@ Ctrl_Data_Struct Ctrl_Data = {
 	.flags = CTRL_RTD_INVALID
 };
 
+
 // Task to manage control operations
 void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
+		pressureSensorConversions();
 		RTD();
 		pumpCtrl();
 		fanCtrl();
 		LEDCtrl();
 		osDelayUntil(tick += CTRL_PERIOD);
-		pressureSensorConversion();
 	}
 }
 
@@ -179,23 +176,41 @@ void fanCtrl() {
 	}
 }
 
-//pressure sensor, analog readings to pressure value
-void pressureSensorConversion(){
-	//constants used for digital -> pressure conversion
-	float min_pressure = 0.25;
-	int8_t max_pressure = 40;
-	//2^12 - 1
-	int16_t adc_res = 4095;
+void pressureSensorConversions(){
+	uint32_t pressure1_adc_avg = 0;
+	uint32_t pressure2_adc_avg = 0;
+	int32_t pressure1 = 0;
+	int32_t pressure2 = 0;
+//
+//	//sum of all pressure 1 values
+//	for(uint16_t i = 1; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
+//		pressure1_adc_avg += adc_3_dma_buffer[i];
+//	}
+//	//sum of all pressure 2 values
+//	for(uint16_t i = 2; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
+//		pressure2_adc_avg += adc_3_dma_buffer[i];
+//	}
+//	pressure1_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN/ADC_CHANNEL_3_DMA_CHANNELS);
+//	pressure2_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN/ADC_CHANNEL_3_DMA_CHANNELS);
 
-	//pressure resolution
-	float pressure_res = (max_pressure - min_pressure)/adc_res;
-	//start conversion
-	HAL_ADC_Start_DMA(&hadc3, adc_readings, 2);
+	// RULE (2024 V1): T.4.2.10 (Detect open circuit and short circuit conditions)
+	// TODO: add flags for pressure sensor shorts
+	if(pressure1_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= pressure1_adc_avg){
+		GRCprintf("possible short detected at pressure sensor 1");
+	} else if(pressure2_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= pressure2_adc_avg){
+		GRCprintf("Possible short detected at pressure sensor 2");
+	}
 
-	//pressure value for
-	Ctrl_Data.pressure_readings[0] = adc_readings[0]*pressure_res;
-	Ctrl_Data.pressure_readings[1] = adc_readings[1]*pressure_res;
+	pressure1 = CLAMP(PRESSURE_SENSOR_MIN, pressure1_adc_avg, PRESSURE_SENSOR_MIN);
+	pressure2 = CLAMP(PRESSURE_SENSOR_MIN, pressure2_adc_avg, PRESSURE_SENSOR_MAX);
+
+	Ctrl_Data.pressure_readings[0] = (((pressure1 - PRESSURE_SENSOR_MIN)/(PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN))*PRESSURE_RANGE);
+	Ctrl_Data.pressure_readings[1] = (((pressure2 - PRESSURE_SENSOR_MIN)/(PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN))*PRESSURE_RANGE);
+
+	GRCprintf("Pressure 1 = ", Ctrl_Data.pressure_readings[0]);
+	GRCprintf("Pressure 2 = ", Ctrl_Data.pressure_readings[1]);
 }
+
 
 void LEDCtrl() {
 

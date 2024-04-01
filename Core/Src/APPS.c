@@ -4,14 +4,6 @@
 #include "control.h"
 #include <string.h>
 
-#define APPS1_MIN 1440
-#define APPS1_MAX 1375
-#define APPS2_MIN (APPS1_MIN * 2)
-#define APPS2_MAX (APPS1_MAX * 2)
-#define BRAKE_PRESSURE_MIN 410
-#define BRAKE_PRESSURE_MAX 3686
-#define ADC_SHORTED_GND 200
-#define ADC_SHORTED_VCC 3800
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -44,7 +36,7 @@ Torque_Map_Struct Torque_Map_Data = { {
 
 //Buffer from DMA
 volatile uint16_t apps_dma_buffer[APPS_DMA_BUFFER_LEN] = {};
-volatile uint16_t brake_pressure_dma_buffer[BRAKE_PRESSURE_DMA_BUFFER_LEN] = {};
+volatile uint16_t adc_3_dma_buffer[ADC_CHANNEL_3_DMA_BUFFER_LEN] = {};
 
 void startAPPSTask() {
 	uint32_t tick = osKernelGetTickCount();
@@ -90,10 +82,10 @@ void startAPPSTask() {
 
 
 		int32_t brake_pressure_adc_avg = 0;
-		for (int i = 0; i < BRAKE_PRESSURE_DMA_BUFFER_LEN; i++) {
-			brake_pressure_adc_avg += brake_pressure_dma_buffer[i];
-		}
-		brake_pressure_adc_avg /= BRAKE_PRESSURE_DMA_BUFFER_LEN;
+//		for (int i = 0; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i+=3) {
+//			brake_pressure_adc_avg += adc_3_dma_buffer[i];
+//		}
+//		brake_pressure_adc_avg /= ADC_CHANNEL_3_DMA_BUFFER_LEN;
 
 		if (brake_pressure_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= brake_pressure_adc_avg) {
 			SET_FLAG(APPS_Data.flags, BRAKE_SENSOR_OUT_OF_RANGE_INVALID);

@@ -6,11 +6,20 @@
 
 #define APPS_DMA_CHANNELS (2)
 #define APPS_DMA_BUFFER_LEN (4096 * APPS_DMA_CHANNELS)
-#define BRAKE_PRESSURE_DMA_BUFFER_LEN (4096)
+#define ADC_CHANNEL_3_DMA_CHANNELS (3)
+#define ADC_CHANNEL_3_DMA_BUFFER_LEN (4096 * ADC_CHANNEL_3_DMA_CHANNELS)
+#define APPS1_MIN 1440
+#define APPS1_MAX 1375
+#define APPS2_MIN (APPS1_MIN * 2)
+#define APPS2_MAX (APPS1_MAX * 2)
+#define BRAKE_PRESSURE_MIN 410
+#define BRAKE_PRESSURE_MAX 3686
+#define ADC_SHORTED_GND 200
+#define ADC_SHORTED_VCC 3800
 
 // DMA variables for APPS and brake pressure
 extern volatile uint16_t apps_dma_buffer[APPS_DMA_BUFFER_LEN];
-extern volatile uint16_t brake_pressure_dma_buffer[BRAKE_PRESSURE_DMA_BUFFER_LEN];
+extern volatile uint16_t adc_3_dma_buffer[ADC_CHANNEL_3_DMA_BUFFER_LEN];
 
 #define APPS_BSPC_INVALID 0x1
 // RULE (2023 V2): T.4.2.10 Sensor out of defined range
