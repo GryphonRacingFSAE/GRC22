@@ -112,8 +112,8 @@ void startAPPSTask() {
 		int32_t rpm = MIN(Ctrl_Data.motor_speed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
 
 		// Integer division - rounds down (use this to our advantage)
-		int32_t pedalOffset = pedalPercent % 100;
-		int32_t pedalLowIndex = pedalPercent / 100;
+		int32_t pedalOffset = pedalPercent % 1000;
+		int32_t pedalLowIndex = pedalPercent / 1000;
 		int32_t pedalHighIndex = pedalLowIndex + 1;
 		int32_t rpmOffset = rpm % 500;
 		int32_t rpmLowIndex = rpm / 500;

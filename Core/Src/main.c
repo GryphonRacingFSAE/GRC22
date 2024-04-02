@@ -73,7 +73,7 @@ osThreadId_t CANTxTaskHandle;
 const osThreadAttr_t CANTxTask_attributes = {
   .name = "CANTxTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh1,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for APPSTask */
 osThreadId_t APPSTaskHandle;
@@ -101,7 +101,7 @@ osThreadId_t CANTransmitHandle;
 const osThreadAttr_t CANTransmit_attributes = {
   .name = "CANTransmit",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityRealtime7,
+  .priority = (osPriority_t) osPriorityRealtime,
 };
 /* Definitions for CANTX_Q */
 osMessageQueueId_t CANTX_QHandle;
@@ -268,6 +268,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
+  osSemaphoreRelease(printSemHandle);
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
