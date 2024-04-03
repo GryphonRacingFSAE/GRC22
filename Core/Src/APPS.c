@@ -50,8 +50,8 @@ void startAPPSTask() {
 			apps2_adc_avg += apps_dma_buffer[i++];
 		}
 
-		apps1_adc_avg /= (APPS_DMA_BUFFER_LEN / 2);
-		apps2_adc_avg /= (APPS_DMA_BUFFER_LEN / 2);
+		apps1_adc_avg /= (APPS_DMA_BUFFER_LEN / APPS_DMA_CHANNELS);
+		apps2_adc_avg /= (APPS_DMA_BUFFER_LEN / APPS_DMA_CHANNELS);
 
 		// RULE (2024 V1): T.4.2.10 (Detect open circuit and short circuit conditions)
 		// TODO: Add APPS2 once we figure that out
@@ -82,10 +82,10 @@ void startAPPSTask() {
 
 
 		int32_t brake_pressure_adc_avg = 0;
-//		for (int i = 0; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i+=3) {
-//			brake_pressure_adc_avg += adc_3_dma_buffer[i];
-//		}
-//		brake_pressure_adc_avg /= ADC_CHANNEL_3_DMA_BUFFER_LEN;
+		for (int i = 0; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i+=3) {
+			brake_pressure_adc_avg += adc_3_dma_buffer[i];
+		}
+		brake_pressure_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN/ADC_CHANNEL_3_DMA_CHANNELS);
 
 		if (brake_pressure_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= brake_pressure_adc_avg) {
 			SET_FLAG(APPS_Data.flags, BRAKE_SENSOR_OUT_OF_RANGE_INVALID);

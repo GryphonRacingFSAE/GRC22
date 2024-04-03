@@ -20,7 +20,7 @@ int32_t kmphToRPM(int32_t);
 
 int GRCprintf(const char *format, ...);
 
-#define DEBUG_PRINT_LEVEL 5
+#define DEBUG_PRINT_LEVEL 1
 
 #if DEBUG_PRINT_LEVEL == 1
 	#define TRACE_PRINT(...)

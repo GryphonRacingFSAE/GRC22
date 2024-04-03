@@ -1,6 +1,7 @@
 #include "control.h"
 #include "APPS.h"
 #include "main.h"
+#include <stdlib.h>
 // Array to store overflow counters for each wheel
 volatile uint32_t tim_ovc[NUM_WHEELS] = { 0 };
 
@@ -22,6 +23,7 @@ void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
 		pressureSensorConversions();
+		GRCprintf("Differential Pressure = %d mbar\r\n", Ctrl_Data.pressure_difference);
 		RTD();
 		pumpCtrl();
 		fanCtrl();
@@ -179,36 +181,34 @@ void fanCtrl() {
 void pressureSensorConversions(){
 	uint32_t pressure1_adc_avg = 0;
 	uint32_t pressure2_adc_avg = 0;
-	int32_t pressure1 = 0;
-	int32_t pressure2 = 0;
-//
-//	//sum of all pressure 1 values
-//	for(uint16_t i = 1; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
-//		pressure1_adc_avg += adc_3_dma_buffer[i];
-//	}
-//	//sum of all pressure 2 values
-//	for(uint16_t i = 2; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
-//		pressure2_adc_avg += adc_3_dma_buffer[i];
-//	}
-//	pressure1_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN/ADC_CHANNEL_3_DMA_CHANNELS);
-//	pressure2_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN/ADC_CHANNEL_3_DMA_CHANNELS);
+	uint32_t pressure1_bar = 0;
+	uint32_t pressure2_bar = 0;
+
+	//sum of all pressure 1 values
+	for(uint32_t i = 1; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
+		pressure1_adc_avg += adc_3_dma_buffer[i];
+	}
+	//sum of all pressure 2 values
+	for(uint32_t i = 2; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
+		pressure2_adc_avg += adc_3_dma_buffer[i];
+	}
+	pressure1_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN / ADC_CHANNEL_3_DMA_CHANNELS);
+	pressure2_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN / ADC_CHANNEL_3_DMA_CHANNELS);
+
 
 	// RULE (2024 V1): T.4.2.10 (Detect open circuit and short circuit conditions)
 	// TODO: add flags for pressure sensor shorts
-	if(pressure1_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= pressure1_adc_avg){
-		GRCprintf("possible short detected at pressure sensor 1");
-	} else if(pressure2_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= pressure2_adc_avg){
-		GRCprintf("Possible short detected at pressure sensor 2");
+	if(pressure1_adc_avg <= PRESSURE_ADC_SHORT_GND || PRESSURE_ADC_SHORT_VCC <= pressure1_adc_avg){
+		GRCprintf("possible short detected at pressure sensor 1\r\n");
+	}
+	if(pressure2_adc_avg <= PRESSURE_ADC_SHORT_GND || PRESSURE_ADC_SHORT_VCC <= pressure2_adc_avg){
+		GRCprintf("Possible short detected at pressure sensor 2\r\n");
 	}
 
-	pressure1 = CLAMP(PRESSURE_SENSOR_MIN, pressure1_adc_avg, PRESSURE_SENSOR_MIN);
-	pressure2 = CLAMP(PRESSURE_SENSOR_MIN, pressure2_adc_avg, PRESSURE_SENSOR_MAX);
+	pressure1_bar = CLAMP(0, (((pressure1_adc_avg - PRESSURE_SENSOR_MIN) * 1000 / (PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN)) * PRESSURE_RANGE), 2500);
+	pressure2_bar = CLAMP(0, (((pressure2_adc_avg - PRESSURE_SENSOR_MIN) * 1000 / (PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN)) * PRESSURE_RANGE), 2500);
 
-	Ctrl_Data.pressure_readings[0] = (((pressure1 - PRESSURE_SENSOR_MIN)/(PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN))*PRESSURE_RANGE);
-	Ctrl_Data.pressure_readings[1] = (((pressure2 - PRESSURE_SENSOR_MIN)/(PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN))*PRESSURE_RANGE);
-
-	GRCprintf("Pressure 1 = ", Ctrl_Data.pressure_readings[0]);
-	GRCprintf("Pressure 2 = ", Ctrl_Data.pressure_readings[1]);
+	Ctrl_Data.pressure_difference = abs(pressure1_bar - pressure2_bar);
 }
 
 

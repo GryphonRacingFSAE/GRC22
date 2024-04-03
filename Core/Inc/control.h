@@ -25,6 +25,8 @@
 #define PRESSURE_SENSOR_MIN 410
 #define PRESSURE_SENSOR_MAX 3686
 #define PRESSURE_RANGE 2.5
+#define PRESSURE_ADC_SHORT_VCC 3800
+#define PRESSURE_ADC_SHORT_GND 375
 
 // Flags
 #define CTRL_RTD_INVALID 0x1
@@ -43,7 +45,7 @@ typedef struct {
 	uint32_t flags;
 	volatile uint32_t wheel_rpm[NUM_WHEELS];  // Array to store final wheel RPMs
 	volatile uint32_t wheel_freq[NUM_WHEELS];  // Array to store final wheel frequencies
-	uint16_t pressure_readings[2];  // Array to store Pressure values (in bar)
+	uint32_t pressure_difference;  // Differential pressure between the two sensors (in milli bar)
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
