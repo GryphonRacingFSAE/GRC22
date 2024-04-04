@@ -4,7 +4,7 @@
 #include "cmsis_os2.h"
 
 // 2ms between measurements
-#define THERMISTOR_PERIOD 500
+#define THERMISTOR_PERIOD 50
 
 #define DEV_BOARD 0
 

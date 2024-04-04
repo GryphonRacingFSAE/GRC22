@@ -43,13 +43,13 @@ void adcChangeMUX(int channel) {
     if (!DEV_BOARD) {
         switch (channel) {
         case 0:
-            sConfig.Channel = ADC_CHANNEL_2;
+            sConfig.Channel = ADC_CHANNEL_8;
             break;
         case 1:
             sConfig.Channel = ADC_CHANNEL_7;
             break;
         case 2:
-            sConfig.Channel = ADC_CHANNEL_8;
+            sConfig.Channel = ADC_CHANNEL_2;
             break;
         case 3:
             sConfig.Channel = ADC_CHANNEL_9;
@@ -86,7 +86,7 @@ void startThermistorMonitorTask() {
 
         // This delay should be quite small, and only large enough to guarentee
         // the multiplexers have time to react to the new addresses
-        osDelay(200);
+        osDelay(2);
 
         // Grab the temperature for all modules at once
         for (uint8_t cur_mux = 0; cur_mux < MUX_COUNT; cur_mux++) {
