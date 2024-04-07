@@ -6,7 +6,7 @@ Item {
     required property double low;
     required property double high;
     required property int precision;
-    property double value;
+    property double value: 0;
 
     onValueChanged: () => {
         display_value.text = value.toFixed(precision)
@@ -40,7 +40,7 @@ Item {
         id: display_value
         font.family: "Consolas"
         font.pointSize: parent.fontSize * 20 / 8
-        text: ""
+        text: "0"
         color: "black"
         font.bold: true
         anchors {

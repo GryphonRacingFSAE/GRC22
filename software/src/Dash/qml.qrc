@@ -20,6 +20,9 @@
         <file>Debug/DataBox.qml</file>
         <file>Debug/Segment.qml</file>
         <file>Debug/SectionHeader.qml</file>
+        <file>Drive/PedalPosBox.qml</file>
+        <file>Drive/Indicator.qml</file>
+        <file>Drive/DisplayBox.qml</file>
 
         <file>Tuning/Tuning.qml</file>
         <file>Tuning/TractionControl.qml</file>

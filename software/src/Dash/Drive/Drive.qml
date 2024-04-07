@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import CAN.MotorController
 import CAN.BMS
+import CAN.VCU
 import CAN.EnergyMeter
 
 Item {
@@ -20,6 +21,7 @@ Item {
 
         //Motor and Inverter
         ColumnLayout {
+            Layout.bottomMargin: root.height/10
             Layout.preferredWidth: parent.width/16*5
 
             DataBox {
@@ -49,6 +51,7 @@ Item {
         //Speed and Accum Temp
         ColumnLayout {
             Layout.preferredWidth: parent.width/16*5
+            Layout.bottomMargin: root.height/10
 
             DataBox {
                 Layout.fillWidth: true
@@ -94,79 +97,68 @@ Item {
                 precision: 0;
                 low: 25
                 high: 60
-            }
+            }   
+            Layout.bottomMargin: root.height/10
         }
 
         //Speed
         ColumnLayout {
-            Layout.preferredWidth: parent.width/16*6
+            Layout.bottomMargin: root.height/10
+            Layout.preferredWidth: parent.width/16*4
+            anchors.verticalCenter: parent.verticalCenter
 
-            Rectangle {
-                id: torqueContainer
-                color: "grey"
-                radius: height/3
-                Layout.fillWidth: true;
-                implicitHeight: main.height/10
-
-                Text{
-                    id: torqueValue
-                    text: ""
-                    font.bold: true
-                    color:"black"
-                    font.pointSize: main.height/15
-                    anchors{
-                        horizontalCenter: parent.horizontalCenter
-                        verticalCenter: parent.verticalCenter
+            Rectangle{
+                id: rightPanel
+                width: 200
+                height: 300
+                color: "white"
+                // pedal position displays
+                RowLayout{
+                    spacing: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    PedalPosBox{
+                        id: brakeBox
+                        width: 60
+                        height: 300
+                        borderWidth:2
+                        lineColour: "red"
+                        letter: "B"
+                        value: 0
                     }
-                }
-            }
-
-            Rectangle {
-                id: torqueContainer2
-                color: "grey"
-                radius: height/3
-                Layout.fillWidth: true;
-                implicitHeight: main.height/10
-
-                Text{
-                    id: torqueValue2
-                    text: ""
-                    font.bold: true
-                    color:"black"
-                    font.pointSize: main.height/15
-                    anchors{
-                        horizontalCenter: parent.horizontalCenter
-                        verticalCenter: parent.verticalCenter
+                     PedalPosBox{
+                        id: acceleratorBox
+                        width: 60
+                        height: 300
+                        borderWidth:2
+                        lineColour: "green"
+                        letter: "A"
+                        value: 0
                     }
-                }
-            }
-            Item {
-                Layout.fillWidth: true
-                implicitHeight: 160
-                Text {
-                    id: speedValue
-                    font.pointSize: main.height/3.5
-                    opacity: 0.9
-                    font.bold: true
-                    color:"black"
-                    text: ""
-                    anchors{
-                        top: parent.top
-                        topMargin: main.height/10
-                        horizontalCenter: parent.horizontalCenter
-                    }
-                }
-
-                Text {
-                    font.family: "Consolas"
-                    text: "kmph"
-                    font.bold: true
-                    color:"black"
-                    font.pointSize: main.height/15
-                    anchors{
-                        top:speedValue.bottom
-                        horizontalCenter: parent.horizontalCenter
-                        topMargin: - main.height/15
+                    //tick marks
+                    Rectangle{
+                        width: 60
+                        height: 300
+                        color: "white"
+                        // border{
+                        //     width: 2
+                        //     color: "white"
+                        // }
+                        Repeater{
+                            id: ticks
+                            model: 11
+                            Text{
+                                text: `${(index)*10}`+"%"
+                                font.family: "Consolas"
+                                font.pointSize: 10
+                                font.bold: true
+                                color: "black"
+                                anchors{
+                                    left: parent.left
+                                    bottom: parent.bottom
+                                    bottomMargin: (parent.height) * (index)*10/100 - 7
+                                }
+                            }
+                        }             
                     }
                 }
             }
@@ -188,13 +180,64 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
         }
-        //Logo
-        Image {
-            id: logo
-            source:"qrc:/images/Logo"
-            Layout.fillHeight: true
-            Layout.preferredWidth: sourceSize.width/sourceSize.height * height
+        ColumnLayout {    
+            RowLayout {
+                Indicator {
+                    id: pump_active
+                    name: "PUMP"
+                    color: "green"
+                }
+                Indicator {
+                    id: acc_fan_active
+                    name: "ACC FAN"
+                    color: "green"
+                }
+                Indicator {
+                    id: rad_fan_active
+                    name: "RAD FAN"
+                    color: "green"
+                }
+                Indicator {
+                    id: brake_switch
+                    name: "BRAKE"
+                    color: "green"
+                }
+                Indicator {
+                    id: rtd_button
+                    name: "RTD BUT"
+                    color: "green"
+                }
+            }
+            RowLayout {
+                Indicator {
+                    id: rtd_invalid
+                    name: "RTD"
+                    color: "green"
+                }
+                Indicator {
+                    id: bspc_invalid
+                    name: "BSPC"
+                    color: "red"
+                }
+                Indicator {
+                    id: apps_conflict
+                    name: ">10%"
+                    color: "red"
+                }
+                Indicator {
+                    id: apps_oor    
+                    name: "A OOR"
+                    color: "red"
+                }
+                Indicator {
+                    id: brake_oor
+                    name: "B OOR"
+                    color: "red"
+                }
+            }
         }
+
+
     }
 
     Connections {
@@ -256,6 +299,46 @@ Item {
         }
     }
 
+    Connections {
+        target: VCU
+        function onNewBrakePressure(value) {
+            brakeBox.value = value/15;
+        }
+        function onNewAcceleratorPos(percent) {
+            acceleratorBox.value = percent;
+        }
+      
+        function onNewBSPCInvalid(state) {
+            bspc_invalid.value = state;
+        }
+        function onNewAPPSOutOfRange(state) {
+            apps_oor.value = state;
+        }
+        function onNewAPPSSensorConflict(state) {
+            apps_conflict.value = state;
+        }
+        function onNewBrakeOutOfRange(state) { 
+            brake_oor.value = state;
+        }
+        function onNewRTDInvalid(state) {
+            rtd_invalid.value = state != 1;
+        }
+        function onNewRTDButton(state) {
+            rtd_button.value = state;
+        }
+        function onNewBrakeSwitch(state) {
+            brake_switch.value = state;
+        }
+        function onNewPumpActive(state) {
+            pump_active.value = state;
+        }
+        function onNewAccumulatorFanActive(state) {
+            acc_fan_active.value = state;
+        }
+        function onNewRadiatorFanActive(state) {
+            rad_fan_active.value = state;
+        }
+    }
     Connections {
         target: BMS
         function onNewStateOfCharge(percent) {

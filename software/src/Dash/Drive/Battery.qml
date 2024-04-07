@@ -4,6 +4,7 @@ Rectangle {
     id: battery
     radius:height/10
     property double percent: 0
+    color: "red"
 
     onPercentChanged: () => {
         if (percent <= 20) {

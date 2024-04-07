@@ -10,7 +10,7 @@
 
 namespace real {
 
-class VCU : public QObject, public CAN::Interface {
+class VCU : public QObject, public CAN::DBCInterface<VCU> {
     Q_OBJECT
     Q_PROPERTY(QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
     Q_PROPERTY(int profileId MEMBER m_profile_id NOTIFY profileIdChanged)
@@ -19,22 +19,32 @@ class VCU : public QObject, public CAN::Interface {
     Q_PROPERTY(QList<float> currentTcTune MEMBER m_current_tc_tune NOTIFY currentTcTuneChanged)
     Q_PROPERTY(int tcTuneId MEMBER m_tc_tune_id NOTIFY tcTuneIdChanged)
   public:
-    VCU(const std::string& torque_map_directory = "")
-        : QObject(nullptr), m_torque_map_directory(torque_map_directory), m_profile_id(0), m_tc_tune_id(0) {
+    VCU(const std::string& dbc_file = "VCU.dbc", const std::string& torque_map_directory = "")
+        : QObject(nullptr), DBCInterface(dbc_file), m_torque_map_directory(torque_map_directory), m_profile_id(0), m_tc_tune_id(0) {
 
-        if (!std::filesystem::exists(m_torque_map_directory) || !std::filesystem::is_directory(m_torque_map_directory)) {
-            fmt::print("Torque map directory doesn't exist!");
-            throw "Bricked hard";
-        }
+        // if (!std::filesystem::exists(m_torque_map_directory) || !std::filesystem::is_directory(m_torque_map_directory)) {
+        //     fmt::print("Torque map directory doesn't exist!");
+        //     throw "Bricked hard";
+        // }
 
-        connect(this, &VCU::profileIdChanged, &VCU::readTorqueMapCSV);
-        connect(this, &VCU::tcTuneIdChanged, &VCU::readTcTuneCSV);
+        // connect(this, &VCU::profileIdChanged, &VCU::readTorqueMapCSV);
+        // connect(this, &VCU::tcTuneIdChanged, &VCU::readTcTuneCSV);
 
-        readTorqueMapCSV();
-        readTcTuneCSV();
+        // readTorqueMapCSV();
+        // readTcTuneCSV();
 
-        // Startup HW interface
-        this->CAN::Interface::startReceiving("can0", VCU::filters, VCU::num_of_filters, VCU::timeout_ms);
+        can_signal_dispatch["ACCELERATOR_POSITION"] = &VCU::newAcceleratorPos;
+        can_signal_dispatch["BRAKE_PRESSURE"] = &VCU::newBrakePressure;        
+        can_signal_dispatch["BSPC_INVALID"] = &VCU::newBSPCInvalid;
+        can_signal_dispatch["APPS_OUT_OF_RANGE"] = &VCU::newAPPSOutOfRange;
+        can_signal_dispatch["APPS_SENSOR_CONFLICT"] = &VCU::newAPPSSensorConflict;
+        can_signal_dispatch["BRAKE_OUT_OF_RANGE"] = &VCU::newBrakeOutOfRange;
+        can_signal_dispatch["CTRL_RTD_INVALID"] = &VCU::newRTDInvalid;
+        can_signal_dispatch["RTD_BUTTON"] = &VCU::newRTDButton;
+        can_signal_dispatch["BRAKE_SWITCH"] = &VCU::newBrakeSwitch;
+        can_signal_dispatch["PUMP_ACTIVE"] = &VCU::newPumpActive;
+        can_signal_dispatch["ACCUMULATOR_FAN_ACTIVE"] = &VCU::newAccumulatorFanActive;
+        can_signal_dispatch["RADIATOR_FAN_ACTIVE"] = &VCU::newRadiatorFanActive;
     }
 
     Q_INVOKABLE void saveTorqueMapCSV(QList<int> torque_map) {
@@ -84,6 +94,18 @@ class VCU : public QObject, public CAN::Interface {
     void currentTcTuneChanged();
     void profileIdChanged();
     void tcTuneIdChanged();
+    void newAcceleratorPos(float pos);
+    void newBrakePressure(float psi);   
+    void newBSPCInvalid(float state);
+    void newAPPSOutOfRange(float state);
+    void newAPPSSensorConflict(float state);
+    void newBrakeOutOfRange(float state);
+    void newRTDInvalid(float state);
+    void newRTDButton(float state);
+    void newBrakeSwitch(float state);
+    void newPumpActive(float state);
+    void newAccumulatorFanActive(float state);
+    void newRadiatorFanActive(float state);
 
   public:
     Q_INVOKABLE void sendTorqueMap(QList<int> torque_map) {
@@ -167,21 +189,6 @@ class VCU : public QObject, public CAN::Interface {
         return RetCode::Success;
     }
 
-    void newFrame(const can_frame& frame) override {
-        switch (CAN::frameId(frame)) {
-        case 0x0D2:
-            fmt::print("({}) message ack, with data: \n", (char)frame.data[0], frame.data);
-            break;
-        default:
-            fmt::print("Anything else (lol)\n");
-            break;
-        }
-    }
-    void newError(const can_frame&) override {
-        fmt::print("Error\n");
-    }
-    void newTimeout() override{};
-
   private:
     std::filesystem::path m_torque_map_directory;
     QList<int> m_current_torque_map;
@@ -197,8 +204,8 @@ class VCU : public QObject, public CAN::Interface {
         std::numeric_limits<uint8_t>::min() - (int)torque_map_offset; // Cast is required for integer promotion
     static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {{
-        0x0D0,
-        0x0DF // Grab all messages VCU from 0D0 to 0DF (16 Addresses)
+        0x200,
+        0x7F0 // Grab all messages VCU from 0x200 to 0x20F (16 Addresses)
     }};
 
     static constexpr uint32_t timeout_ms = 500;

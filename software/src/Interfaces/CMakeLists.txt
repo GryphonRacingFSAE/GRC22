@@ -5,23 +5,11 @@ endif()
 add_library(CANInterfaces)
 
 if(BUILD_BACKEND)
-    target_sources(CANInterfaces PUBLIC Full/MotorController.hpp Full/EnergyMeter.hpp Full/VCU.hpp Full/BMS.hpp Full/SMU.hpp Demo/MotorController.hpp)
+    target_sources(CANInterfaces PUBLIC Full/MotorController.hpp Full/EnergyMeter.hpp Full/VCU.hpp Full/BMS.hpp Full/SMU.hpp)
 
     target_link_libraries(CANInterfaces PUBLIC dbcppp::dbcppp CANLib)
 endif()
 
-target_sources(
-    CANInterfaces
-    PUBLIC Frontend/FakeInterface.hpp
-           Frontend/FakeInterface.cpp
-           Frontend/MotorController.hpp
-           Frontend/MotorController.cpp
-           Frontend/EnergyMeter.cpp
-           Frontend/EnergyMeter.hpp
-           Frontend/BMS.hpp
-           Frontend/BMS.cpp
-           Frontend/SMU.hpp
-           Frontend/VCU.hpp)
 set_target_properties(
     CANInterfaces
     PROPERTIES AUTOUIC ON

@@ -115,10 +115,16 @@ class MotorController : public QObject, public CAN::DBCInterface<MotorController
     void newRUNFaultLow(float fault);
 
   public:
-    static constexpr size_t num_of_filters = 1;
+    static constexpr size_t num_of_filters = 3;
     inline static can_filter filters[num_of_filters] = {{
         0x0A0,
-        0x0CF // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
+        0x7F0 // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
+    },{
+        0x0B0,
+        0x7F0 // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
+    },{
+        0x0C0,
+        0x7F0 // Grab all messages from 0xA0 to 0xCF (Everything reserved by the motor controller)
     }};
 
     static constexpr uint32_t timeout_ms = 500;
