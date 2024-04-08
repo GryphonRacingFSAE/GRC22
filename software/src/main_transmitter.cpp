@@ -109,9 +109,9 @@ void readCAN() {
             msg.data.size = can_message.data_length_code;
             memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
 
-            Serial.printf("\e[0;34m[0x%X] \e[0m", msg.address);
+            Serial.printf("\e[0;34m%X\e[0m", msg.address);
             for (int i = 0; i < msg.data.size; i++) {
-                Serial.printf("\e[0;34m%02X \e[0m", msg.data.bytes[i]);
+                Serial.printf("\e[0;34m,%02X\e[0m", msg.data.bytes[i]);
             }
             Serial.println();
 
@@ -137,9 +137,9 @@ void sendCAN(uint32_t address, uint8_t* can_frame, int length) {
         msg.data.size = can_message.data_length_code;
         memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
 
-        Serial.printf("\e[0;32m[0x%X] \e[0m", msg.address);
+        Serial.printf("\e[0;32m%X\e[0m", msg.address);
         for (int i = 0; i < msg.data.size; i++) {
-            Serial.printf("\e[0;32m%02X \e[0m", msg.data.bytes[i]);
+            Serial.printf("\e[0;32m,%02X\e[0m", msg.data.bytes[i]);
         }
         Serial.println();
 
@@ -171,7 +171,6 @@ void initMPU() {
 void calibrateMPU() {
     mpu.getMotion6(&ax_offset, &ay_offset, &az_offset, &gx_offset, &gy_offset, &gz_offset);
     Serial.printf("\nMPU RECALIBRATED\n");
-    delay(1000);
 }
 
 void readMPU() {
@@ -241,7 +240,7 @@ void readGPS() {
 //==============================================================================
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(921600);
     delay(500);
 
     Serial.println();
@@ -262,23 +261,27 @@ void setup() {
 // Loop
 //==============================================================================
 
-uint32_t delta_time;
+const uint32_t interval = 100;
+uint32_t prev_time = 0;
+uint32_t cur_time;
 
 void loop() {
-    delta_time = millis();
+    cur_time = millis();
 
-    rlm_time.time = delta_time;
+    rlm_time.time = cur_time;
     rlm_rlm_time_0_xf4_pack(can_frame, &rlm_time, CAN_FRAME_MAX_SIZE);
     sendCAN(RLM_RLM_TIME_0_XF4_FRAME_ID, can_frame, RLM_RLM_TIME_0_XF4_LENGTH);
 
-    readMPU();
-    readGPS();
+    if (cur_time - prev_time >= interval) {
+        prev_time = cur_time;
 
-    // readCAN();
+        readMPU();
+        readGPS();
+    }
 
-    /*
+    readCAN();
+
     if (digitalRead(MPU_CAL) == HIGH) {
         calibrateMPU();
     }
-    */
 }

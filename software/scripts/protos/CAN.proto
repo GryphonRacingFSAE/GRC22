@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-message CAN {
-    uint32 address = 1;
-    bytes data = 2;
-}
