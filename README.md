@@ -53,11 +53,11 @@ SERIAL_PORT = "/dev/ttyUSB0"
 BAUD_RATE = 921600
 ```
 
-_NOTE: port names may differ between operating systems_
-
 ```bash
 python3 foxglove_server.py
 ```
+
+_NOTE: port names may differ between operating systems_
 
 ## Resources
 
