@@ -42,6 +42,23 @@ pip install python-can==4.2.2 # downgrade required
 python3 -m cantools generate_c_source DBCs/RLM.dbc -o src
 ```
 
+## Foxglove WebSocket Server
+
+To enable the Foxglove server, plug in the receiver module and verify the serial port, then run the script:
+
+```python
+# foxglove_server.py
+
+SERIAL_PORT = "/dev/ttyUSB0"
+BAUD_RATE = 921600
+```
+
+_NOTE: port names may differ between operating systems_
+
+```bash
+python3 foxglove_server.py
+```
+
 ## Resources
 
 **Datasheets**
@@ -52,5 +69,5 @@ python3 -m cantools generate_c_source DBCs/RLM.dbc -o src
 
 **Other**
 
-- [Design Requirements](https://uoguelphca-my.sharepoint.com/:w:/r/personal/ugracing_uoguelph_ca/_layouts/15/Doc.aspx?sourcedoc=%7B7C1A61FF-9C05-44D4-A12C-FCA501E7928A%7D&file=Remote%20Data%20Logger%20Design%20Requirements.docx&action=default&mobileredirect=true&DefaultItemOpen=1&web=1)
-- [BonoGPS](https://github.com/renatobo/bonogps) (future idea)
+- [Design Requirements (GRC OneDrive)](https://uoguelphca-my.sharepoint.com/:w:/r/personal/ugracing_uoguelph_ca/_layouts/15/Doc.aspx?sourcedoc=%7B7C1A61FF-9C05-44D4-A12C-FCA501E7928A%7D&file=Remote%20Data%20Logger%20Design%20Requirements.docx&action=default&mobileredirect=true&DefaultItemOpen=1&web=1)
+- [Foxglove WebSocket Server (JSON)](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/json_server.py)
