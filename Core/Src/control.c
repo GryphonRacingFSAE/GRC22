@@ -23,7 +23,6 @@ void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
 		pressureSensorConversions();
-		GRCprintf("Differential Pressure = %d mbar\r\n", Ctrl_Data.pressure_difference);
 		RTD();
 		pumpCtrl();
 		fanCtrl();
@@ -131,24 +130,23 @@ void RTD() {
 void pumpCtrl() {
 
 	//pump off
-	pumpCycle(0);
+	pumpCycle(75);
 	// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
 	if (Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD) {
 		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET);
 	} else {
-		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Turn on pump if cannot acquire mutex
-		ERROR_PRINT(
-				"Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:pumpCtrl\n");
+
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET);
 	}
 }
 
 // Cooling pump duty cycles based on input of desired pump speed in percentage
 void pumpCycle(uint8_t pump_speed){
 
-	if(pump_speed == 0){			//pump off
+	if(pump_speed == 0) {			//pump off
 		TIM1 -> CCR1 = 0;			//duty cycle between 0-12%
-	} else if (pump_speed == 100){	//max speed
+	} else if (pump_speed == 100) {	//max speed
 		TIM1 -> CCR1 = 3600;		//duty cycle between 86-97%
 	} else{							//between 1-99% pump speed, 13-85% duty cycle
 		uint32_t duty_cycle = (((pump_speed-1)/(99-1))*(85-13))+13;
@@ -199,10 +197,10 @@ void pressureSensorConversions(){
 	// RULE (2024 V1): T.4.2.10 (Detect open circuit and short circuit conditions)
 	// TODO: add flags for pressure sensor shorts
 	if(pressure1_adc_avg <= PRESSURE_ADC_SHORT_GND || PRESSURE_ADC_SHORT_VCC <= pressure1_adc_avg){
-		GRCprintf("possible short detected at pressure sensor 1\r\n");
+		TRACE_PRINT("possible short detected at pressure sensor 1\r\n");
 	}
 	if(pressure2_adc_avg <= PRESSURE_ADC_SHORT_GND || PRESSURE_ADC_SHORT_VCC <= pressure2_adc_avg){
-		GRCprintf("Possible short detected at pressure sensor 2\r\n");
+		TRACE_PRINT("Possible short detected at pressure sensor 2\r\n");
 	}
 
 	pressure1_bar = CLAMP(0, (((pressure1_adc_avg - PRESSURE_SENSOR_MIN) * 1000 / (PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN)) * PRESSURE_RANGE), 2500);

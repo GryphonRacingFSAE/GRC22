@@ -32,7 +32,7 @@ Torque_Map_Struct Torque_Map_Data = { {
     { 1170, 1160, 1160, 1230, 1210, 1250, 1180, 1150, 1110, 1050,  880,  880,  440,    0 },
     { 1260, 1250, 1240, 1270, 1260, 1270, 1230, 1200, 1150, 1060, 1040,  880,  440,    0 },
     { 1290, 1300, 1300, 1290, 1290, 1300, 1300, 1300, 1200, 1080,  970,  860,  430,    0 }
-}, .scaling_factor = 10, .regen_enabled = 0 };
+}, .scaling_factor = 5, .regen_enabled = 0 };
 
 //Buffer from DMA
 volatile uint16_t apps_dma_buffer[APPS_DMA_BUFFER_LEN] = {};
@@ -54,8 +54,7 @@ void startAPPSTask() {
 		apps2_adc_avg /= (APPS_DMA_BUFFER_LEN / APPS_DMA_CHANNELS);
 
 		// RULE (2024 V1): T.4.2.10 (Detect open circuit and short circuit conditions)
-		// TODO: Add APPS2 once we figure that out
-		if (apps1_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= apps1_adc_avg) {
+		if (apps1_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= apps1_adc_avg || apps2_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= apps2_adc_avg) {
 			SET_FLAG(APPS_Data.flags, APPS_SENSOR_OUT_OF_RANGE_INVALID);
 		} else {
 			CLEAR_FLAG(APPS_Data.flags, APPS_SENSOR_OUT_OF_RANGE_INVALID);
@@ -70,15 +69,12 @@ void startAPPSTask() {
 		// TODO: T.4.3.4
 
 		// RULE (2024 V1): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
-		apps2_pos = apps1_pos;
-
-		if (ABS(apps1_pos - apps2_pos) <= 10) {
-			APPS_Data.apps_position = (apps1_pos + apps2_pos) / 2;
+		if (ABS(apps1_pos - apps2_pos) <= 100) {
+			APPS_Data.apps_position = CLAMP(0, (apps1_pos + apps2_pos) / 2, 1000);
 			CLEAR_FLAG(APPS_Data.flags, APPS_SENSOR_CONFLICT_INVALID);
 		} else {
 			SET_FLAG(APPS_Data.flags, APPS_SENSOR_CONFLICT_INVALID);
 		}
-
 
 
 		int32_t brake_pressure_adc_avg = 0;
@@ -128,7 +124,7 @@ void startAPPSTask() {
 		// Interpolating across rpm values
 		int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
 		int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
-		int16_t requested_torque = interpolate(100, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset) / Torque_Map_Data.scaling_factor;
+		int16_t requested_torque = interpolate(1000, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset) / Torque_Map_Data.scaling_factor;
 
 
 		// RULE (2024 V1): EV.3.3.3 No regen < 5km/h

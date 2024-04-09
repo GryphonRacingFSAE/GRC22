@@ -96,7 +96,10 @@ void sendTorque() {
 	tx_msg.to = &hcan2;
 
 	// Bytes 0 & 1 is the requested torque
-	uint16_t bitwise_requested_torque = *(uint16_t*)&APPS_Data.torque;
+	uint16_t bitwise_requested_torque = 0;
+	if (!APPS_Data.flags) {
+		bitwise_requested_torque = *(uint16_t*)&APPS_Data.torque;
+	}
 	tx_msg.data[0] = bitwise_requested_torque & 0xFF;
 	tx_msg.data[1] = bitwise_requested_torque >> 8;
 
