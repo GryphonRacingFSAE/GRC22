@@ -11,7 +11,7 @@
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
 // Turn on Pump if tractive voltage > 450v
-#define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 4500
+#define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 300
 // Turn on Fan if coolant temp > 40c
 #define RAD_FAN_COOLANT_TEMP_THRESHOLD 400
 // Turn on Accumulator fan if accumulator temp > 40c
@@ -19,7 +19,7 @@
 // Turn off flag when tractive voltage < 20
 #define RTD_TRACTIVE_VOLTAGE_OFF 200
 // Turn off flag when tractive voltage > 450
-#define RTD_TRACTIVE_VOLTAGE_ON 4500
+#define RTD_TRACTIVE_VOLTAGE_ON 300
 // Number of teeth on wheel hub
 #define NUM_TEETH 32;
 #define PRESSURE_SENSOR_MIN 410

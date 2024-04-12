@@ -70,10 +70,16 @@ void startAPPSTask() {
 
 		// RULE (2024 V1): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
 		if (ABS(apps1_pos - apps2_pos) <= 100) {
-			APPS_Data.apps_position = CLAMP(0, (apps1_pos + apps2_pos) / 2, 1000);
 			CLEAR_FLAG(APPS_Data.flags, APPS_SENSOR_CONFLICT_INVALID);
 		} else {
 			SET_FLAG(APPS_Data.flags, APPS_SENSOR_CONFLICT_INVALID);
+		}
+
+		if (!FLAG_ACTIVE(APPS_Data.flags, APPS_SENSOR_OUT_OF_RANGE_INVALID) && !FLAG_ACTIVE(APPS_Data.flags, APPS_SENSOR_CONFLICT_INVALID)) {
+			APPS_Data.apps_position = CLAMP(0, (apps1_pos + apps2_pos) / 2, 1000);
+
+		} else {
+			APPS_Data.apps_position = 0;
 		}
 
 
@@ -85,11 +91,12 @@ void startAPPSTask() {
 
 		if (brake_pressure_adc_avg <= ADC_SHORTED_GND || ADC_SHORTED_VCC <= brake_pressure_adc_avg) {
 			SET_FLAG(APPS_Data.flags, BRAKE_SENSOR_OUT_OF_RANGE_INVALID);
+			APPS_Data.brake_pressure = 0;
 		} else {
 			CLEAR_FLAG(APPS_Data.flags, BRAKE_SENSOR_OUT_OF_RANGE_INVALID);
+			APPS_Data.brake_pressure = CLAMP(0, (brake_pressure_adc_avg - BRAKE_PRESSURE_MIN) * 20000 /(BRAKE_PRESSURE_MAX - BRAKE_PRESSURE_MIN), 20000);
 		}
-		APPS_Data.brake_pressure = CLAMP(0, (brake_pressure_adc_avg - BRAKE_PRESSURE_MIN) * 20000 /(BRAKE_PRESSURE_MAX - BRAKE_PRESSURE_MIN), 20000);
-		CRITICAL_PRINT("BRAKE_PRESSURE:%d, BRAKE_PRESSURE ADC: %d\r\n", APPS_Data.brake_pressure, brake_pressure_adc_avg);
+//		CRITICAL_PRINT("BRAKE_PRESSURE:%d, BRAKE_PRESSURE ADC: %d\r\n", APPS_Data.brake_pressure, brake_pressure_adc_avg);
 
 		// RULE (2024 V1): T.4.7 (BSPC)
 		if (FLAG_ACTIVE(APPS_Data.flags, APPS_BSPC_INVALID)){
@@ -97,19 +104,19 @@ void startAPPSTask() {
 			if (APPS_Data.apps_position < 50) {
 				CLEAR_FLAG(APPS_Data.flags, APPS_BSPC_INVALID);
 			}
-		} else if (APPS_Data.apps_position > 250 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin)) {
+		} else if (APPS_Data.apps_position > 250 && APPS_Data.brake_pressure > 500) {
 			// Set to invalid if over >25% travel and brakes engaged (EV.4.7.1)
 			SET_FLAG(APPS_Data.flags, APPS_BSPC_INVALID);
 		}
 
 
 		// NOTE: Cap values at slightly less then our max % for easier math
-		int32_t pedalPercent = MIN(APPS_Data.apps_position, 99);
+		int32_t pedalPercent = MIN(APPS_Data.apps_position, 999);
 		int32_t rpm = MIN(Ctrl_Data.motor_speed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
 
 		// Integer division - rounds down (use this to our advantage)
-		int32_t pedalOffset = pedalPercent % 1000;
-		int32_t pedalLowIndex = pedalPercent / 1000;
+		int32_t pedalOffset = pedalPercent % 100;
+		int32_t pedalLowIndex = pedalPercent / 100;
 		int32_t pedalHighIndex = pedalLowIndex + 1;
 		int32_t rpmOffset = rpm % 500;
 		int32_t rpmLowIndex = rpm / 500;
@@ -124,14 +131,16 @@ void startAPPSTask() {
 		// Interpolating across rpm values
 		int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
 		int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
-		int16_t requested_torque = interpolate(1000, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset) / Torque_Map_Data.scaling_factor;
+		int16_t requested_torque = interpolate(100, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset) / Torque_Map_Data.scaling_factor;
 
 
 		// RULE (2024 V1): EV.3.3.3 No regen < 5km/h
 		if (!Torque_Map_Data.regen_enabled || rpm < kmphToRPM(5)) {
 			requested_torque = MAX(requested_torque, 0);
 		}
+		CRITICAL_PRINT("Requested Torque: %d\r\n", requested_torque);
 		APPS_Data.torque = requested_torque;
+
 
 		osDelayUntil(tick += APPS_PERIOD);
 	}

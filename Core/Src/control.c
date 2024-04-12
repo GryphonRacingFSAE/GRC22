@@ -112,43 +112,54 @@ void RTD() {
 	if (callCounts * CTRL_PERIOD > 2000) {
 		HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 0);
 	}
+
+	if (HAL_GPIO_ReadPin(GPIO_START_BTN_GPIO_Port, GPIO_START_BTN_Pin)) {
+		SET_FLAG(Ctrl_Data.flags, RTD_BUTTON);
+	} else {
+		CLEAR_FLAG(Ctrl_Data.flags, RTD_BUTTON);
+	}
+
+//	if (Ctrl_Data.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF) {
+//		// Disable RTD if TS drops below threshold
+//		SET_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID);
+//	}
+
 	if (FLAG_ACTIVE(Ctrl_Data.flags, CTRL_RTD_INVALID)) {
 		// Check if the pedal position is <3% to put APPS back into a valid state (EV.10.4.3)
-		if (APPS_Data.apps_position < 30 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin) && Ctrl_Data.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON && HAL_GPIO_ReadPin(GPIO_START_BTN_GPIO_Port, GPIO_START_BTN_Pin)) {
+		if (APPS_Data.apps_position < 30 && APPS_Data.brake_pressure > 800 /* && Ctrl_Data.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON */ && FLAG_ACTIVE(Ctrl_Data.flags, RTD_BUTTON)) {
 			CLEAR_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID); // Remove the invalid flag
 			HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 1);
 			callCounts = 0;
-		} else if (Ctrl_Data.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF) {
-			// Disable RTD if TS drops below threshold
-			SET_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID);
 		}
+	} else if (APPS_Data.apps_position < 30 && APPS_Data.brake_pressure < 800 && FLAG_ACTIVE(Ctrl_Data.flags, RTD_BUTTON)) {
+		SET_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID); // Remove the invalid flag
 	}
 	callCounts++;
 }
 
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
-
-	//pump off
-	pumpCycle(75);
-	// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
-	if (Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD) {
+	// Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD
+	if (APPS_Data.apps_position > 100) {
 		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
-		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET);
+		pumpCycle(80);
 	} else {
-
-		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET);
+		CLEAR_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
+		pumpCycle(0);
 	}
 }
 
 // Cooling pump duty cycles based on input of desired pump speed in percentage
 void pumpCycle(uint8_t pump_speed){
-
 	if(pump_speed == 0) {			//pump off
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET); // Active Low (on)
 		TIM1 -> CCR1 = 0;			//duty cycle between 0-12%
 	} else if (pump_speed == 100) {	//max speed
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Active Low (off)
 		TIM1 -> CCR1 = 3600;		//duty cycle between 86-97%
-	} else{							//between 1-99% pump speed, 13-85% duty cycle
+	} else {
+		// between 1-99% pump speed, 13-85% duty cycle
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET); // Active Low (on)
 		uint32_t duty_cycle = (((pump_speed-1)/(99-1))*(85-13))+13;
 		TIM1 -> CCR1 = (duty_cycle*4000)/100;	//divide by 100 since duty cycle is in percentage not decimal value
 	}

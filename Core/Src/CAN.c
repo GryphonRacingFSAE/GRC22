@@ -95,30 +95,37 @@ void sendTorque() {
 	tx_msg.header.DLC = 8;
 	tx_msg.to = &hcan2;
 
-	// Bytes 0 & 1 is the requested torque
-	uint16_t bitwise_requested_torque = 0;
-	if (!APPS_Data.flags) {
-		bitwise_requested_torque = *(uint16_t*)&APPS_Data.torque;
+	if (FLAG_ACTIVE(Ctrl_Data.flags, CTRL_RTD_INVALID)) {
+		for (uint8_t i = 0; i < 8; i++){
+			tx_msg.data[i] = 0;
+		}
+	} else {
+		// Bytes 0 & 1 is the requested torque
+		uint16_t bitwise_requested_torque = 0;
+		if (!APPS_Data.flags) {
+			bitwise_requested_torque = *(uint16_t*)&APPS_Data.torque;
+		}
+		tx_msg.data[0] = bitwise_requested_torque & 0xFF;
+		tx_msg.data[1] = bitwise_requested_torque >> 8;
+
+		// Bytes 2 & 3 is the requested RPM (if not in torque mode)
+		tx_msg.data[2] = 0;
+		tx_msg.data[3] = 0;
+
+		// Byte 4 is Forward/Reverse
+		tx_msg.data[4] = 1; // 1 is Forward
+
+		// Byte 5 is Configuration
+		tx_msg.data[5] = 0x1;
+			// | 0x1 // Inverter Enable
+			// | 0x2 // Inverter Discharge
+			// | 0x4 // Speed Mode override
+
+		// Byte 6 & 7 sets torque limits
+		tx_msg.data[6] = 0;
+		tx_msg.data[7] = 0;
 	}
-	tx_msg.data[0] = bitwise_requested_torque & 0xFF;
-	tx_msg.data[1] = bitwise_requested_torque >> 8;
 
-	// Bytes 2 & 3 is the requested RPM (if not in torque mode)
-	tx_msg.data[2] = 0;
-	tx_msg.data[3] = 0;
-
-	// Byte 4 is Forward/Reverse
-	tx_msg.data[4] = 1; // 1 is Forward
-
-	// Byte 5 is Configuration
-	tx_msg.data[5] = 0;
-		// | 0x1 // Inverter Enable
-		// | 0x2 // Inverter Discharge
-		// | 0x4 // Speed Mode override
-
-	// Byte 6 & 7 sets torque limits
-	tx_msg.data[6] = 0;
-	tx_msg.data[7] = 0;
 
 	// Send over CAN2
 	osMessageQueuePut(CANTX_QHandle, &tx_msg, 0, 5);
