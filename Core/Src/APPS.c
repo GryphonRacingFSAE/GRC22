@@ -138,7 +138,8 @@ void startAPPSTask() {
 		if (!Torque_Map_Data.regen_enabled || rpm < kmphToRPM(5)) {
 			requested_torque = MAX(requested_torque, 0);
 		}
-		CRITICAL_PRINT("Requested Torque: %d\r\n", requested_torque);
+		requested_torque -= 13;
+		GRCprintf("Requested Torque: %d\r\n", requested_torque);
 		APPS_Data.torque = requested_torque;
 
 

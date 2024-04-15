@@ -139,14 +139,15 @@ void RTD() {
 
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
+	pumpCycle(50);
 	// Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD
-	if (APPS_Data.apps_position > 100) {
-		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
-		pumpCycle(80);
-	} else {
-		CLEAR_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
-		pumpCycle(0);
-	}
+//	if (APPS_Data.apps_position > 100) {
+//		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
+//		pumpCycle(50);
+//	} else {
+//		CLEAR_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
+//		pumpCycle(0);
+//	}
 }
 
 // Cooling pump duty cycles based on input of desired pump speed in percentage
