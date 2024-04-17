@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Build STM32CubeIde project
-        uses: xanderhendriks/action-build-stm32cubeide@v7.2
+        uses: xanderhendriks/action-build-stm32cubeide@v10.0
         with:
           project-path: "."
           project-target: "APPS_FW_22"
