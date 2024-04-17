@@ -113,7 +113,7 @@ void sendTorque() {
 		tx_msg.data[3] = 0;
 
 		// Byte 4 is Forward/Reverse
-		tx_msg.data[4] = 1; // 1 is Forward
+		tx_msg.data[4] = 0; // 1 is Forward
 
 		// Byte 5 is Configuration
 		tx_msg.data[5] = 0x1;

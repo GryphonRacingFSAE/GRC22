@@ -154,7 +154,7 @@ void pumpCtrl() {
 void pumpCycle(uint8_t pump_speed){
 	if(pump_speed == 0) {			//pump off
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET); // Active Low (on)
-		TIM1 -> CCR1 = 0;			//duty cycle between 0-12%
+		TIM1 -> CCR1 = 40;			//duty cycle between 0-12%
 	} else if (pump_speed == 100) {	//max speed
 		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Active Low (off)
 		TIM1 -> CCR1 = 3600;		//duty cycle between 86-97%

@@ -118,9 +118,9 @@ void startAPPSTask() {
 		int32_t pedalOffset = pedalPercent % 100;
 		int32_t pedalLowIndex = pedalPercent / 100;
 		int32_t pedalHighIndex = pedalLowIndex + 1;
-		int32_t rpmOffset = rpm % 500;
-		int32_t rpmLowIndex = rpm / 500;
-		int32_t rpmHighIndex = rpmLowIndex + 1;
+		int32_t rpmOffset = 0;//rpm % 500;
+		int32_t rpmLowIndex = 0;//rpm / 500;
+		int32_t rpmHighIndex = 0;//rpmLowIndex + 1;
 		// NOTE: because we capped our values, both lower indexes will never read the maximum index
 		// this always leaves one column left for the high index.
 		int16_t torque_pedallow_rpmlow = Torque_Map_Data.map[pedalLowIndex][rpmLowIndex];
@@ -138,7 +138,6 @@ void startAPPSTask() {
 		if (!Torque_Map_Data.regen_enabled || rpm < kmphToRPM(5)) {
 			requested_torque = MAX(requested_torque, 0);
 		}
-		requested_torque -= 13;
 		GRCprintf("Requested Torque: %d\r\n", requested_torque);
 		APPS_Data.torque = requested_torque;
 
