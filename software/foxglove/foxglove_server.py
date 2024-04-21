@@ -4,6 +4,7 @@ import json
 import os
 import serial
 import time
+
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import (
@@ -13,9 +14,6 @@ from foxglove_websocket.types import (
     ServiceId,
 )
 
-
-# custom json schemas for messages with strings
-from custom_schemas import custom_schemas
 
 # serial port parameters
 SERIAL_PORT = "/dev/ttyUSB0"

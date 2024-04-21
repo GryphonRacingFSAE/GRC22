@@ -7,6 +7,7 @@ An onboard data logging system for our cars, using radio transmission for remote
 - [Visual Studio Code](https://code.visualstudio.com/download)
 - [C/C++ Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)
 - [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
+- [Foxglove Studio](https://foxglove.dev/download)
 
 ## Setup
 
@@ -44,20 +45,40 @@ python3 -m cantools generate_c_source DBCs/RLM.dbc -o src
 
 ## Foxglove WebSocket Server
 
-To enable the Foxglove server, plug in the receiver module and verify the serial port, then run the script:
+1. In a terminal, navigate to the `/software/foxglove` directory
+2. Install the necessary libraries:
 
-```python
-# foxglove_server.py
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-SERIAL_PORT = "/dev/ttyUSB0"
-BAUD_RATE = 921600
-```
+3. Plug in the receiver module and note the serial port (eg. `/dev/ttyUSB0`)
+4. Modify `foxglove_server.py` to have the correct serial port information:
+
+   ```python
+   SERIAL_PORT = "/dev/ttyUSB0"
+   BAUD_RATE = 921600
+   ```
+
+   _NOTE: port names may differ between operating systems_
+
+5. Run the Foxglove Studio application and open a connection to `ws://localhost:8765`
+6. Start the Foxglove WebSocket server:
+
+   ```bash
+   python3 foxglove_server.py
+   ```
+
+## Troubleshooting
+
+There is a known issue with the `foxglove_server.py` script that if it reads the first serial message incorrectly it will crash. To fix this, kill the python process then run the script again.
 
 ```bash
+pkill -9 python
 python3 foxglove_server.py
 ```
 
-_NOTE: port names may differ between operating systems_
+_NOTE: currently working on a fix for this_
 
 ## Resources
 
