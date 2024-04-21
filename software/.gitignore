@@ -5,5 +5,4 @@
 .pio
 .vscode
 
-scripts/protos/*
-!scripts/protos/CAN.proto
+foxglove/__pycache__

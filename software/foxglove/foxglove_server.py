@@ -13,6 +13,10 @@ from foxglove_websocket.types import (
     ServiceId,
 )
 
+
+# custom json schemas for messages with strings
+from custom_schemas import custom_schemas
+
 # serial port parameters
 SERIAL_PORT = "/dev/ttyUSB0"
 BAUD_RATE = 921600
@@ -113,11 +117,6 @@ async def main():
 
             # check dictionary for message name
             if message_name in channel_ids:
-                # temporary removal of this message (contains strings for certain data types)
-                # TODO: generate correct json schemas for strings
-                if message_name == "M170_Internal_States":
-                    continue
-
                 channel_id = channel_ids[message_name]
 
                 # send message from server
