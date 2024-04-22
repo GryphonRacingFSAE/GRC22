@@ -4,6 +4,7 @@ import json
 import os
 import serial
 import time
+from serial_asyncio import open_serial_connection
 
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
@@ -16,7 +17,7 @@ from foxglove_websocket.types import (
 
 
 # serial port parameters
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "COM3"
 BAUD_RATE = 921600
 
 # location of dbc folder (relative to this file)
@@ -73,8 +74,7 @@ async def main():
         supported_encodings=["json"],
     ) as server:
         server.set_listener(Listener())
-
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
+        reader, writer = await open_serial_connection(url=SERIAL_PORT, baudrate=BAUD_RATE)
         db = load_dbc_files(DBC_FOLDER)
 
         # create dictionary to store channel ids
@@ -95,20 +95,15 @@ async def main():
                 }
             )
 
-            print(
-                f"Added channel for topic {topic_name} with schema:\n{json.dumps(schema, indent=2)}"
-            )
+            print(f"Added channel for topic {topic_name}")
 
             # link channel id to associated message name
             channel_ids[topic_name] = channel_id
 
-        # give time for foxglove to connect
-        await asyncio.sleep(3)
-
         while True:
             # read and parse message from serial
-            message = ser.readline().decode()
-            message_name, decoded_message = parse_can_message(message, db)
+            message = await reader.readline()
+            message_name, decoded_message = parse_can_message(message.decode(), db)
 
             print(message_name)
             print(decoded_message)
