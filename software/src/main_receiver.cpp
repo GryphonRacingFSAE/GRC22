@@ -30,11 +30,11 @@ AsyncWebSocket ws("/ws");
 //==============================================================================
 
 void initNRF() {
-    if (radio.begin()) {
-        Serial.println("Radio initialized successfully");
-    } else {
-        Serial.println("Failed to initialize radio");
-    }
+    // if (radio.begin()) {
+    //     Serial.println("Radio initialized successfully");
+    // } else {
+    //     Serial.println("Failed to initialize radio");
+    // }
 
     radio.setDataRate(RF24_1MBPS);
     radio.setPALevel(RF24_PA_MAX);
