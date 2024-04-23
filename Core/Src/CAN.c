@@ -83,11 +83,13 @@ inline void canMsgHandler(CANRXMsg* rxMsg) {
 		Ctrl_Data.motor_speed = *(int16_t*) (&INV_Motor_Speed);
 		break;
 	}
-	case 0x300: { // Torque Map Editing
-		uint16_t pedal_index = (uint8_t) rxMsg->data[0];
-		uint16_t speed_index = (uint8_t) rxMsg->data[1];
-		uint16_t torque_raw = ((uint16_t) rxMsg->data[3] << 8) | ((uint16_t) rxMsg->data[2]);
-		Torque_Map_Data.map[pedal_index][speed_index] = *(int16_t*) (&torque_raw);
+	case 0x300: { // Torque Parameter Editing
+		uint16_t torque_raw = ((uint16_t) rxMsg->data[1] << 8) | ((uint16_t) rxMsg->data[0]);
+		Torque_Map_Data.max_torque_scaling_factor = *(int16_t*) (&torque_raw);
+		uint16_t power_raw = ((uint16_t) rxMsg->data[3] << 8) | ((uint16_t) rxMsg->data[2]);
+		Torque_Map_Data.max_power_scaling_factor = *(int16_t*) (&power_raw);
+		uint16_t target_speed_limit = ((uint16_t) rxMsg->data[5] << 8) | ((uint16_t) rxMsg->data[4]);
+		Torque_Map_Data.target_speed_limit = *(int16_t*) (&target_speed_limit);
 		break;
 	}
 	}

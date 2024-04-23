@@ -19,20 +19,16 @@ APPS_Data_Struct APPS_Data = {
 	.brake_pressure = 0,
 	.flags = APPS_BSPC_INVALID | APPS_SENSOR_OUT_OF_RANGE_INVALID | APPS_SENSOR_CONFLICT_INVALID | BRAKE_SENSOR_OUT_OF_RANGE_INVALID
 };
-// Columns are RPM in increments of 500 (0-6500), Rows are pedal percent in increments of 10% (0-100%)
-Torque_Map_Struct Torque_Map_Data = { {
-    {  -60, -200, -220, -220, -220, -220, -220, -220, -220, -220, -210, -170, -190, -220 },
-    {  120,  -50, -150, -140, -110,  -80,  -70,  -80,  -60,  -80,  -70,  -40, -120, -200 },
-    {  270,  150,   50,   70,   50,   50,   50,   50,   50,   40,   50,   50,  -60, -180 },
-    {  440,  370,  260,  230,  240,  230,  220,  210,  240,  230,  200,  180,   50,  -70 },
-    {  670,  570,  490,  490,  480,  510,  480,  500,  420,  470,  410,  460,  220,  -20 },
-    {  830,  780,  720,  730,  720,  720,  690,  640,  630,  700,  620,  550,  270,    0 },
-    {  960, 1000,  940,  930,  970,  950,  980,  900,  910,  850,  800,  750,  380,    0 },
-    { 1090, 1090, 1080, 1110, 1070, 1100, 1090, 1070, 1050, 1000,  880,  800,  400,    0 },
-    { 1170, 1160, 1160, 1230, 1210, 1250, 1180, 1150, 1110, 1050,  880,  880,  440,    0 },
-    { 1260, 1250, 1240, 1270, 1260, 1270, 1230, 1200, 1150, 1060, 1040,  880,  440,    0 },
-    { 1290, 1300, 1300, 1290, 1290, 1300, 1300, 1300, 1200, 1080,  970,  860,  430,    0 }
-}, .scaling_factor = 3, .regen_enabled = 0 };
+
+Torque_Map_Struct Torque_Map_Data = {
+		.max_torque = 1500,
+		.max_power = 700,
+		.max_torque_scaling_factor = 1000,
+		.max_power_scaling_factor = 1000,
+		.target_speed_limit = 6000,
+		.speed_limit_range = 500,
+		.regen_enabled = 0
+};
 
 //Buffer from DMA
 volatile uint16_t apps_dma_buffer[APPS_DMA_BUFFER_LEN] = {};
@@ -109,30 +105,23 @@ void startAPPSTask() {
 			SET_FLAG(APPS_Data.flags, APPS_BSPC_INVALID);
 		}
 
-		// NOTE: Cap values at slightly less then our max % for easier math
-		int32_t pedalPercent = MIN(APPS_Data.apps_position, 999);
-		int32_t rpm = MIN(Ctrl_Data.motor_speed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
+		int32_t max_torque = (int32_t)Torque_Map_Data.max_torque * Torque_Map_Data.max_torque_scaling_factor / 1000;
+		int32_t max_power_watts = (int32_t)Torque_Map_Data.max_power * 1000 * Torque_Map_Data.max_power_scaling_factor / 1000;
+		int16_t rpm = Ctrl_Data.motor_speed;
 
-		// Integer division - rounds down (use this to our advantage)
-		int32_t pedalOffset = pedalPercent % 100;
-		int32_t pedalLowIndex = pedalPercent / 100;
-		int32_t pedalHighIndex = pedalLowIndex + 1;
-		int32_t rpmOffset = rpm % 500;
-		int32_t rpmLowIndex = rpm / 500;
-		int32_t rpmHighIndex = rpmLowIndex + 1;
 
-		// NOTE: because we capped our values, both lower indexes will never read the maximum index
-		// this always leaves one column left for the high index.
-		int16_t torque_pedallow_rpmlow = Torque_Map_Data.map[pedalLowIndex][rpmLowIndex];
-		int16_t torque_pedallow_rpmhigh = Torque_Map_Data.map[pedalLowIndex][rpmHighIndex];
-		int16_t torque_pedalhigh_rpmlow = Torque_Map_Data.map[pedalHighIndex][rpmLowIndex];
-		int16_t torque_pedalhigh_rpmhigh = Torque_Map_Data.map[pedalHighIndex][rpmHighIndex];
+		// Max torque as calculated from max_power
+		int16_t max_torque_from_power = max_power * 95492 / rpm / 10000;
 
-		// Interpolating across rpm values
-		int16_t torque_pedallow = interpolate(500, torque_pedallow_rpmhigh - torque_pedallow_rpmlow, torque_pedallow_rpmlow, rpmOffset);
-		int16_t torque_pedalhigh = interpolate(500, torque_pedalhigh_rpmhigh - torque_pedalhigh_rpmlow, torque_pedalhigh_rpmlow, rpmOffset);
-		int16_t requested_torque = interpolate(100, torque_pedalhigh - torque_pedallow, torque_pedallow, pedalOffset) / Torque_Map_Data.scaling_factor;
+		// Scale based on pedal position
+		int16_t requested_torque = MIN(max_torque, max_torque_from_power) * APPS_Data.apps_position / 1000;
 
+		int16_t low_speed_cutoff = Torque_Map_Data.target_speed_limit - Torque_Map_Data.speed_limit_range / 2;
+		int16_t high_speed_cutoff = Torque_Map_Data.target_speed_limit + Torque_Map_Data.speed_limit_range / 2;
+
+		if (low_speed_cutoff <= rpm) {
+			request_torque = requested_torque * (high_speed_cutoff - rpm) / Torque_Map_Data.speed_limit_range;
+		}
 
 		// RULE (2024 V1): EV.3.3.3 No regen < 5km/h
 		if (!Torque_Map_Data.regen_enabled || rpm < kmphToRPM(5)) {

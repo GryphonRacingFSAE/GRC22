@@ -44,8 +44,12 @@ void startAPPSTask();
 #define TORQUE_MAP_COLUMNS 14
 
 typedef struct {
-	int16_t map[TORQUE_MAP_ROWS][TORQUE_MAP_COLUMNS]; // Base torque map stored in 10 : 1 values
-	uint8_t scaling_factor; // Additionally scales power to reduce power output
+	int16_t max_torque; // Torque in Nm * 10
+	int16_t max_power; // Power in kW * 10
+	uint16_t max_torque_scaling_factor; // in % * 10
+	uint16_t max_power_scaling_factor; // in % * 10
+	int16_t target_speed_limit; // in RPM
+	int16_t speed_limit_range; // in RPM
 	uint8_t regen_enabled;
 } Torque_Map_Struct;
 
