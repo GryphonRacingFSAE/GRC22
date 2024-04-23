@@ -2,9 +2,7 @@ import asyncio
 import cantools
 import json
 import os
-import serial
 import time
-from serial_asyncio import open_serial_connection
 
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
@@ -14,6 +12,7 @@ from foxglove_websocket.types import (
     ClientChannelId,
     ServiceId,
 )
+from serial_asyncio import open_serial_connection
 
 
 # serial port parameters
@@ -74,7 +73,9 @@ async def main():
         supported_encodings=["json"],
     ) as server:
         server.set_listener(Listener())
-        reader, writer = await open_serial_connection(url=SERIAL_PORT, baudrate=BAUD_RATE)
+        reader, writer = await open_serial_connection(
+            url=SERIAL_PORT, baudrate=BAUD_RATE
+        )
         db = load_dbc_files(DBC_FOLDER)
 
         # create dictionary to store channel ids

@@ -1,4 +1,4 @@
 cantools
 foxglove_websocket
-pyserial
+pyserial-asyncio
 python-can==4.2.2
