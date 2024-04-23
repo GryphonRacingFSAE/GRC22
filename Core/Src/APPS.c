@@ -32,7 +32,7 @@ Torque_Map_Struct Torque_Map_Data = { {
     { 1170, 1160, 1160, 1230, 1210, 1250, 1180, 1150, 1110, 1050,  880,  880,  440,    0 },
     { 1260, 1250, 1240, 1270, 1260, 1270, 1230, 1200, 1150, 1060, 1040,  880,  440,    0 },
     { 1290, 1300, 1300, 1290, 1290, 1300, 1300, 1300, 1200, 1080,  970,  860,  430,    0 }
-}, .scaling_factor = 5, .regen_enabled = 0 };
+}, .scaling_factor = 3, .regen_enabled = 0 };
 
 //Buffer from DMA
 volatile uint16_t apps_dma_buffer[APPS_DMA_BUFFER_LEN] = {};
@@ -62,7 +62,7 @@ void startAPPSTask() {
 
 		int32_t apps1_pos = CLAMP(0, (apps1_adc_avg - APPS1_MIN) * 1000 /(APPS1_MAX - APPS1_MIN), 1000);
 		int32_t apps2_pos = CLAMP(0, (apps2_adc_avg - APPS2_MIN) * 1000 /(APPS2_MAX - APPS2_MIN), 1000);
-		CRITICAL_PRINT("APPS1:%d, APPS1 ADC: %d, APPS2:%d, APPS2 ADC: %d\r\n", apps1_pos, apps1_adc_avg, apps2_pos, apps2_adc_avg);
+		DEBUG_PRINT("APPS1:%d, APPS1 ADC: %d, APPS2:%d, APPS2 ADC: %d\r\n", apps1_pos, apps1_adc_avg, apps2_pos, apps2_adc_avg);
 
 		// TODO: T.4.2.5
 		// TODO: T.4.3.3
@@ -109,7 +109,6 @@ void startAPPSTask() {
 			SET_FLAG(APPS_Data.flags, APPS_BSPC_INVALID);
 		}
 
-
 		// NOTE: Cap values at slightly less then our max % for easier math
 		int32_t pedalPercent = MIN(APPS_Data.apps_position, 999);
 		int32_t rpm = MIN(Ctrl_Data.motor_speed, 6499); // NOTE: Cap values at slightly less then our max rpm for easier math
@@ -118,9 +117,10 @@ void startAPPSTask() {
 		int32_t pedalOffset = pedalPercent % 100;
 		int32_t pedalLowIndex = pedalPercent / 100;
 		int32_t pedalHighIndex = pedalLowIndex + 1;
-		int32_t rpmOffset = 0;//rpm % 500;
-		int32_t rpmLowIndex = 0;//rpm / 500;
-		int32_t rpmHighIndex = 0;//rpmLowIndex + 1;
+		int32_t rpmOffset = rpm % 500;
+		int32_t rpmLowIndex = rpm / 500;
+		int32_t rpmHighIndex = rpmLowIndex + 1;
+
 		// NOTE: because we capped our values, both lower indexes will never read the maximum index
 		// this always leaves one column left for the high index.
 		int16_t torque_pedallow_rpmlow = Torque_Map_Data.map[pedalLowIndex][rpmLowIndex];
@@ -138,7 +138,7 @@ void startAPPSTask() {
 		if (!Torque_Map_Data.regen_enabled || rpm < kmphToRPM(5)) {
 			requested_torque = MAX(requested_torque, 0);
 		}
-		GRCprintf("Requested Torque: %d\r\n", requested_torque);
+		DEBUG_PRINT("Requested Torque: %d\r\n", requested_torque);
 		APPS_Data.torque = requested_torque;
 
 

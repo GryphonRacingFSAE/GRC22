@@ -78,9 +78,16 @@ inline void canMsgHandler(CANRXMsg* rxMsg) {
 		Ctrl_Data.tractive_voltage = *(int16_t*) (&INV_DC_Bus_Voltage);
 		break;
 	}
-	case 0x0A5: { // INV_Motor_Speed
+	case 0x0B0: { // INV_Motor_Speed
 		uint16_t INV_Motor_Speed = ((uint16_t) rxMsg->data[3] << 8) | ((uint16_t) rxMsg->data[2]);
 		Ctrl_Data.motor_speed = *(int16_t*) (&INV_Motor_Speed);
+		break;
+	}
+	case 0x300: { // Torque Map Editing
+		uint16_t pedal_index = (uint8_t) rxMsg->data[0];
+		uint16_t speed_index = (uint8_t) rxMsg->data[1];
+		uint16_t torque_raw = ((uint16_t) rxMsg->data[3] << 8) | ((uint16_t) rxMsg->data[2]);
+		Torque_Map_Data.map[pedal_index][speed_index] = *(int16_t*) (&torque_raw);
 		break;
 	}
 	}
