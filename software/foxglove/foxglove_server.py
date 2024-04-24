@@ -3,8 +3,8 @@ import cantools
 import json
 import os
 import serial
+import sys
 import time
-from serial_asyncio import open_serial_connection
 
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
@@ -14,10 +14,16 @@ from foxglove_websocket.types import (
     ClientChannelId,
     ServiceId,
 )
+from serial_asyncio import open_serial_connection
 
+
+# check for command-line argument
+if len(sys.argv) != 2:
+    print("ERROR: No serial port selected")
+    sys.exit()
 
 # serial port parameters
-SERIAL_PORT = "COM3"
+SERIAL_PORT = sys.argv[1]
 BAUD_RATE = 921600
 
 # location of dbc folder (relative to this file)
@@ -74,7 +80,9 @@ async def main():
         supported_encodings=["json"],
     ) as server:
         server.set_listener(Listener())
-        reader, writer = await open_serial_connection(url=SERIAL_PORT, baudrate=BAUD_RATE)
+        reader, writer = await open_serial_connection(
+            url=SERIAL_PORT, baudrate=BAUD_RATE
+        )
         db = load_dbc_files(DBC_FOLDER)
 
         # create dictionary to store channel ids
@@ -100,6 +108,8 @@ async def main():
             # link channel id to associated message name
             channel_ids[topic_name] = channel_id
 
+        delta_time = 0
+
         while True:
             # read and parse message from serial
             message = await reader.readline()
@@ -107,6 +117,10 @@ async def main():
 
             print(message_name)
             print(decoded_message)
+
+            # update message time when available
+            if message_name == "RLM_TIME_0XF4":
+                delta_time = decoded_message["TIME"]
 
             # check dictionary for message name
             if message_name in channel_ids:
@@ -116,7 +130,7 @@ async def main():
                 # TODO: change time variable to use RLM time
                 await server.send_message(
                     channel_id,
-                    time.time_ns(),
+                    delta_time,
                     json.dumps(decoded_message).encode("utf8"),
                 )
 
