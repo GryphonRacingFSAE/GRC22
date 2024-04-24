@@ -21,7 +21,7 @@ APPS_Data_Struct APPS_Data = {
 };
 
 Torque_Map_Struct Torque_Map_Data = {
-		.max_torque = 1500,
+		.max_torque = 400,
 		.max_power = 700,
 		.max_torque_scaling_factor = 1000,
 		.max_power_scaling_factor = 1000,
@@ -106,21 +106,25 @@ void startAPPSTask() {
 		}
 
 		int32_t max_torque = (int32_t)Torque_Map_Data.max_torque * Torque_Map_Data.max_torque_scaling_factor / 1000;
-		int32_t max_power_watts = (int32_t)Torque_Map_Data.max_power * 1000 * Torque_Map_Data.max_power_scaling_factor / 1000;
 		int16_t rpm = Ctrl_Data.motor_speed;
 
 
+		int16_t requested_torque = max_torque;
 		// Max torque as calculated from max_power
-		int16_t max_torque_from_power = max_power * 95492 / rpm / 10000;
+		if (rpm != 0) {
+			int32_t max_power_watts = (int32_t)Torque_Map_Data.max_power * 1000 * Torque_Map_Data.max_power_scaling_factor / 1000;
+			int16_t max_torque_from_power = max_power_watts * 95492 / rpm / 10000;
+			requested_torque = MIN(max_torque, max_torque_from_power);
+		}
 
 		// Scale based on pedal position
-		int16_t requested_torque = MIN(max_torque, max_torque_from_power) * APPS_Data.apps_position / 1000;
+		requested_torque = requested_torque * APPS_Data.apps_position / 1000;
 
 		int16_t low_speed_cutoff = Torque_Map_Data.target_speed_limit - Torque_Map_Data.speed_limit_range / 2;
 		int16_t high_speed_cutoff = Torque_Map_Data.target_speed_limit + Torque_Map_Data.speed_limit_range / 2;
 
 		if (low_speed_cutoff <= rpm) {
-			request_torque = requested_torque * (high_speed_cutoff - rpm) / Torque_Map_Data.speed_limit_range;
+			requested_torque = requested_torque * (high_speed_cutoff - rpm) / Torque_Map_Data.speed_limit_range;
 		}
 
 		// RULE (2024 V1): EV.3.3.3 No regen < 5km/h
