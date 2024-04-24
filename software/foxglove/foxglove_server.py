@@ -4,7 +4,6 @@ import json
 import os
 import serial
 import sys
-import time
 
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
