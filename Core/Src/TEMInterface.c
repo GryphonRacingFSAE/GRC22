@@ -30,16 +30,20 @@ void startTEMInterfaceTask() {
     	int8_t minimum_thermistor_temperature = 127;
     	int8_t maximum_thermistor_temperature = -128;
     	int16_t thermistor_temperature_sum = 0;
+    	uint8_t actual_thermistor_count = 0;
     	for (uint8_t i = 0; i < THERMISTOR_COUNT; i++) {
-    		if (ThermistorData.thermistors[i] < minimum_thermistor_temperature) {
-    			minimum_thermistor_temperature = ThermistorData.thermistors[i];
+    		if (ThermistorData.thermistors[i] != -60) {
+    			actual_thermistor_count++;
+				if (ThermistorData.thermistors[i] < minimum_thermistor_temperature) {
+					minimum_thermistor_temperature = ThermistorData.thermistors[i];
+				}
+				if (ThermistorData.thermistors[i] > maximum_thermistor_temperature) {
+					maximum_thermistor_temperature = ThermistorData.thermistors[i];
+				}
+				thermistor_temperature_sum += ThermistorData.thermistors[i];
     		}
-    		if (ThermistorData.thermistors[i] > maximum_thermistor_temperature) {
-    			maximum_thermistor_temperature = ThermistorData.thermistors[i];
-			}
-    		thermistor_temperature_sum += ThermistorData.thermistors[i];
     	}
-    	int8_t average_thermistor_temperature = (int8_t)(thermistor_temperature_sum / THERMISTOR_COUNT);
+    	int8_t average_thermistor_temperature = (int8_t)(thermistor_temperature_sum / actual_thermistor_count);
 
     	// The TEM modules don't actually seem to offset their module numbers even though the CAN specification says they should.
     	bms_broadcast.header.ExtId = 0x1839F380; // The CAN ID is offset by the module number
@@ -47,8 +51,8 @@ void startTEMInterfaceTask() {
     	bms_broadcast.data[1] = *(uint8_t*)(&minimum_thermistor_temperature);
     	bms_broadcast.data[2] = *(uint8_t*)(&maximum_thermistor_temperature);
     	bms_broadcast.data[3] = *(uint8_t*)(&average_thermistor_temperature);
-    	bms_broadcast.data[4] = THERMISTOR_COUNT;
-    	bms_broadcast.data[5] = THERMISTOR_COUNT - 1;
+    	bms_broadcast.data[4] = actual_thermistor_count;
+    	bms_broadcast.data[5] = actual_thermistor_count - 1;
     	bms_broadcast.data[6] = 0;
 
     	uint8_t bms_broadcast_checksum = 0x39 + 0x8; // Module number + 1, plus length (8) shifted to the left 4 bits
@@ -69,7 +73,7 @@ void startTEMInterfaceTask() {
 
     	general_broadcast.data[4] = *(uint8_t*)(&minimum_thermistor_temperature); // Min thermistor
     	general_broadcast.data[5] = *(uint8_t*)(&maximum_thermistor_temperature); // Max thermistor
-    	general_broadcast.data[6] = THERMISTOR_COUNT - 1;
+    	general_broadcast.data[6] = actual_thermistor_count - 1;
     	general_broadcast.data[7] = 0;
 
 
