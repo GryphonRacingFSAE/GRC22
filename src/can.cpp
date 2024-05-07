@@ -27,6 +27,28 @@ void initCAN() {
 
 void startTransmitCANTask(void *pvParameters) {
     (void)pvParameters;    
+
+    twai_message_t tx_msg = {};
+
+    // Clear motor controller faults
+
+    tx_msg.identifier = 0x0c1;
+    tx_msg.data_length_code = 8;
+
+    tx_msg.data[0] = 20;
+    tx_msg.data[1] = 0;
+    tx_msg.data[2] = 1;
+    tx_msg.data[3] = 0;
+    tx_msg.data[4] = 0;
+    tx_msg.data[5] = 0; 
+    tx_msg.data[6] = 0;
+    tx_msg.data[7] = 0;
+
+    auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
+    if (resp != ESP_OK) {
+        Serial.printf("Failed to send CAN message: %#02x\n", resp);
+    }
+
     TickType_t tick = xTaskGetTickCount();
 
 	while (1) {
@@ -72,6 +94,12 @@ void startReceiveCANTask(void *pvParameters) {
             case 0x0E0: { // Custom BMS MSG
                 uint8_t max_temp_raw = (uint8_t)(rx_msg.data[0]);
                 global_bms.max_temp = *(int8_t*) (&max_temp_raw);
+                break;
+            }
+            case 0x0E5: {
+                global_bms.DTC1 = rx_msg.data[1] | (rx_msg.data[0] << 8);
+                global_bms.DTC2 = rx_msg.data[3] | (rx_msg.data[2] << 8);
+                global_bms.last_heartbeat = xTaskGetTickCount();
                 break;
             }
             case 0x300: { // Torque Parameter Editing

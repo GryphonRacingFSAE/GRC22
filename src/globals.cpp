@@ -8,7 +8,8 @@ MotorController global_motor_controller = {
 };
 
 BMS global_bms = {
-    .max_temp = 0
+    .max_temp = 0,
+    .last_heartbeat = 0
 };
 
 Peripherals global_peripherals = {
@@ -17,8 +18,8 @@ Peripherals global_peripherals = {
 };
 
 TorqueMap global_torque_map = {
-    .max_torque = 400,
-    .max_power = 700,
+    .max_torque = 1200,
+    .max_power = 500,
     .max_torque_scaling_factor = 1000,
     .max_power_scaling_factor = 1000,
     .target_speed_limit = 6000,

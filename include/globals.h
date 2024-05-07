@@ -13,7 +13,7 @@
 #define BRAKE_PRESSURE_PIN GPIO_NUM_25
 #define PUSH_BUTTON_PIN GPIO_NUM_35
 
-#define ACCUM_FAN_PIN GPIO_NUM_22
+#define AMS_SHUTDOWN_PIN GPIO_NUM_22
 #define RAD_FAN_PIN GPIO_NUM_23
 
 #define BRAKE_LIGHT_PIN GPIO_NUM_26
@@ -78,6 +78,9 @@ extern TorqueMap global_torque_map;
 
 typedef struct {
 	int16_t max_temp;
+    uint16_t DTC1;
+    uint16_t DTC2;
+    uint32_t last_heartbeat;
 } BMS;
 
 extern BMS global_bms;
