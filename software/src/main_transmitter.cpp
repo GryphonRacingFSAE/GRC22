@@ -32,7 +32,7 @@ const byte address[6] = "00001";
 uint8_t nrf_buffer[128];
 
 // CAN
-twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NO_ACK);
+twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NORMAL);
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
@@ -43,8 +43,8 @@ rlm_rlm_position_0_xf2_t rlm_position;
 rlm_rlm_trajectory_0_xf3_t rlm_trajectory;
 rlm_rlm_time_0_xf4_t rlm_time;
 
-#define CAN_FRAME_MAX_SIZE 64
-uint8_t can_frame[CAN_FRAME_MAX_SIZE];
+#define CAN_MAX_SIZE 64
+uint8_t can_frame[CAN_MAX_SIZE];
 
 // MPU-6050
 MPU6050 mpu;
@@ -60,7 +60,7 @@ HardwareSerial SerialGPS(1);
 // Time
 const int interval = 100;
 uint32_t prev_time = 0;
-uint32_t cur_time;
+uint32_t cur_time = 0;
 
 //==============================================================================
 // nRF24L01+
@@ -94,7 +94,7 @@ void sendProto(uint32_t address, uint8_t size, uint8_t data[], uint32_t time) {
             Serial.printf(",");
         }
     }
-    Serial.printf("|%d\n");
+    Serial.printf("|%d\n", msg.time);
 
     pb_ostream_t output_stream = pb_ostream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
     pb_encode(&output_stream, ProtoMessage_fields, &msg);
@@ -140,7 +140,7 @@ void sendCAN(uint32_t address, uint8_t* can_frame, int length) {
         can_message.data[i] = can_frame[i];
     }
 
-    if (twai_transmit(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+    if (twai_transmit(&can_message, pdMS_TO_TICKS(5000)) == ESP_OK) {
         sendProto(can_message.identifier, can_message.data_length_code, can_message.data, cur_time);
     } else {
         printf("Failed to send CAN message\n");
@@ -194,13 +194,13 @@ void readMPU() {
     rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax_real);
     rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay_real);
     rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az_real);
-    rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_FRAME_MAX_SIZE);
+    rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_MAX_SIZE);
     sendCAN(RLM_RLM_ACCEL_0_XF0_FRAME_ID, can_frame, RLM_RLM_ACCEL_0_XF0_LENGTH);
 
     rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx_real);
     rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy_real);
     rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz_real);
-    rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_FRAME_MAX_SIZE);
+    rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_MAX_SIZE);
     sendCAN(RLM_RLM_GYRO_0_XF1_FRAME_ID, can_frame, RLM_RLM_GYRO_0_XF1_LENGTH);
 }
 
@@ -220,12 +220,12 @@ void readGPS() {
 
             rlm_position.latitude = rlm_rlm_position_0_xf2_latitude_encode(gps.location.lat());
             rlm_position.longitude = rlm_rlm_position_0_xf2_longitude_encode(gps.location.lng());
-            rlm_rlm_position_0_xf2_pack(can_frame, &rlm_position, CAN_FRAME_MAX_SIZE);
+            rlm_rlm_position_0_xf2_pack(can_frame, &rlm_position, CAN_MAX_SIZE);
             sendCAN(RLM_RLM_POSITION_0_XF2_FRAME_ID, can_frame, RLM_RLM_POSITION_0_XF2_LENGTH);
 
             rlm_trajectory.direction = rlm_rlm_trajectory_0_xf3_direction_encode(gps.course.deg());
             rlm_trajectory.speed = rlm_rlm_trajectory_0_xf3_speed_encode(gps.speed.mps());
-            rlm_rlm_trajectory_0_xf3_pack(can_frame, &rlm_trajectory, CAN_FRAME_MAX_SIZE);
+            rlm_rlm_trajectory_0_xf3_pack(can_frame, &rlm_trajectory, CAN_MAX_SIZE);
             sendCAN(RLM_RLM_TRAJECTORY_0_XF3_FRAME_ID, can_frame, RLM_RLM_TRAJECTORY_0_XF3_LENGTH);
 
             return;

@@ -31,19 +31,28 @@ DBC_FOLDER = "../DBCs"
 
 def parse_can_message(message, db):
     if not message.strip():
-        return (None, None)
+        return (None, None, None)
 
-    # split hex values
-    hex_values = message.split(",")
-    address = int(hex_values[0], 16)
-    data = bytes([int(value, 16) for value in hex_values[1:]])
+    # split messages by pipe
+    parts = message.strip().split("|")
+    if len(parts) != 3:
+        return (None, None, None)
+
+    addr_str, data_str, time_str = parts
+
+    # extract address, data, and time
+    try:
+        address = int(addr_str)
+        data = bytes([int(value, 16) for value in data_str.split(",")])
+        time = int(time_str)
+    except ValueError:
+        return (None, None, None)
 
     # get message object and decoded data
     try:
         message = db.get_message_by_frame_id(address)
         decoded_message = db.decode_message(message.frame_id, data)
-        return message.name, decoded_message
-
+        return message.name, decoded_message, time
     except KeyError:
         return (None, None)
 
@@ -107,26 +116,21 @@ async def main():
             # link channel id to associated message name
             channel_ids[topic_name] = channel_id
 
-        delta_time = 0
-
         while True:
             # read and parse message from serial
             message = await reader.readline()
-            message_name, decoded_message = parse_can_message(message.decode(), db)
+            message_name, decoded_message, delta_time = parse_can_message(
+                message.decode(), db
+            )
 
             print(message_name)
             print(decoded_message)
-
-            # update message time when available
-            if message_name == "RLM_TIME_0XF4":
-                delta_time = decoded_message["TIME"]
 
             # check dictionary for message name
             if message_name in channel_ids:
                 channel_id = channel_ids[message_name]
 
                 # send message from server
-                # TODO: change time variable to use RLM time
                 await server.send_message(
                     channel_id,
                     delta_time,
