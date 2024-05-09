@@ -7,7 +7,7 @@
 #include <driver/twai.h>
 #include <pb_encode.h>
 
-#include "CAN.pb.h"
+#include "message.pb.h"
 #include "rlm.h"
 
 //==============================================================================
@@ -57,6 +57,11 @@ int16_t gx_offset, gy_offset, gz_offset;
 TinyGPSPlus gps;
 HardwareSerial SerialGPS(1);
 
+// Time
+const int interval = 100;
+uint32_t prev_time = 0;
+uint32_t cur_time;
+
 //==============================================================================
 // nRF24L01+
 //==============================================================================
@@ -75,9 +80,24 @@ void initNRF() {
     radio.stopListening();
 }
 
-void sendProto(CAN msg) {
+void sendProto(uint32_t address, uint8_t size, uint8_t data[], uint32_t time) {
+    ProtoMessage msg = ProtoMessage_init_default;
+    msg.address = address;
+    msg.data.size = size;
+    memcpy(msg.data.bytes, data, size);
+    msg.time = time;
+
+    Serial.printf("%d|", msg.address);
+    for (int i = 0; i < msg.data.size; i++) {
+        Serial.printf("%02X", msg.data.bytes[i]);
+        if (i != msg.data.size - 1) {
+            Serial.printf(",");
+        }
+    }
+    Serial.printf("|%d\n");
+
     pb_ostream_t output_stream = pb_ostream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
-    pb_encode(&output_stream, CAN_fields, &msg);
+    pb_encode(&output_stream, ProtoMessage_fields, &msg);
     radio.write(nrf_buffer, output_stream.bytes_written);
 }
 
@@ -102,20 +122,9 @@ void initCAN() {
 void readCAN() {
     twai_message_t can_message;
 
-    if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+    if (twai_receive(&can_message, pdMS_TO_TICKS(5000)) == ESP_OK) {
         if (!can_message.rtr) {
-            CAN msg = CAN_init_default;
-            msg.address = can_message.identifier;
-            msg.data.size = can_message.data_length_code;
-            memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
-
-            Serial.printf("\e[0;34m%X\e[0m", msg.address);
-            for (int i = 0; i < msg.data.size; i++) {
-                Serial.printf("\e[0;34m,%02X\e[0m", msg.data.bytes[i]);
-            }
-            Serial.println();
-
-            sendProto(msg);
+            sendProto(can_message.identifier, can_message.data_length_code, can_message.data, cur_time);
         }
     } else {
         Serial.println("Failed to receive CAN message");
@@ -132,18 +141,7 @@ void sendCAN(uint32_t address, uint8_t* can_frame, int length) {
     }
 
     if (twai_transmit(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
-        CAN msg = CAN_init_default;
-        msg.address = can_message.identifier;
-        msg.data.size = can_message.data_length_code;
-        memcpy(msg.data.bytes, can_message.data, can_message.data_length_code);
-
-        Serial.printf("\e[0;32m%X\e[0m", msg.address);
-        for (int i = 0; i < msg.data.size; i++) {
-            Serial.printf("\e[0;32m,%02X\e[0m", msg.data.bytes[i]);
-        }
-        Serial.println();
-
-        sendProto(msg);
+        sendProto(can_message.identifier, can_message.data_length_code, can_message.data, cur_time);
     } else {
         printf("Failed to send CAN message\n");
     }
@@ -261,16 +259,8 @@ void setup() {
 // Loop
 //==============================================================================
 
-const uint32_t interval = 100;
-uint32_t prev_time = 0;
-uint32_t cur_time;
-
 void loop() {
     cur_time = millis();
-
-    rlm_time.time = cur_time;
-    rlm_rlm_time_0_xf4_pack(can_frame, &rlm_time, CAN_FRAME_MAX_SIZE);
-    sendCAN(RLM_RLM_TIME_0_XF4_FRAME_ID, can_frame, RLM_RLM_TIME_0_XF4_LENGTH);
 
     if (cur_time - prev_time >= interval) {
         prev_time = cur_time;
@@ -281,7 +271,7 @@ void loop() {
 
     readCAN();
 
-    if (digitalRead(MPU_CAL) == HIGH) {
-        calibrateMPU();
-    }
+    // if (digitalRead(MPU_CAL) == HIGH) {
+    //     calibrateMPU();
+    // }
 }

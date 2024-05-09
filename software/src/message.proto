@@ -2,7 +2,8 @@ syntax = "proto3";
 
 import "nanopb.proto";
 
-message CAN {
+message ProtoMessage {
     uint32 address = 1;
     bytes data = 2 [(nanopb).max_size = 8];
+    uint32 time = 3;
 }
