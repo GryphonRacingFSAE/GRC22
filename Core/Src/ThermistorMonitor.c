@@ -79,6 +79,11 @@ void startThermistorMonitorTask() {
     uint32_t tick = osKernelGetTickCount();
     uint8_t select_line = 0;
 
+    // Initialize thermistor temperatures
+    for (uint8_t i = 0; i < THERMISTOR_COUNT; i++) {
+        ThermistorData.thermistors[i] = 20;
+    }
+
     while (1) {
         // Resetting pins A, B, C; then setting the next binary sequence as per table 1:
         HAL_GPIO_WritePin(GPIOA, 0b1111000, GPIO_PIN_RESET);
@@ -116,7 +121,7 @@ void startThermistorMonitorTask() {
             // This is more for detecting open circuit connections.
             // It seems that the TEM modules use -41 degrees as sentinal values, so we're copying it.
             if (thermistor_resistance < 100) {
-                ThermistorData.thermistors[current_thermistor_id] = -41;
+                ThermistorData.thermistors[current_thermistor_id] = -60;
                 continue;
             }
 

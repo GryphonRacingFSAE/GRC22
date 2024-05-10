@@ -18,7 +18,6 @@ void startTEMInterfaceTask() {
 
 
     while (1) {
-        // GRCprintf("Sending out to queue");
         // Grab the current module ID.
         // Index 3 on the dip switch is LSB, index 1 on the dip switch is MSB
     	uint8_t module_bit_0 = HAL_GPIO_ReadPin(DIP0_GPIO_Port, DIP0_Pin);
@@ -32,7 +31,8 @@ void startTEMInterfaceTask() {
     	int16_t thermistor_temperature_sum = 0;
     	uint8_t actual_thermistor_count = 0;
     	for (uint8_t i = 0; i < THERMISTOR_COUNT; i++) {
-    		if (ThermistorData.thermistors[i] != -60) {
+    		uint8_t excluded_thermistors = (module_number == 1 && i == 25);
+    		if (ThermistorData.thermistors[i] > -35 && !excluded_thermistors) {
     			actual_thermistor_count++;
 				if (ThermistorData.thermistors[i] < minimum_thermistor_temperature) {
 					minimum_thermistor_temperature = ThermistorData.thermistors[i];
@@ -43,6 +43,9 @@ void startTEMInterfaceTask() {
 				thermistor_temperature_sum += ThermistorData.thermistors[i];
     		}
     	}
+    	if (actual_thermistor_count == 0) {
+    		actual_thermistor_count = 1;
+    	}
     	int8_t average_thermistor_temperature = (int8_t)(thermistor_temperature_sum / actual_thermistor_count);
 
     	// The TEM modules don't actually seem to offset their module numbers even though the CAN specification says they should.
@@ -51,8 +54,8 @@ void startTEMInterfaceTask() {
     	bms_broadcast.data[1] = *(uint8_t*)(&minimum_thermistor_temperature);
     	bms_broadcast.data[2] = *(uint8_t*)(&maximum_thermistor_temperature);
     	bms_broadcast.data[3] = *(uint8_t*)(&average_thermistor_temperature);
-    	bms_broadcast.data[4] = actual_thermistor_count;
-    	bms_broadcast.data[5] = actual_thermistor_count - 1;
+    	bms_broadcast.data[4] = THERMISTOR_COUNT;
+    	bms_broadcast.data[5] = THERMISTOR_COUNT - 1;
     	bms_broadcast.data[6] = 0;
 
     	uint8_t bms_broadcast_checksum = 0x39 + 0x8; // Module number + 1, plus length (8) shifted to the left 4 bits
@@ -66,17 +69,14 @@ void startTEMInterfaceTask() {
     	uint16_t absolute_thermistor_id = (uint16_t)module_number * 80 + current_thermistor_id;
     	general_broadcast.data[0] = (uint8_t)((absolute_thermistor_id & 0xFF00) >> 8);
     	general_broadcast.data[1] = (uint8_t)(absolute_thermistor_id & 0x00FF);
-    	general_broadcast.data[2] = *(uint8_t*)(&ThermistorData.thermistors[current_thermistor_id]);
+		general_broadcast.data[2] = *(uint8_t*)(&ThermistorData.thermistors[current_thermistor_id]);
 
     	// The TEM modules don't seem to broadcast the thermistor count, instead they just repeat the module relative thermistor ID.
     	general_broadcast.data[3] = current_thermistor_id;
-
     	general_broadcast.data[4] = *(uint8_t*)(&minimum_thermistor_temperature); // Min thermistor
     	general_broadcast.data[5] = *(uint8_t*)(&maximum_thermistor_temperature); // Max thermistor
-    	general_broadcast.data[6] = actual_thermistor_count - 1;
+    	general_broadcast.data[6] = THERMISTOR_COUNT - 1;
     	general_broadcast.data[7] = 0;
-
-
 
         osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 0);
         osMessageQueuePut(CANTX_QHandle, &general_broadcast, 0, 0);
