@@ -32,7 +32,7 @@ void startTEMInterfaceTask() {
     	uint8_t actual_thermistor_count = 0;
     	for (uint8_t i = 0; i < THERMISTOR_COUNT; i++) {
     		uint8_t excluded_thermistors = (module_number == 1 && i == 25);
-    		if (ThermistorData.thermistors[i] > -35 && !excluded_thermistors) {
+    		if (ThermistorData.thermistors[i] > -10 && !excluded_thermistors) {
     			actual_thermistor_count++;
 				if (ThermistorData.thermistors[i] < minimum_thermistor_temperature) {
 					minimum_thermistor_temperature = ThermistorData.thermistors[i];
