@@ -207,6 +207,11 @@ Item {
                     name: "RTD BUT"
                     color: "green"
                 }
+                Indicator {
+                    id: inverter_active
+                    name: "INV ACT"
+                    color: "green"
+                }
             }
             RowLayout {
                 Indicator {
@@ -232,6 +237,11 @@ Item {
                 Indicator {
                     id: brake_oor
                     name: "B OOR"
+                    color: "red"
+                } 
+                Indicator {
+                    id: inverter_lockout
+                    name: "INV LOCK"
                     color: "red"
                 }
             }
@@ -331,6 +341,12 @@ Item {
         }
         function onNewPumpActive(state) {
             pump_active.value = state;
+        }
+        function onNewLockoutStatus(state) {
+            inverter_lockout.value = state;
+        }
+        function onNewActiveStatus(state) {
+            inverter_active.value = state;
         }
         function onNewAccumulatorFanActive(state) {
             acc_fan_active.value = state;

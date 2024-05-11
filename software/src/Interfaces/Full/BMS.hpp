@@ -13,21 +13,55 @@ class BMS : public QObject, public CAN::DBCInterface<BMS> {
     BMS(const std::string& dbc_file_path = "Orion_CANBUS.dbc")
         : QObject(nullptr), DBCInterface(dbc_file_path), m_voltages(5 * 28, -40), m_resistances(5 * 28, -40) {
         can_signal_dispatch["Pack_Open_Voltage"] = &BMS::newAccumulatorOpenVoltage;
-        can_signal_dispatch["Pack_SOC"] = &BMS::newAccumulatorSOC;
-        can_signal_dispatch["Pack_Inst_Voltage"] = &BMS::newAccumulatorInstVoltage;
-        can_signal_dispatch["Pack_Current"] = &BMS::newAccumulatorCurrent;
-        can_signal_dispatch["High_Temperature"] = &BMS::newAccumulatorMaxTemp;
+        can_signal_dispatch["Pack_SOC"] = &BMS::newSOC;
+        can_signal_dispatch["Pack_Inst_Voltage"] = &BMS::newVoltage;
+        // can_signal_dispatch["Pack_Current"] = &BMS::newAccumulatorCurrent;
+        can_signal_dispatch["High_Temperature"] = &BMS::newHighestTemp;
         can_signal_dispatch["Internal_Temperature"] = &BMS::newBMSTemp;
         can_message_dispatch[0x108] = &BMS::handleCellBroadcast;
     }
 
   signals:
+    // E0
+    void newHighestTemp(float temp);
+    void newAvgTemp(float temp);
+    void newLowestTemp(float temp);
     void newBMSTemp(float temp);
+
+    // E1
+    void newHighCellVoltage(float voltage);
+    void newAvgCellVoltage(float voltage);
+    void newLowCellVoltage(float voltage);
+    void newVoltage(float voltage);
+
+    // E2
+    void newAvgCellOpenVoltage(float voltage);
+    void newLowCellOpenVoltage(float voltage);
+    void newHighCellOpenVoltage(float voltage);
+    void newOpenVoltage(float voltage);
+
+    // E3
+    void newSOC(float percent);
+
+    // Not Used
+    void newAvgPackCurrent(float current);
+    void newSignedCurrent(float current);
+    void newUnsignedCurrent(float current);
+    void newCurrentLimitStatus(float current);
+    void newChargeCurrentLimitA(float current);
+    void newChargeCurrentLimitKW(float current);
+    void newDischargeCurrentLimitA(float current);
+    void newDischargeCurrentLimitKW(float current);
+    void newSummedVoltage(float voltage);
+    void newLowCellVoltageID(float voltage);
+    void newHighCellVoltageID(float voltage);
+    void newHeatsinkTemp(float temp);
+    void newHottestThermistorID(float temp);
+
     void newAccumulatorMaxTemp(float temp);
     void newAccumulatorCurrent(float current);
     void newAccumulatorInstVoltage(float voltage);
     void newAccumulatorOpenVoltage(float voltage);
-    void newAccumulatorSOC(float percent);
 
     void newCellVoltage(int segment, int id, float voltage);
     void voltagesChanged();

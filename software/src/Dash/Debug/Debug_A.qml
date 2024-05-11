@@ -137,14 +137,6 @@ Item {
                 id: bms_high_cell_open_voltage
                 title: "High Cell Open Voltage"
             }
-            DataBox {
-                id: bms_min_cell_voltage
-                title: "Minimum Cell Voltage"
-            }
-            DataBox {
-                id: bms_max_cell_voltage
-                title: "Maximum Cell Voltage"
-            }
 
             SectionHeader {
                 title: "[Voltage]  Energy Meter"
@@ -269,8 +261,6 @@ Item {
         function onNewAvgCellOpenVoltage(voltage) {bms_avg_cell_open_voltage.value = voltage}
         function onNewLowCellOpenVoltage(voltage) {bms_low_cell_open_voltage.value = voltage}
         function onNewHighCellOpenVoltage(voltage) {bms_high_cell_open_voltage.value = voltage}
-        function onNewMinCellVoltage(voltage) {bms_min_cell_voltage.value = voltage}
-        function onNewMaxCellVoltage(voltage) {bms_max_cell_voltage.value = voltage}
     
         function onNewAvgTemp(temp) {bms_avg_temp.value = temp}
         function onNewLowestTemp(temp) {bms_lowest_temp.value = temp}
