@@ -14,15 +14,15 @@ int32_t kmphToRPM(int32_t kmph) {
 }
 
 void pumpCycle(uint8_t pump_speed) {
-	// if(pump_speed == 0) {
-    //     // ledcWrite(0, 1024 * 10 / 100); // Stop / Error Reset
-	// } else if (pump_speed == 100) {
-    //     ledcWrite(0, 1024 * 90 / 100); // Maximum Speed
-	// } else {
-	// 	// between 1-99% pump speed, 13-85% duty cycle (We only use from 15% - 85% duty cycle as 15% duty cycle at 50Hz will wake the pump)
-	// 	uint32_t duty_cycle = (1024 * (pump_speed-1)*(85-15)/(99-1) + 1024 * 15) / 100;
-    //     ledcWrite(0, duty_cycle); // → Controlled operation from min to max speed
-	// }
+	if(pump_speed == 0) {
+        ledcWrite(0, 1023 - 1023 * 10 / 100); // Stop / Error Reset
+	} else if (pump_speed == 100) {
+        ledcWrite(0, 1023 - 1023 * 90 / 100); // Maximum Speed
+	} else {
+		// between 1-99% pump speed, 13-85% duty cycle (We only use from 15% - 85% duty cycle as 15% duty cycle at 50Hz will wake the pump)
+		uint32_t duty_cycle = 1023 - (1023 * (pump_speed-1)*(85-15)/(99-1) + 1023 * 15) / 100;
+        ledcWrite(0, duty_cycle); // → Controlled operation from min to max speed
+	}
 }
 
 void startBMSTask(void* params) {
@@ -33,9 +33,8 @@ void startBMSTask(void* params) {
         uint32_t can_error = 0;
         twai_read_alerts(&can_error, 0);
         // Serial.printf("DTC1: %04x, DTC2: %04x\n", global_bms.DTC1, global_bms.DTC2);
-        Serial.printf("%d, %d\n", global_bms.last_heartbeat, tick);
         if (!can_error && (tick < (global_bms.last_heartbeat + 1000))) {
-            if ((global_bms.DTC1 & 0x00Ff) || (global_bms.DTC2 & 0xFFFE)) {
+            if ((global_bms.DTC1 & 0x00FF) || (global_bms.DTC2 & 0xFFF2)) {
                 digitalWrite(AMS_SHUTDOWN_PIN, LOW);
             } else {
                 digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
@@ -81,11 +80,10 @@ void startControlTask(void *pvParameters) {
         
         if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || !FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
             SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            ledcWrite(0, 1024 * 19 / 100); // Maximum Speed
+            pumpCycle(60);
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            ledcWrite(0, 1024 * 10 / 100); // Maximum Speed
-
+            pumpCycle(0);
         }
 
         // Turn on fan based on coolant temperature threshold
@@ -153,8 +151,10 @@ void setup() {
 
     initCAN();
 
-    ledcSetup(0, 60, 10);   // 50Hz PWM, 10-bit resolution
+    ledcSetup(0, 50, 10);   // 50Hz PWM, 10-bit resolution
+    pinMode(PUMP_PWM_PIN, OUTPUT);
     ledcAttachPin(PUMP_PWM_PIN, 0); // assign RGB led pins to channels
+    pumpCycle(0);
 
     pinMode(APPS1_PIN, INPUT);
     pinMode(APPS2_PIN, INPUT);

@@ -97,8 +97,8 @@ void startReceiveCANTask(void *pvParameters) {
                 break;
             }
             case 0x0E5: {
-                global_bms.DTC1 = rx_msg.data[1] | (rx_msg.data[0] << 8);
-                global_bms.DTC2 = rx_msg.data[3] | (rx_msg.data[2] << 8);
+                global_bms.DTC1 = (rx_msg.data[1] << 8) | rx_msg.data[0];
+                global_bms.DTC2 = (rx_msg.data[3] << 8) | rx_msg.data[2];
                 global_bms.last_heartbeat = xTaskGetTickCount();
                 break;
             }

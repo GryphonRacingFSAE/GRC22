@@ -4,9 +4,9 @@
 
 #include <freertos/task.h>
 
-#define APPS1_MIN 1360
+#define APPS1_MIN 1340
 #define APPS1_MAX 1160
-#define APPS2_MIN 2970
+#define APPS2_MIN 2915
 #define APPS2_MAX 2520
 #define BRAKE_PRESSURE_MIN 290
 #define BRAKE_PRESSURE_MAX (4095 * 9 / 10)
@@ -16,8 +16,8 @@
 
 uint16_t analogReadRepeated(uint8_t pin) {
     uint32_t adc_avg = 0;
-    const uint8_t counts = 128;
-    for (uint8_t i = 0; i < counts; i++) {
+    const uint16_t counts = 150;
+    for (uint16_t i = 0; i < counts; i++) {
         adc_avg += analogRead(pin);
     }
     adc_avg /= counts;
