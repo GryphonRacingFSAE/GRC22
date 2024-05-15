@@ -4,15 +4,17 @@
 
 #include <freertos/task.h>
 
-#define APPS1_MIN 1340
-#define APPS1_MAX 1160
-#define APPS2_MIN 2915
-#define APPS2_MAX 2520
-#define BRAKE_PRESSURE_MIN 290
-#define BRAKE_PRESSURE_MAX (4095 * 9 / 10)
-#define ADC_SHORTED_GND 150
-#define ADC_SHORTED_VCC 3950
-
+void pumpCycle(uint8_t pump_speed) {
+	if(pump_speed == 0) {
+        ledcWrite(0, 1023 - 1023 * 10 / 100); // Stop / Error Reset
+	} else if (pump_speed == 100) {
+        ledcWrite(0, 1023 - 1023 * 90 / 100); // Maximum Speed
+	} else {
+		// between 1-99% pump speed, 13-85% duty cycle (We only use from 15% - 85% duty cycle as 15% duty cycle at 50Hz will wake the pump)
+		uint32_t duty_cycle = 1023 - (1023 * (pump_speed-1)*(85-15)/(99-1) + 1023 * 15) / 100;
+        ledcWrite(0, duty_cycle); // Controlled operation from min to max speed
+	}
+}
 
 uint16_t analogReadRepeated(uint8_t pin) {
     uint32_t adc_avg = 0;
@@ -111,4 +113,66 @@ void startPeripheralTask(void* pvParameters) {
     // TODO: T.4.2.5
     // TODO: T.4.3.3
     // TODO: T.4.3.4
+}
+
+
+void startControlTask(void *pvParameters) {
+    (void)pvParameters;
+
+	static int rtd_call_counts = 0;
+
+    TickType_t tick = xTaskGetTickCount();
+    while (1) {
+        if (global_peripherals.brake_pressure > 300) {
+            digitalWrite(BRAKE_LIGHT_PIN, HIGH);
+        } else {
+            digitalWrite(BRAKE_LIGHT_PIN, LOW);
+        }
+
+        if (rtd_call_counts * CONTROL_TASK_PERIOD > 2000) {
+            digitalWrite(BUZZER_PIN, 0);
+        }
+
+        if (FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
+            // Check if the pedal position is <3% to put APPS back into a valid state (EV.10.4.3)
+            if (global_peripherals.pedal_position < 30 && global_peripherals.brake_pressure > 800 && global_motor_controller.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON && FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON)) {
+                CLEAR_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Remove the invalid flag
+                digitalWrite(BUZZER_PIN, 1);   
+                digitalWrite(LED_PIN, 1);
+                rtd_call_counts = 0;
+            }
+        } else if (global_motor_controller.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF || (global_peripherals.pedal_position < 30 && global_peripherals.brake_pressure < 800 && FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON))) {
+            SET_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Add the invalid flag
+            digitalWrite(BUZZER_PIN, 0);
+            digitalWrite(LED_PIN, 0);
+        }
+        
+        if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || !FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
+            SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
+            pumpCycle(60);
+        } else {
+            CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
+            pumpCycle(0);
+        }
+
+        // Turn on fan based on coolant temperature threshold
+        if (global_motor_controller.coolant_temp > RAD_FAN_COOLANT_TEMP_THRESHOLD) {
+            SET_FLAG(global_output_peripherals.flags, RADIATOR_FAN_ACTIVE);
+            digitalWrite(RAD_FAN_PIN, HIGH);
+        } else {
+            CLEAR_FLAG(global_output_peripherals.flags, RADIATOR_FAN_ACTIVE);
+            digitalWrite(RAD_FAN_PIN, LOW);
+        }
+
+        // if (global_bms.max_temp > ACC_FAN_ACC_TEMP_THRESHOLD) {
+        //     SET_FLAG(global_output_peripherals.flags, ACCUMULATOR_FAN_ACTIVE);
+        //     digitalWrite(ACCUM_FAN_PIN, HIGH);
+        // } else {
+        //     CLEAR_FLAG(global_output_peripherals.flags, ACCUMULATOR_FAN_ACTIVE);
+        //     digitalWrite(ACCUM_FAN_PIN, LOW);
+        // }
+
+        rtd_call_counts++;
+        xTaskDelayUntil(&tick, pdMS_TO_TICKS(CONTROL_TASK_PERIOD));
+    }
 }
