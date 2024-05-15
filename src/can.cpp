@@ -1,15 +1,14 @@
-#include <driver/twai.h>
 #include <HardwareSerial.h>
+#include <driver/twai.h>
 
-#include "globals.h"
 #include "can.h"
+#include "globals.h"
 #include "utils.h"
 
 // CAN
 twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
-
 
 void initCAN() {
     if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
@@ -25,8 +24,8 @@ void initCAN() {
     }
 }
 
-void startTransmitCANTask(void *pvParameters) {
-    (void)pvParameters;    
+void startTransmitCANTask(void* pvParameters) {
+    (void)pvParameters;
 
     twai_message_t tx_msg = {};
 
@@ -40,7 +39,7 @@ void startTransmitCANTask(void *pvParameters) {
     tx_msg.data[2] = 1;
     tx_msg.data[3] = 0;
     tx_msg.data[4] = 0;
-    tx_msg.data[5] = 0; 
+    tx_msg.data[5] = 0;
     tx_msg.data[6] = 0;
     tx_msg.data[7] = 0;
 
@@ -51,49 +50,49 @@ void startTransmitCANTask(void *pvParameters) {
 
     TickType_t tick = xTaskGetTickCount();
 
-	while (1) {
-		// Send messages that should be transmitted every 3ms
-		if (tick % 3 == 0) {
-			sendTorque();
-		}
+    while (1) {
+        // Send messages that should be transmitted every 3ms
+        if (tick % 3 == 0) {
+            sendTorque();
+        }
 
-		// Send messages that should be transmitted every 100ms
-		if (tick % 100 == 0) {
-			sendState();
-			sendPedals();
-		}
+        // Send messages that should be transmitted every 100ms
+        if (tick % 100 == 0) {
+            sendState();
+            sendPedals();
+        }
 
-		xTaskDelayUntil(&tick, pdMS_TO_TICKS(1));
-	}
+        xTaskDelayUntil(&tick, pdMS_TO_TICKS(1));
+    }
 }
 
-void startReceiveCANTask(void *pvParameters) {
+void startReceiveCANTask(void* pvParameters) {
     (void)pvParameters;
     twai_message_t rx_msg;
 
     while (1) {
         if (twai_receive(&rx_msg, portMAX_DELAY) == ESP_OK) {
             switch (rx_msg.identifier) {
-            case 0x0A2: { //INV_Hot_Spot_Temp, INV_Coolant_Temp
-                uint16_t INV_Hot_Spot_Temp = ((uint16_t) rx_msg.data[3] << 8) | ((uint16_t) rx_msg.data[2]);
-                global_motor_controller.motor_controller_temp = *(int16_t*) (&INV_Hot_Spot_Temp);
-                uint16_t INV_Coolant_Temp = ((uint16_t) rx_msg.data[1] << 8) | ((uint16_t) rx_msg.data[0]);
-                global_motor_controller.coolant_temp = *(int16_t*) (&INV_Coolant_Temp);
+            case 0x0A2: { // INV_Hot_Spot_Temp, INV_Coolant_Temp
+                uint16_t INV_Hot_Spot_Temp = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
+                global_motor_controller.motor_controller_temp = *(int16_t*)(&INV_Hot_Spot_Temp);
+                uint16_t INV_Coolant_Temp = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
+                global_motor_controller.coolant_temp = *(int16_t*)(&INV_Coolant_Temp);
                 break;
             }
             case 0x0A7: { // INV_DC_Bus_Voltage
-                uint16_t INV_DC_Bus_Voltage = ((uint16_t) rx_msg.data[1] << 8) | ((uint16_t) rx_msg.data[0]);
-                global_motor_controller.tractive_voltage = *(int16_t*) (&INV_DC_Bus_Voltage);
+                uint16_t INV_DC_Bus_Voltage = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
+                global_motor_controller.tractive_voltage = *(int16_t*)(&INV_DC_Bus_Voltage);
                 break;
             }
             case 0x0B0: { // INV_Motor_Speed
-                uint16_t INV_Motor_Speed = ((uint16_t) rx_msg.data[3] << 8) | ((uint16_t) rx_msg.data[2]);
-                global_motor_controller.motor_speed = *(int16_t*) (&INV_Motor_Speed);
+                uint16_t INV_Motor_Speed = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
+                global_motor_controller.motor_speed = *(int16_t*)(&INV_Motor_Speed);
                 break;
             }
             case 0x0E0: { // Custom BMS MSG
                 uint8_t max_temp_raw = (uint8_t)(rx_msg.data[0]);
-                global_bms.max_temp = *(int8_t*) (&max_temp_raw);
+                global_bms.max_temp = *(int8_t*)(&max_temp_raw);
                 break;
             }
             case 0x0E5: {
@@ -103,17 +102,17 @@ void startReceiveCANTask(void *pvParameters) {
                 break;
             }
             case 0x300: { // Torque Parameter Editing
-                uint16_t torque_raw = ((uint16_t) rx_msg.data[1] << 8) | ((uint16_t) rx_msg.data[0]);
-                global_torque_map.max_torque_scaling_factor = *(int16_t*) (&torque_raw);
-                uint16_t power_raw = ((uint16_t) rx_msg.data[3] << 8) | ((uint16_t) rx_msg.data[2]);
-                global_torque_map.max_power_scaling_factor = *(int16_t*) (&power_raw);
-                uint16_t target_speed_limit = ((uint16_t) rx_msg.data[5] << 8) | ((uint16_t) rx_msg.data[4]);
-                global_torque_map.target_speed_limit = *(int16_t*) (&target_speed_limit);
+                uint16_t torque_raw = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
+                global_torque_map.max_torque_scaling_factor = *(int16_t*)(&torque_raw);
+                uint16_t power_raw = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
+                global_torque_map.max_power_scaling_factor = *(int16_t*)(&power_raw);
+                uint16_t target_speed_limit = ((uint16_t)rx_msg.data[5] << 8) | ((uint16_t)rx_msg.data[4]);
+                global_torque_map.target_speed_limit = *(int16_t*)(&target_speed_limit);
                 break;
             }
             }
         }
-    }  
+    }
 }
 
 void sendTorque() {
@@ -121,9 +120,9 @@ void sendTorque() {
 
     tx_msg.identifier = 0x0c0;
     tx_msg.data_length_code = 8;
-    
+
     if (FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
-        for (uint8_t i = 0; i < 8; i++){
+        for (uint8_t i = 0; i < 8; i++) {
             tx_msg.data[i] = 0;
         }
     } else {
@@ -156,16 +155,15 @@ void sendTorque() {
     }
 }
 
-
 void sendState() {
-	// Format is defined in VCU.dbc
+    // Format is defined in VCU.dbc
     twai_message_t tx_msg;
     tx_msg.identifier = 0x200;
     tx_msg.data_length_code = 2;
 
-	uint16_t flags = global_output_peripherals.flags;
-	tx_msg.data[0] = flags & 0xFF;
-	tx_msg.data[1] = (flags >> 8) && 0xFF;
+    uint16_t flags = global_output_peripherals.flags;
+    tx_msg.data[0] = flags & 0xFF;
+    tx_msg.data[1] = (flags >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
         printf("Failed to send CAN message\n");
@@ -173,19 +171,18 @@ void sendState() {
 }
 
 void sendPedals() {
-	// Format is defined in VCU.dbc
+    // Format is defined in VCU.dbc
     twai_message_t tx_msg;
     tx_msg.identifier = 0x201;
     tx_msg.data_length_code = 4;
 
-	uint16_t position = global_peripherals.pedal_position;
-	tx_msg.data[0] = position & 0xFF;
-	tx_msg.data[1] = position >> 8;
+    uint16_t position = global_peripherals.pedal_position;
+    tx_msg.data[0] = position & 0xFF;
+    tx_msg.data[1] = position >> 8;
 
-
-	uint16_t pressure = global_peripherals.brake_pressure;
-	tx_msg.data[2] = pressure & 0xFF;
-	tx_msg.data[3] = pressure >> 8;
+    uint16_t pressure = global_peripherals.brake_pressure;
+    tx_msg.data[2] = pressure & 0xFF;
+    tx_msg.data[3] = pressure >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
         printf("Failed to send CAN message\n");

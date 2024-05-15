@@ -5,8 +5,8 @@
 
 void initCAN();
 
-void startTransmitCANTask(void *pvParameters);
-void startReceiveCANTask(void *pvParameters);
+void startTransmitCANTask(void* pvParameters);
+void startReceiveCANTask(void* pvParameters);
 
 void sendTorque();
 void sendState();

@@ -65,19 +65,19 @@ typedef struct {
 extern Peripherals global_peripherals;
 
 typedef struct {
-	int16_t max_torque; // Torque in Nm * 10
-	int16_t max_power; // Power in kW * 10
-	uint16_t max_torque_scaling_factor; // in % * 10
-	uint16_t max_power_scaling_factor; // in % * 10
-	int16_t target_speed_limit; // in RPM
-	int16_t speed_limit_range; // in RPM
-	uint8_t regen_enabled;
+    int16_t max_torque;                 // Torque in Nm * 10
+    int16_t max_power;                  // Power in kW * 10
+    uint16_t max_torque_scaling_factor; // in % * 10
+    uint16_t max_power_scaling_factor;  // in % * 10
+    int16_t target_speed_limit;         // in RPM
+    int16_t speed_limit_range;          // in RPM
+    uint8_t regen_enabled;
 } TorqueMap;
 
 extern TorqueMap global_torque_map;
 
 typedef struct {
-	int16_t max_temp;
+    int16_t max_temp;
     uint16_t DTC1;
     uint16_t DTC2;
     uint32_t last_heartbeat;
@@ -90,9 +90,8 @@ typedef struct {
     uint32_t flags;
 } OutputPeripherals;
 
-#define FAULTS_ACTIVE(flags) ((flags) & 0x1F)
+#define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 
 extern OutputPeripherals global_output_peripherals;
-
 
 #endif // GLOBALS_H

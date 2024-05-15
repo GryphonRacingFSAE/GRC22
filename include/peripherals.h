@@ -16,6 +16,6 @@
 
 void pumpCycle(uint8_t pump_speed);
 void startPeripheralTask(void* pvParameters);
-void startControlTask(void *pvParameters);
+void startControlTask(void* pvParameters);
 
 #endif // PERIPHERALS_H

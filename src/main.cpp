@@ -2,19 +2,19 @@
 #include <HardwareSerial.h>
 #include <freertos/task.h>
 
+#include "ams.h"
 #include "can.h"
 #include "globals.h"
 #include "peripherals.h"
-#include "utils.h"
-#include "ams.h"
 #include "torque.h"
+#include "utils.h"
 
 void setup() {
     Serial.begin(921600);
 
     initCAN();
 
-    ledcSetup(0, 50, 10);   // 50Hz PWM, 10-bit resolution
+    ledcSetup(0, 50, 10); // 50Hz PWM, 10-bit resolution
     pinMode(PUMP_PWM_PIN, OUTPUT);
     ledcAttachPin(PUMP_PWM_PIN, 0); // assign RGB led pins to channels
     pumpCycle(0);

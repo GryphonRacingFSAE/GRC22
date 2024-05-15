@@ -2,12 +2,12 @@
 #include "globals.h"
 #include "utils.h"
 
-#include <freertos/task.h>
 #include <driver/twai.h>
+#include <freertos/task.h>
 
 void startAMSTask(void* params) {
     (void)params;
-    
+
     TickType_t tick = xTaskGetTickCount();
     while (1) {
         uint32_t can_error = 0;
@@ -22,7 +22,7 @@ void startAMSTask(void* params) {
         } else {
             digitalWrite(AMS_SHUTDOWN_PIN, LOW);
         }
-        
+
         xTaskDelayUntil(&tick, pdMS_TO_TICKS(AMS_TASK_PERIOD));
     }
 }
