@@ -1,8 +1,59 @@
 #include "peripherals.h"
 #include "globals.h"
 #include "utils.h"
-
 #include <freertos/task.h>
+static uint32_t imd_rising0 = 0;
+static uint32_t imd_rising1 = 0;
+static uint32_t imd_falling = 0;
+
+
+void IRAM_ATTR imdRisingEdgeTime(void){
+    imd_rising0 = imd_rising1; 
+    imd_rising1 = micros();
+    if(imd_rising1 != imd_rising0){
+        global_imd.frequency = 10000000 / (imd_rising1 - imd_rising0);
+    }
+}
+
+void IRAM_ATTR imdFallingEdgeTime(void){
+    imd_falling = micros();
+    
+    if(imd_rising1 != imd_rising0){
+        global_imd.duty_cycle = 1000 - (imd_falling - imd_rising1) * 1000 / (imd_rising1 - imd_rising0);
+    }
+}
+
+void imdReadings(uint32_t duty_cycle, uint32_t frequency){
+    Serial.printf("Difference %d \r\n", (imd_rising1 - imd_rising0));
+    Serial.printf("Frequency %d \r\n", global_imd.frequency);
+    Serial.printf("Duty Cycle %d \r\n", global_imd.duty_cycle);
+
+    if (frequency < 30)
+    {
+        global_imd.state = IMD_SHORT_CIRCUIT;
+    } 
+    if (frequency > 70 && frequency < 130)
+    {
+        global_imd.resistance = ((90 - (1200 * 1000))/(duty_cycle - 5)) - (1200 * 1000);
+        global_imd.state = IMD_NORMAL_CONDITION;  
+    }
+    if(frequency > 170 && frequency < 230){
+        global_imd.resistance = ((90 - (1200 * 1000))/(duty_cycle - 5)) - (1200 * 1000);
+        global_imd.state = IMD_UNDERVOLTAGE;
+    }
+    if (frequency > 270 && frequency < 330)
+    {
+        global_imd.state = IMD_STARTUP;
+    }
+    if (frequency > 370 && frequency < 430)
+    {
+        global_imd.state = IMD_DEVICE_ERROR;
+    } 
+    if (frequency > 470 && frequency < 530)
+    {
+        global_imd.state = IMD_EARTH_FAULT;
+    }  
+}
 
 void pumpCycle(uint8_t pump_speed) {
     if (pump_speed == 0) {
@@ -47,14 +98,14 @@ void startPeripheralTask(void* pvParameters) {
         int32_t apps1_pos = CLAMP(0, (apps1_adc - APPS1_MIN) * 1000 / (APPS1_MAX - APPS1_MIN), 1000);
         int32_t apps2_pos = CLAMP(0, (apps2_adc - APPS2_MIN) * 1000 / (APPS2_MAX - APPS2_MIN), 1000);
 
-        Serial.print("apps1:");
-        Serial.print(apps1_adc);
-        Serial.print(",apps2:");
-        Serial.print(apps2_adc);
-        Serial.print(",apps1 pos:");
-        Serial.print(apps1_pos);
-        Serial.print(",apps2 pos:");
-        Serial.println(apps2_pos);
+        // Serial.print("apps1:");
+        // Serial.print(apps1_adc);
+        // Serial.print(",apps2:");
+        // Serial.print(apps2_adc);
+        // Serial.print(",apps1 pos:");
+        // Serial.print(apps1_pos);
+        // Serial.print(",apps2 pos:");
+        // Serial.println(apps2_pos);
 
         // RULE (2024 V1): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
         if (ABS(apps1_pos - apps2_pos) <= 100) {
@@ -118,10 +169,15 @@ void startPeripheralTask(void* pvParameters) {
 void startControlTask(void* pvParameters) {
     (void)pvParameters;
 
+
     static int rtd_call_counts = 0;
 
     TickType_t tick = xTaskGetTickCount();
     while (1) {
+        
+        imdReadings(global_imd.duty_cycle, global_imd.frequency);
+
+
         if (global_peripherals.brake_pressure > 300) {
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
         } else {
@@ -138,7 +194,7 @@ void startControlTask(void* pvParameters) {
                 global_motor_controller.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON && FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON)) {
                 CLEAR_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Remove the invalid flag
                 digitalWrite(BUZZER_PIN, 1);
-                digitalWrite(LED_PIN, 1);
+                // digitalWrite(LED_PIN, 1);
                 rtd_call_counts = 0;
             }
         } else if (global_motor_controller.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF ||
@@ -146,7 +202,7 @@ void startControlTask(void* pvParameters) {
                     FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON))) {
             SET_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Add the invalid flag
             digitalWrite(BUZZER_PIN, 0);
-            digitalWrite(LED_PIN, 0);
+            // digitalWrite(LED_PIN, 0);
         }
 
         if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD ||

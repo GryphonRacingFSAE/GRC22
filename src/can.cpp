@@ -45,7 +45,7 @@ void startTransmitCANTask(void* pvParameters) {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        Serial.printf("Failed to send CAN message: %#02x\n", resp);
+        // Serial.printf("Failed to send CAN message: %#02x\n", resp);
     }
 
     TickType_t tick = xTaskGetTickCount();
@@ -60,6 +60,7 @@ void startTransmitCANTask(void* pvParameters) {
         if (tick % 100 == 0) {
             sendState();
             sendPedals();
+            // sendIMD();
         }
 
         xTaskDelayUntil(&tick, pdMS_TO_TICKS(1));
@@ -151,14 +152,14 @@ void sendTorque() {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        Serial.printf("Failed to send CAN message: %#02x\n", resp);
+        // Serial.printf("Failed to send CAN message: %#02x\n", resp);
     }
 }
 
 void sendState() {
     // Format is defined in VCU.dbc
     twai_message_t tx_msg;
-    tx_msg.identifier = 0x200;
+    tx_msg.identifier = 0x300;
     tx_msg.data_length_code = 2;
 
     uint16_t flags = global_output_peripherals.flags;
@@ -166,14 +167,14 @@ void sendState() {
     tx_msg.data[1] = (flags >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        printf("Failed to send CAN message\n");
+        // printf("Failed to send CAN message\n");
     }
 }
 
 void sendPedals() {
     // Format is defined in VCU.dbc
     twai_message_t tx_msg;
-    tx_msg.identifier = 0x201;
+    tx_msg.identifier = 0x301;
     tx_msg.data_length_code = 4;
 
     uint16_t position = global_peripherals.pedal_position;
@@ -185,6 +186,14 @@ void sendPedals() {
     tx_msg.data[3] = pressure >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        printf("Failed to send CAN message\n");
+        // printf("Failed to send CAN message\n");
     }
 }
+
+// void sendIMD(){
+//     twai_message_t tx_msg;
+//     tx_msg.identifier = 0x302;
+
+
+    
+// }

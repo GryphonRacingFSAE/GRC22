@@ -7,13 +7,15 @@
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
 #define PUMP_PWM_PIN GPIO_NUM_4
+#define IMD_PWM_RISING_PIN GPIO_NUM_15
+#define IMD_PWM_FALLING_PIN GPIO_NUM_5
 
 #define APPS1_PIN GPIO_NUM_33
 #define APPS2_PIN GPIO_NUM_32
 #define BRAKE_PRESSURE_PIN GPIO_NUM_25
 #define PUSH_BUTTON_PIN GPIO_NUM_35
 
-#define AMS_SHUTDOWN_PIN GPIO_NUM_22
+#define AMS_SHUTDOWN_PIN GPIO_NUM_14
 #define RAD_FAN_PIN GPIO_NUM_23
 
 #define BRAKE_LIGHT_PIN GPIO_NUM_26
@@ -40,6 +42,13 @@
 #define APPS_SENSOR_CONFLICT_INVALID 0x4
 // RULE (2023 V2): T.4.3.4 BSE sensor out of defined range
 #define BRAKE_SENSOR_OUT_OF_RANGE_INVALID 0x8
+
+#define IMD_SHORT_CIRCUIT 0
+#define IMD_NORMAL_CONDITION 1
+#define IMD_UNDERVOLTAGE 2
+#define IMD_STARTUP 3
+#define IMD_DEVICE_ERROR 4
+#define IMD_EARTH_FAULT 5
 
 #define CTRL_RTD_INVALID 0x10
 #define RTD_BUTTON 0x20
@@ -89,6 +98,16 @@ typedef struct {
     int16_t requested_torque;
     uint32_t flags;
 } OutputPeripherals;
+
+
+typedef struct{
+    uint32_t duty_cycle;        // in % * 10
+    uint32_t frequency;         // in hz * 10
+    uint32_t resistance;
+    uint8_t state;
+} IMD;
+extern IMD global_imd;
+
 
 #define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 

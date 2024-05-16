@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <freertos/task.h>
-
 #include "ams.h"
 #include "can.h"
 #include "globals.h"
 #include "peripherals.h"
 #include "torque.h"
 #include "utils.h"
+
+
 
 void setup() {
     Serial.begin(921600);
@@ -27,6 +28,10 @@ void setup() {
     pinMode(BUZZER_PIN, OUTPUT);
     pinMode(BRAKE_LIGHT_PIN, OUTPUT);
     pinMode(AMS_SHUTDOWN_PIN, OUTPUT);
+    pinMode(IMD_PWM_RISING_PIN, INPUT);
+    pinMode(IMD_PWM_FALLING_PIN, INPUT);
+    attachInterrupt(IMD_PWM_RISING_PIN, imdRisingEdgeTime, RISING);
+    attachInterrupt(IMD_PWM_FALLING_PIN, imdFallingEdgeTime, FALLING);
 
     xTaskCreate(startAMSTask, "AMS_TASK", 2048, NULL, 8, NULL);
     Serial.println("Finished creating task 0");

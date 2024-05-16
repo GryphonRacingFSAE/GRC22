@@ -14,6 +14,10 @@
 #define ADC_SHORTED_GND 150
 #define ADC_SHORTED_VCC 3950
 
+
+
+void imdFallingEdgeTime(void);
+void imdRisingEdgeTime(void);
 void pumpCycle(uint8_t pump_speed);
 void startPeripheralTask(void* pvParameters);
 void startControlTask(void* pvParameters);
