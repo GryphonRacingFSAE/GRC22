@@ -20,11 +20,10 @@ jobs:
         uses: DoozyX/clang-format-lint-action@v0.16
         if: always()
         with:
-          source: software
+          source: .
 
       # Build with PlatformIO
-      - name: Compile Transmitter and Reciever Code
+      - name: Compile VCU Code
         if: always()
         run: |
-          cd software
           pio run
