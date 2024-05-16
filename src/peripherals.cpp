@@ -6,53 +6,47 @@ static uint32_t imd_rising0 = 0;
 static uint32_t imd_rising1 = 0;
 static uint32_t imd_falling = 0;
 
-
-void IRAM_ATTR imdRisingEdgeTime(void){
-    imd_rising0 = imd_rising1; 
+void IRAM_ATTR imdRisingEdgeTime(void) {
+    imd_rising0 = imd_rising1;
     imd_rising1 = micros();
-    if(imd_rising1 != imd_rising0){
+    if (imd_rising1 != imd_rising0) {
         global_imd.frequency = 10000000 / (imd_rising1 - imd_rising0);
     }
 }
 
-void IRAM_ATTR imdFallingEdgeTime(void){
+void IRAM_ATTR imdFallingEdgeTime(void) {
     imd_falling = micros();
-    
-    if(imd_rising1 != imd_rising0){
+
+    if (imd_rising1 != imd_rising0) {
         global_imd.duty_cycle = 1000 - (imd_falling - imd_rising1) * 1000 / (imd_rising1 - imd_rising0);
     }
 }
 
-void imdReadings(uint32_t duty_cycle, uint32_t frequency){
+void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
     Serial.printf("Difference %d \r\n", (imd_rising1 - imd_rising0));
     Serial.printf("Frequency %d \r\n", global_imd.frequency);
     Serial.printf("Duty Cycle %d \r\n", global_imd.duty_cycle);
 
-    if (frequency < 30)
-    {
+    if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
-    } 
-    if (frequency > 70 && frequency < 130)
-    {
-        global_imd.resistance = ((90 - (1200 * 1000))/(duty_cycle - 5)) - (1200 * 1000);
-        global_imd.state = IMD_NORMAL_CONDITION;  
     }
-    if(frequency > 170 && frequency < 230){
-        global_imd.resistance = ((90 - (1200 * 1000))/(duty_cycle - 5)) - (1200 * 1000);
+    if (frequency > 70 && frequency < 130) {
+        global_imd.resistance = ((90 - (1200 * 1000)) / (duty_cycle - 5)) - (1200 * 1000);
+        global_imd.state = IMD_NORMAL_CONDITION;
+    }
+    if (frequency > 170 && frequency < 230) {
+        global_imd.resistance = ((90 - (1200 * 1000)) / (duty_cycle - 5)) - (1200 * 1000);
         global_imd.state = IMD_UNDERVOLTAGE;
     }
-    if (frequency > 270 && frequency < 330)
-    {
+    if (frequency > 270 && frequency < 330) {
         global_imd.state = IMD_STARTUP;
     }
-    if (frequency > 370 && frequency < 430)
-    {
+    if (frequency > 370 && frequency < 430) {
         global_imd.state = IMD_DEVICE_ERROR;
-    } 
-    if (frequency > 470 && frequency < 530)
-    {
+    }
+    if (frequency > 470 && frequency < 530) {
         global_imd.state = IMD_EARTH_FAULT;
-    }  
+    }
 }
 
 void pumpCycle(uint8_t pump_speed) {
@@ -169,14 +163,12 @@ void startPeripheralTask(void* pvParameters) {
 void startControlTask(void* pvParameters) {
     (void)pvParameters;
 
-
     static int rtd_call_counts = 0;
 
     TickType_t tick = xTaskGetTickCount();
     while (1) {
-        
-        imdReadings(global_imd.duty_cycle, global_imd.frequency);
 
+        imdReadings(global_imd.duty_cycle, global_imd.frequency);
 
         if (global_peripherals.brake_pressure > 300) {
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);

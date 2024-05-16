@@ -194,6 +194,4 @@ void sendPedals() {
 //     twai_message_t tx_msg;
 //     tx_msg.identifier = 0x302;
 
-
-    
 // }

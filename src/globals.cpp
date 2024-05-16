@@ -18,5 +18,4 @@ OutputPeripherals global_output_peripherals = {.requested_torque = 0,
                                                .flags = APPS_BSPC_INVALID | APPS_SENSOR_OUT_OF_RANGE_INVALID | APPS_SENSOR_CONFLICT_INVALID |
                                                         BRAKE_SENSOR_OUT_OF_RANGE_INVALID | CTRL_RTD_INVALID};
 
-
 IMD global_imd = {.duty_cycle = 0, .frequency = 0, .resistance = 0, .state = IMD_STARTUP};

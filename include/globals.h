@@ -99,15 +99,13 @@ typedef struct {
     uint32_t flags;
 } OutputPeripherals;
 
-
-typedef struct{
-    uint32_t duty_cycle;        // in % * 10
-    uint32_t frequency;         // in hz * 10
+typedef struct {
+    uint32_t duty_cycle; // in % * 10
+    uint32_t frequency;  // in hz * 10
     uint32_t resistance;
     uint8_t state;
 } IMD;
 extern IMD global_imd;
-
 
 #define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 
