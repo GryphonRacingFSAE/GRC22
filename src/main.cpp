@@ -1,12 +1,13 @@
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <freertos/task.h>
+
 #include "ams.h"
 #include "can.h"
 #include "globals.h"
 #include "peripherals.h"
 #include "torque.h"
 #include "utils.h"
-#include <Arduino.h>
-#include <HardwareSerial.h>
-#include <freertos/task.h>
 
 void setup() {
     Serial.begin(921600);
