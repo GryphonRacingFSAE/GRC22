@@ -75,7 +75,7 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
             - Pump stop -> 0-12% duty cycle
             - Controlled Operation -> 13-85% duty cycle
             - Max speed -> 86-97% duty cycle
-    - The PWM is set to generate a frequency of 100Hz, the Auto Reload Register (ARR) is set to 4000, since this is also the period of each pulse this ensures that the motor can be woken up properly at 75% duty cycle. The overall prescaler is divided by 4. In order to find the prescale value the formula that was used is:
+    - The PWM is set to generate a frequency of 100Hz, the Auto Reload Register (ARR) is set to 4000, since this is also the period of each pulse this ensures that the motor can be woken up properly at 75% duty cycle. In order to find the prescale value the formula that was used is:
         $`Frequency = chip clock /(ARR*Prescaler)`$
         $`100 = 96MHz/(4000*Prescaler)`$
         $`Prescaler = 240`$
@@ -86,8 +86,8 @@ find ./src -iname *.hpp -o -iname *.cpp | xargs clang-format -i # In the root fo
             Where A = lower bound of old value (1)
                   B = upper bound of old value (99)
                   C = lower bound of new value (13)
-                  D = upper bound of new value (99)
-                  X = input value (pump speed)
+                  D = upper bound of new value (85)
+                  X = input value (pump speed in percent)
             Yielding:
             $`duty cycle = (((pump speed - 1)/(99 - 1)) * (85 - 13)) + 13`$
         

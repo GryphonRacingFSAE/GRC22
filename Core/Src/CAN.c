@@ -78,9 +78,18 @@ inline void canMsgHandler(CANRXMsg* rxMsg) {
 		Ctrl_Data.tractive_voltage = *(int16_t*) (&INV_DC_Bus_Voltage);
 		break;
 	}
-	case 0x0A5: { // INV_Motor_Speed
+	case 0x0B0: { // INV_Motor_Speed
 		uint16_t INV_Motor_Speed = ((uint16_t) rxMsg->data[3] << 8) | ((uint16_t) rxMsg->data[2]);
 		Ctrl_Data.motor_speed = *(int16_t*) (&INV_Motor_Speed);
+		break;
+	}
+	case 0x300: { // Torque Parameter Editing
+		uint16_t torque_raw = ((uint16_t) rxMsg->data[1] << 8) | ((uint16_t) rxMsg->data[0]);
+		Torque_Map_Data.max_torque_scaling_factor = *(int16_t*) (&torque_raw);
+		uint16_t power_raw = ((uint16_t) rxMsg->data[3] << 8) | ((uint16_t) rxMsg->data[2]);
+		Torque_Map_Data.max_power_scaling_factor = *(int16_t*) (&power_raw);
+		uint16_t target_speed_limit = ((uint16_t) rxMsg->data[5] << 8) | ((uint16_t) rxMsg->data[4]);
+		Torque_Map_Data.target_speed_limit = *(int16_t*) (&target_speed_limit);
 		break;
 	}
 	}
@@ -95,27 +104,37 @@ void sendTorque() {
 	tx_msg.header.DLC = 8;
 	tx_msg.to = &hcan2;
 
-	// Bytes 0 & 1 is the requested torque
-	uint16_t bitwise_requested_torque = *(uint16_t*)&APPS_Data.torque;
-	tx_msg.data[0] = bitwise_requested_torque & 0xFF;
-	tx_msg.data[1] = bitwise_requested_torque >> 8;
+	if (FLAG_ACTIVE(Ctrl_Data.flags, CTRL_RTD_INVALID)) {
+		for (uint8_t i = 0; i < 8; i++){
+			tx_msg.data[i] = 0;
+		}
+	} else {
+		// Bytes 0 & 1 is the requested torque
+		uint16_t bitwise_requested_torque = 0;
+		if (!APPS_Data.flags) {
+			bitwise_requested_torque = *(uint16_t*)&APPS_Data.torque;
+		}
+		tx_msg.data[0] = bitwise_requested_torque & 0xFF;
+		tx_msg.data[1] = bitwise_requested_torque >> 8;
 
-	// Bytes 2 & 3 is the requested RPM (if not in torque mode)
-	tx_msg.data[2] = 0;
-	tx_msg.data[3] = 0;
+		// Bytes 2 & 3 is the requested RPM (if not in torque mode)
+		tx_msg.data[2] = 0;
+		tx_msg.data[3] = 0;
 
-	// Byte 4 is Forward/Reverse
-	tx_msg.data[4] = 1; // 1 is Forward
+		// Byte 4 is Forward/Reverse
+		tx_msg.data[4] = 0; // 1 is Forward
 
-	// Byte 5 is Configuration
-	tx_msg.data[5] = 0;
-		// | 0x1 // Inverter Enable
-		// | 0x2 // Inverter Discharge
-		// | 0x4 // Speed Mode override
+		// Byte 5 is Configuration
+		tx_msg.data[5] = 0x1;
+			// | 0x1 // Inverter Enable
+			// | 0x2 // Inverter Discharge
+			// | 0x4 // Speed Mode override
 
-	// Byte 6 & 7 sets torque limits
-	tx_msg.data[6] = 0;
-	tx_msg.data[7] = 0;
+		// Byte 6 & 7 sets torque limits
+		tx_msg.data[6] = 0;
+		tx_msg.data[7] = 0;
+	}
+
 
 	// Send over CAN2
 	osMessageQueuePut(CANTX_QHandle, &tx_msg, 0, 5);

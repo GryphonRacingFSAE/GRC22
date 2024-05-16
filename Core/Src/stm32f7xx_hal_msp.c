@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -68,6 +67,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
   */
 void HAL_MspInit(void)
 {
+
   /* USER CODE BEGIN MspInit 0 */
 
   /* USER CODE END MspInit 0 */
@@ -150,18 +150,19 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     PF6     ------> ADC3_IN4
     PF7     ------> ADC3_IN5
     PF8     ------> ADC3_IN6
+    PF9     ------> ADC3_IN7
     PA3     ------> ADC3_IN3
     */
     GPIO_InitStruct.Pin = ADC3_AUX4_Pin|ADC3_AUX4F5_Pin|ADC3_AUX5_Pin|ADC3_AUX6_Pin
-                          |GPIO_PIN_8;
+                          |GPIO_PIN_8|GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = ADC3_AUX2_Pin;
+    GPIO_InitStruct.Pin = GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(ADC3_AUX2_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* ADC3 DMA Init */
     /* ADC3 Init */
@@ -231,12 +232,13 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     PF6     ------> ADC3_IN4
     PF7     ------> ADC3_IN5
     PF8     ------> ADC3_IN6
+    PF9     ------> ADC3_IN7
     PA3     ------> ADC3_IN3
     */
     HAL_GPIO_DeInit(GPIOF, ADC3_AUX4_Pin|ADC3_AUX4F5_Pin|ADC3_AUX5_Pin|ADC3_AUX6_Pin
-                          |GPIO_PIN_8);
+                          |GPIO_PIN_8|GPIO_PIN_9);
 
-    HAL_GPIO_DeInit(ADC3_AUX2_GPIO_Port, ADC3_AUX2_Pin);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_3);
 
     /* ADC3 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);

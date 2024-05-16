@@ -1,9 +1,9 @@
 #include "control.h"
 #include "APPS.h"
 #include "main.h"
+#include <stdlib.h>
 // Array to store overflow counters for each wheel
 volatile uint32_t tim_ovc[NUM_WHEELS] = { 0 };
-
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
@@ -17,10 +17,12 @@ Ctrl_Data_Struct Ctrl_Data = {
 	.flags = CTRL_RTD_INVALID
 };
 
+
 // Task to manage control operations
 void startControlTask() {
 	uint32_t tick = osKernelGetTickCount();
 	while(1){
+		pressureSensorConversions();
 		RTD();
 		pumpCtrl();
 		fanCtrl();
@@ -110,44 +112,55 @@ void RTD() {
 	if (callCounts * CTRL_PERIOD > 2000) {
 		HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 0);
 	}
+
+	if (HAL_GPIO_ReadPin(GPIO_START_BTN_GPIO_Port, GPIO_START_BTN_Pin)) {
+		SET_FLAG(Ctrl_Data.flags, RTD_BUTTON);
+	} else {
+		CLEAR_FLAG(Ctrl_Data.flags, RTD_BUTTON);
+	}
+
+//	if (Ctrl_Data.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF) {
+//		// Disable RTD if TS drops below threshold
+//		SET_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID);
+//	}
+
 	if (FLAG_ACTIVE(Ctrl_Data.flags, CTRL_RTD_INVALID)) {
 		// Check if the pedal position is <3% to put APPS back into a valid state (EV.10.4.3)
-		if (APPS_Data.apps_position < 30 && HAL_GPIO_ReadPin(GPIO_BRAKE_SW_GPIO_Port, GPIO_BRAKE_SW_Pin) && Ctrl_Data.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON && HAL_GPIO_ReadPin(GPIO_START_BTN_GPIO_Port, GPIO_START_BTN_Pin)) {
+		if (APPS_Data.apps_position < 30 && APPS_Data.brake_pressure > 800 /* && Ctrl_Data.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON */ && FLAG_ACTIVE(Ctrl_Data.flags, RTD_BUTTON)) {
 			CLEAR_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID); // Remove the invalid flag
 			HAL_GPIO_WritePin(GPIO_RTD_BUZZER_GPIO_Port, GPIO_RTD_BUZZER_Pin, 1);
 			callCounts = 0;
-		} else if (Ctrl_Data.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF) {
-			// Disable RTD if TS drops below threshold
-			SET_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID);
 		}
+	} else if (APPS_Data.apps_position < 30 && APPS_Data.brake_pressure < 800 && FLAG_ACTIVE(Ctrl_Data.flags, RTD_BUTTON)) {
+		SET_FLAG(Ctrl_Data.flags, CTRL_RTD_INVALID); // Remove the invalid flag
 	}
 	callCounts++;
 }
 
 // Motor & Motor controller cooling pump control
 void pumpCtrl() {
-
-	//pump off
-	pumpCycle(0);
-	// Turn on pump based on motor controller temperature threshold and tractive voltage threshold
-	if (Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD) {
-		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
-		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET);
-	} else {
-		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Turn on pump if cannot acquire mutex
-		ERROR_PRINT(
-				"Missed osMutexAcquire(Ctrl_Data_MtxHandle): control.c:pumpCtrl\n");
-	}
+	pumpCycle(10);
+	// Ctrl_Data.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD || Ctrl_Data.tractive_voltage > PUMP_TRACTIVE_VOLTAGE_THRESHOLD
+//	if (APPS_Data.apps_position > 100) {
+//		SET_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
+//		pumpCycle(50);
+//	} else {
+//		CLEAR_FLAG(Ctrl_Data.flags, PUMP_ACTIVE);
+//		pumpCycle(0);
+//	}
 }
 
 // Cooling pump duty cycles based on input of desired pump speed in percentage
 void pumpCycle(uint8_t pump_speed){
-
-	if(pump_speed == 0){			//pump off
-		TIM1 -> CCR1 = 0;			//duty cycle between 0-12%
-	} else if (pump_speed == 100){	//max speed
+	if(pump_speed == 0) {			//pump off
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET); // Active Low (on)
+		TIM1 -> CCR1 = 40;			//duty cycle between 0-12%
+	} else if (pump_speed == 100) {	//max speed
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_SET); // Active Low (off)
 		TIM1 -> CCR1 = 3600;		//duty cycle between 86-97%
-	} else{							//between 1-99% pump speed, 13-85% duty cycle
+	} else {
+		// between 1-99% pump speed, 13-85% duty cycle
+		HAL_GPIO_WritePin(GPIO_PUMP_GPIO_Port, GPIO_PUMP_Pin, GPIO_PIN_RESET); // Active Low (on)
 		uint32_t duty_cycle = (((pump_speed-1)/(99-1))*(85-13))+13;
 		TIM1 -> CCR1 = (duty_cycle*4000)/100;	//divide by 100 since duty cycle is in percentage not decimal value
 	}
@@ -174,6 +187,40 @@ void fanCtrl() {
 		HAL_GPIO_WritePin(GPIO_ACC_FAN_GPIO_Port, GPIO_ACC_FAN_Pin, GPIO_PIN_RESET);
 	}
 }
+
+void pressureSensorConversions(){
+	uint32_t pressure1_adc_avg = 0;
+	uint32_t pressure2_adc_avg = 0;
+	uint32_t pressure1_bar = 0;
+	uint32_t pressure2_bar = 0;
+
+	//sum of all pressure 1 values
+	for(uint32_t i = 1; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
+		pressure1_adc_avg += adc_3_dma_buffer[i];
+	}
+	//sum of all pressure 2 values
+	for(uint32_t i = 2; i < ADC_CHANNEL_3_DMA_BUFFER_LEN; i += 3){
+		pressure2_adc_avg += adc_3_dma_buffer[i];
+	}
+	pressure1_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN / ADC_CHANNEL_3_DMA_CHANNELS);
+	pressure2_adc_avg /= (ADC_CHANNEL_3_DMA_BUFFER_LEN / ADC_CHANNEL_3_DMA_CHANNELS);
+
+
+	// RULE (2024 V1): T.4.2.10 (Detect open circuit and short circuit conditions)
+	// TODO: add flags for pressure sensor shorts
+	if(pressure1_adc_avg <= PRESSURE_ADC_SHORT_GND || PRESSURE_ADC_SHORT_VCC <= pressure1_adc_avg){
+		TRACE_PRINT("possible short detected at pressure sensor 1\r\n");
+	}
+	if(pressure2_adc_avg <= PRESSURE_ADC_SHORT_GND || PRESSURE_ADC_SHORT_VCC <= pressure2_adc_avg){
+		TRACE_PRINT("Possible short detected at pressure sensor 2\r\n");
+	}
+
+	pressure1_bar = CLAMP(0, (((pressure1_adc_avg - PRESSURE_SENSOR_MIN) * 1000 / (PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN)) * PRESSURE_RANGE), 2500);
+	pressure2_bar = CLAMP(0, (((pressure2_adc_avg - PRESSURE_SENSOR_MIN) * 1000 / (PRESSURE_SENSOR_MAX - PRESSURE_SENSOR_MIN)) * PRESSURE_RANGE), 2500);
+
+	Ctrl_Data.pressure_difference = abs(pressure1_bar - pressure2_bar);
+}
+
 
 void LEDCtrl() {
 

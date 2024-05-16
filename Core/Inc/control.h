@@ -5,12 +5,13 @@
 #include "cmsis_os.h"
 #include "utils.h"
 #include "main.h"
+#include "APPS.h"
 #include <string.h>
 #define NUM_WHEELS 4
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
 // Turn on Pump if tractive voltage > 450v
-#define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 4500
+#define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 300
 // Turn on Fan if coolant temp > 40c
 #define RAD_FAN_COOLANT_TEMP_THRESHOLD 400
 // Turn on Accumulator fan if accumulator temp > 40c
@@ -18,11 +19,16 @@
 // Turn off flag when tractive voltage < 20
 #define RTD_TRACTIVE_VOLTAGE_OFF 200
 // Turn off flag when tractive voltage > 450
-#define RTD_TRACTIVE_VOLTAGE_ON 4500
-//number of teeth on wheel hub
+#define RTD_TRACTIVE_VOLTAGE_ON 300
+// Number of teeth on wheel hub
 #define NUM_TEETH 32;
+#define PRESSURE_SENSOR_MIN 410
+#define PRESSURE_SENSOR_MAX 3686
+#define PRESSURE_RANGE 2.5
+#define PRESSURE_ADC_SHORT_VCC 3800
+#define PRESSURE_ADC_SHORT_GND 375
 
-// FLags
+// Flags
 #define CTRL_RTD_INVALID 0x1
 #define RTD_BUTTON 0x2
 #define BRAKE_SWITCH 0x4
@@ -39,6 +45,7 @@ typedef struct {
 	uint32_t flags;
 	volatile uint32_t wheel_rpm[NUM_WHEELS];  // Array to store final wheel RPMs
 	volatile uint32_t wheel_freq[NUM_WHEELS];  // Array to store final wheel frequencies
+	uint32_t pressure_difference;  // Differential pressure between the two sensors (in milli bar)
 } Ctrl_Data_Struct;
 
 extern Ctrl_Data_Struct Ctrl_Data;
@@ -53,5 +60,5 @@ void pumpCtrl(); // Motor & Motor controller cooling pump control
 void pumpCycle(uint8_t pump_speed); //cooling pump cooling cycles
 void fanCtrl(); // Accumulator cooling fan control
 void LEDCtrl(); // Info
-
+void pressureSensorConversions();
 #endif /* INC_CONTROL_H_ */
