@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <freertos/task.h>
+#include <EEPROM.h>
 
 #include "ams.h"
 #include "can.h"
@@ -13,6 +14,8 @@ void setup() {
     Serial.begin(921600);
 
     initCAN();
+
+    EEPROM.begin(EEPROM_LARGEST_SIZE);
 
     ledcSetup(0, 50, 10); // 50Hz PWM, 10-bit resolution
     pinMode(PUMP_PWM_PIN, OUTPUT);
@@ -29,6 +32,9 @@ void setup() {
     pinMode(AMS_SHUTDOWN_PIN, OUTPUT);
     pinMode(IMD_PWM_RISING_PIN, INPUT);
     pinMode(IMD_PWM_FALLING_PIN, INPUT);
+    pinMode(AIR_CONTACT_PIN, INPUT);
+
+    attachInterrupt(AIR_CONTACT_PIN, amsRisingEdgeInterrupt, RISING);
     attachInterrupt(IMD_PWM_RISING_PIN, imdRisingEdgeTime, RISING);
     attachInterrupt(IMD_PWM_FALLING_PIN, imdFallingEdgeTime, FALLING);
 

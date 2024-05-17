@@ -4,6 +4,11 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+#define EEPROM_LARGEST_SIZE 16
+#define TORQUE_SCALING_FACTOR_ADDR 0
+#define POWER_SCALING_FACTOR_ADDR 15
+#define TARGET_SPEED_LIM_ADDR 31
+
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
 #define PUMP_PWM_PIN GPIO_NUM_4
@@ -16,7 +21,8 @@
 #define PUSH_BUTTON_PIN GPIO_NUM_35
 
 #define AMS_SHUTDOWN_PIN GPIO_NUM_14
-#define RAD_FAN_PIN GPIO_NUM_23
+#define AIR_CONTACT_PIN GPIO_NUM_23
+#define RAD_FAN_PIN GPIO_NUM_21
 
 #define BRAKE_LIGHT_PIN GPIO_NUM_26
 #define BUZZER_PIN GPIO_NUM_27
@@ -43,19 +49,21 @@
 // RULE (2023 V2): T.4.3.4 BSE sensor out of defined range
 #define BRAKE_SENSOR_OUT_OF_RANGE_INVALID 0x8
 
-#define IMD_SHORT_CIRCUIT 0
-#define IMD_NORMAL_CONDITION 1
-#define IMD_UNDERVOLTAGE 2
-#define IMD_STARTUP 3
-#define IMD_DEVICE_ERROR 4
-#define IMD_EARTH_FAULT 5
-
 #define CTRL_RTD_INVALID 0x10
 #define RTD_BUTTON 0x20
 #define BRAKE_SWITCH 0x40
 #define PUMP_ACTIVE 0x80
 #define ACCUMULATOR_FAN_ACTIVE 0x100
 #define RADIATOR_FAN_ACTIVE 0x200
+#define AMS_CHATTER_ACTIVE 0x400
+
+//IMD states
+#define IMD_SHORT_CIRCUIT 0
+#define IMD_NORMAL_CONDITION 1
+#define IMD_UNDERVOLTAGE 2
+#define IMD_STARTUP 3
+#define IMD_DEVICE_ERROR 4
+#define IMD_EARTH_FAULT 5
 
 typedef struct {
     int16_t motor_speed;
