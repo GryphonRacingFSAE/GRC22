@@ -107,7 +107,7 @@ typedef struct {
 } IMD;
 extern IMD global_imd;
 
-#define FAULTS_ACTIVE(flags) ((flags) & 0x1F)
+#define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 
 extern OutputPeripherals global_output_peripherals;
 
