@@ -1,9 +1,9 @@
-#include <HardwareSerial.h>
-#include <driver/twai.h>
-#include <EEPROM.h>
 #include "can.h"
 #include "globals.h"
 #include "utils.h"
+#include <EEPROM.h>
+#include <HardwareSerial.h>
+#include <driver/twai.h>
 
 // CAN
 twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
@@ -102,30 +102,30 @@ void startReceiveCANTask(void* pvParameters) {
                 global_bms.last_heartbeat = xTaskGetTickCount();
                 break;
             }
-            case 0x400: { 
+            case 0x400: {
                 // Torque Parameter Editing
                 uint16_t torque_raw = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
-                int16_t new_torque_raw =*(int16_t*)(&torque_raw);
+                int16_t new_torque_raw = *(int16_t*)(&torque_raw);
                 bool new_max_torque = new_torque_raw != global_torque_map.max_torque_scaling_factor;
-                
+
                 uint16_t power_raw = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
                 int16_t new_power_raw = *(int16_t*)(&power_raw);
                 bool new_max_power = global_torque_map.max_power_scaling_factor != new_power_raw;
-               
+
                 uint16_t target_speed_limit = ((uint16_t)rx_msg.data[5] << 8) | ((uint16_t)rx_msg.data[4]);
                 int16_t new_target_speed_limit = *(int16_t*)(&target_speed_limit);
                 bool new_speed_limit = global_torque_map.target_speed_limit != new_target_speed_limit;
 
-                if(new_max_torque || new_max_power || new_speed_limit){
+                if (new_max_torque || new_max_power || new_speed_limit) {
                     global_torque_map.max_torque_scaling_factor = new_torque_raw;
                     EEPROM.writeShort(TORQUE_SCALING_FACTOR_ADDR, global_torque_map.max_torque_scaling_factor);
 
                     global_torque_map.target_speed_limit = new_target_speed_limit;
                     EEPROM.writeShort(TARGET_SPEED_LIM_ADDR, global_torque_map.target_speed_limit);
-                    
+
                     global_torque_map.max_power_scaling_factor = new_power_raw;
                     EEPROM.writeShort(POWER_SCALING_FACTOR_ADDR, global_torque_map.max_power_scaling_factor);
-                    
+
                     EEPROM.commit();
                 }
                 break;

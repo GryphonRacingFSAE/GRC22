@@ -1,7 +1,7 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <HardwareSerial.h>
 #include <freertos/task.h>
-#include <EEPROM.h>
 
 #include "ams.h"
 #include "can.h"
