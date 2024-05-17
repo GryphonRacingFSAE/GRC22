@@ -60,7 +60,7 @@ void startTransmitCANTask(void* pvParameters) {
         if (tick % 100 == 0) {
             sendState();
             sendPedals();
-            // sendIMD();
+            sendIMD();
         }
 
         xTaskDelayUntil(&tick, pdMS_TO_TICKS(1));
@@ -152,7 +152,7 @@ void sendTorque() {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        // Serial.printf("Failed to send CAN message: %#02x\n", resp);
+        Serial.printf("Failed to send CAN message: %#02x\n", resp);
     }
 }
 
@@ -167,7 +167,7 @@ void sendState() {
     tx_msg.data[1] = (flags >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        printf("Failed to send CAN message\n");
     }
 }
 
@@ -186,12 +186,22 @@ void sendPedals() {
     tx_msg.data[3] = pressure >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        printf("Failed to send CAN message\n");
     }
 }
 
-// void sendIMD(){
-//     twai_message_t tx_msg;
-//     tx_msg.identifier = 0x302;
+void sendIMD() {
+    twai_message_t tx_msg;
+    tx_msg.identifier = 0x304;
+    tx_msg.data_length_code = 3;
 
-// }
+    tx_msg.data[0] = global_imd.state;
+
+    uint16_t resistance = global_imd.resistance;
+    tx_msg.data[1] = resistance & 0xFF;
+    tx_msg.data[2] = resistance >> 8;
+
+    if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
+        printf("Failed to send CAN message\n");
+    }
+}

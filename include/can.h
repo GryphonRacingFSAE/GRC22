@@ -11,5 +11,6 @@ void startReceiveCANTask(void* pvParameters);
 void sendTorque();
 void sendState();
 void sendPedals();
+void sendIMD();
 
 #endif // CAN_H

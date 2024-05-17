@@ -102,12 +102,12 @@ typedef struct {
 typedef struct {
     uint32_t duty_cycle; // in % * 10
     uint32_t frequency;  // in hz * 10
-    uint32_t resistance;
+    uint16_t resistance; // in k ohms
     uint8_t state;
 } IMD;
 extern IMD global_imd;
 
-#define FAULTS_ACTIVE(flags) ((flags)&0x1F)
+#define FAULTS_ACTIVE(flags) ((flags) & 0x1F)
 
 extern OutputPeripherals global_output_peripherals;
 

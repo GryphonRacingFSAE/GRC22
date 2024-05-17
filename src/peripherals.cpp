@@ -29,22 +29,18 @@ void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
 
     if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
-    }
-    if (frequency > 70 && frequency < 130) {
-        global_imd.resistance = ((90 - (1200 * 1000)) / (duty_cycle - 5)) - (1200 * 1000);
+    } else if (frequency > 70 && frequency < 130) {
+        global_imd.resistance = ((90 - 1200) / (duty_cycle - 5)) - 1200;
         global_imd.state = IMD_NORMAL_CONDITION;
-    }
-    if (frequency > 170 && frequency < 230) {
-        global_imd.resistance = ((90 - (1200 * 1000)) / (duty_cycle - 5)) - (1200 * 1000);
+    } else if (frequency > 170 && frequency < 230) {
+        global_imd.resistance = ((90 - 1200) / (duty_cycle - 5)) - 1200;
         global_imd.state = IMD_UNDERVOLTAGE;
-    }
-    if (frequency > 270 && frequency < 330) {
+    } else if (frequency > 270 && frequency < 330) {
         global_imd.state = IMD_STARTUP;
-    }
-    if (frequency > 370 && frequency < 430) {
+        global_imd.resistance = 0;
+    } else if (frequency > 370 && frequency < 430) {
         global_imd.state = IMD_DEVICE_ERROR;
-    }
-    if (frequency > 470 && frequency < 530) {
+    } else if (frequency > 470 && frequency < 530) {
         global_imd.state = IMD_EARTH_FAULT;
     }
 }
