@@ -12,9 +12,9 @@ Firmware for the vehicle control unit in GRC22-Present. We currently utilize an 
 Firmware can be run or debugged directly on the ESP32 using the platform IO extension to seamlessly detect and upload software
 
 ## Resources
-    - [Insulation Monitoring Device](https://www.bender.de/fileadmin/content/Products/d/e/IR155-32xx-V004_D00115_D_XXEN.pdf)
-    - [Cooling Pump](https://www.tecomotive.com/download/PWMinfo_EN.pdf)
-    - [APPS Sensors](https://isc.kyocera-avx.de/wp-content/uploads/Position-sensor_91681.pdf)
+  - [Insulation Monitoring Device](https://www.bender.de/fileadmin/content/Products/d/e/IR155-32xx-V004_D00115_D_XXEN.pdf)
+  - [Cooling Pump](https://www.tecomotive.com/download/PWMinfo_EN.pdf)
+  - [APPS Sensors](https://isc.kyocera-avx.de/wp-content/uploads/Position-sensor_91681.pdf)
 
 # Algorithms/Methodoligies used
 * Insulation Monitoring Device (IMD) Readings:
