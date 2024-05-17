@@ -1,9 +1,10 @@
-#include "can.h"
-#include "globals.h"
-#include "utils.h"
 #include <EEPROM.h>
 #include <HardwareSerial.h>
 #include <driver/twai.h>
+
+#include "can.h"
+#include "globals.h"
+#include "utils.h"
 
 // CAN
 twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
