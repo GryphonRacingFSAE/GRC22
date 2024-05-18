@@ -5,6 +5,7 @@
 #include <SD.h>
 #include <TinyGPSPlus.h>
 #include <driver/twai.h>
+#include <freertos/FreeRTOS.h>
 #include <pb_encode.h>
 
 #include "message.pb.h"
@@ -32,7 +33,7 @@ const byte address[6] = "00001";
 uint8_t nrf_buffer[128];
 
 // CAN
-twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NORMAL);
+twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX, CAN_RX, TWAI_MODE_NO_ACK);
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
@@ -57,10 +58,9 @@ int16_t gx_offset, gy_offset, gz_offset;
 TinyGPSPlus gps;
 HardwareSerial SerialGPS(1);
 
-// Time
-const int interval = 100;
-uint32_t prev_time = 0;
-uint32_t cur_time = 0;
+// FreeRTOS
+QueueHandle_t can_queue;
+QueueHandle_t radio_queue;
 
 //==============================================================================
 // nRF24L01+
@@ -80,25 +80,22 @@ void initNRF() {
     radio.stopListening();
 }
 
-void sendProto(uint32_t address, uint8_t size, uint8_t data[], uint32_t time) {
+void sendProto(twai_message_t can_message) {
     ProtoMessage msg = ProtoMessage_init_default;
-    msg.address = address;
-    msg.data.size = size;
-    memcpy(msg.data.bytes, data, size);
-    msg.time = time;
 
-    Serial.printf("%d|", msg.address);
-    for (int i = 0; i < msg.data.size; i++) {
-        Serial.printf("%02X", msg.data.bytes[i]);
-        if (i != msg.data.size - 1) {
-            Serial.printf(",");
-        }
-    }
-    Serial.printf("|%d\n", msg.time);
+    msg.address = can_message.identifier;
+    msg.data.size = can_message.data_length_code;
+    memcpy(msg.data.bytes, can_message.data, msg.data.size);
+    msg.time = millis();
 
     pb_ostream_t output_stream = pb_ostream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
     pb_encode(&output_stream, ProtoMessage_fields, &msg);
-    radio.write(nrf_buffer, output_stream.bytes_written);
+
+    if (radio.write(nrf_buffer, output_stream.bytes_written)) {
+        Serial.println("Radio message sent");
+    } else {
+        Serial.println("Failed to send radio message");
+    }
 }
 
 //==============================================================================
@@ -117,38 +114,6 @@ void initCAN() {
     } else {
         Serial.println("Failed to start CAN driver");
     }
-}
-
-void readCAN() {
-    twai_message_t can_message;
-
-    if (twai_receive(&can_message, pdMS_TO_TICKS(5000)) == ESP_OK) {
-        if (!can_message.rtr) {
-            sendProto(can_message.identifier, can_message.data_length_code, can_message.data, cur_time);
-        }
-    } else {
-        Serial.println("Failed to receive CAN message");
-    }
-}
-
-void sendCAN(uint32_t address, uint8_t* can_frame, int length) {
-    twai_message_t can_message;
-
-    can_message.identifier = address;
-    can_message.data_length_code = length;
-    for (int i = 0; i < length; i++) {
-        can_message.data[i] = can_frame[i];
-    }
-
-    if (twai_transmit(&can_message, pdMS_TO_TICKS(5000)) == ESP_OK) {
-        sendProto(can_message.identifier, can_message.data_length_code, can_message.data, cur_time);
-    } else {
-        printf("Failed to send CAN message\n");
-    }
-}
-
-uint64_t getSeconds() {
-    return (gps.time.hour() * 3600 + gps.time.minute() * 60 + gps.time.second());
 }
 
 //==============================================================================
@@ -188,20 +153,31 @@ void readMPU() {
     float gy_real = 250 * ((float)gy / 32768);
     float gz_real = 250 * ((float)gz / 32768);
 
-    // Serial.printf("AX %.3f\tAY %.3f\tAZ %.3f\n", ax_real, ay_real, az_real);
-    // Serial.printf("GX %.3f\tGY %.3f\tGZ %.3f\n", gx_real, gy_real, gz_real);
-
     rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax_real);
     rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay_real);
     rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az_real);
     rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_MAX_SIZE);
-    sendCAN(RLM_RLM_ACCEL_0_XF0_FRAME_ID, can_frame, RLM_RLM_ACCEL_0_XF0_LENGTH);
+
+    twai_message_t accel_msg{.identifier = RLM_RLM_ACCEL_0_XF0_FRAME_ID, .data_length_code = RLM_RLM_ACCEL_0_XF0_LENGTH};
+    for (int i = 0; i < accel_msg.data_length_code; i++) {
+        accel_msg.data[i] = can_frame[i];
+    }
 
     rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx_real);
     rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy_real);
     rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz_real);
     rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_MAX_SIZE);
-    sendCAN(RLM_RLM_GYRO_0_XF1_FRAME_ID, can_frame, RLM_RLM_GYRO_0_XF1_LENGTH);
+
+    twai_message_t gyro_msg{.identifier = RLM_RLM_GYRO_0_XF1_FRAME_ID, .data_length_code = RLM_RLM_GYRO_0_XF1_LENGTH};
+    for (int i = 0; i < gyro_msg.data_length_code; i++) {
+        gyro_msg.data[i] = can_frame[i];
+    }
+
+    xQueueSend(can_queue, &accel_msg, portMAX_DELAY);
+    xQueueSend(can_queue, &gyro_msg, portMAX_DELAY);
+
+    xQueueSend(radio_queue, &accel_msg, portMAX_DELAY);
+    xQueueSend(radio_queue, &gyro_msg, portMAX_DELAY);
 }
 
 //==============================================================================
@@ -216,20 +192,81 @@ void initGPS() {
 void readGPS() {
     while (SerialGPS.available() > 0) {
         if (gps.encode(SerialGPS.read())) {
-            // Serial.printf("LAT %f\tLNG %f\n", gps.location.lat(), gps.location.lng());
-
             rlm_position.latitude = rlm_rlm_position_0_xf2_latitude_encode(gps.location.lat());
             rlm_position.longitude = rlm_rlm_position_0_xf2_longitude_encode(gps.location.lng());
             rlm_rlm_position_0_xf2_pack(can_frame, &rlm_position, CAN_MAX_SIZE);
-            sendCAN(RLM_RLM_POSITION_0_XF2_FRAME_ID, can_frame, RLM_RLM_POSITION_0_XF2_LENGTH);
+
+            twai_message_t position_msg{.identifier = RLM_RLM_POSITION_0_XF2_FRAME_ID, .data_length_code = RLM_RLM_POSITION_0_XF2_LENGTH};
+            for (int i = 0; i < position_msg.data_length_code; i++) {
+                position_msg.data[i] = can_frame[i];
+            }
 
             rlm_trajectory.direction = rlm_rlm_trajectory_0_xf3_direction_encode(gps.course.deg());
             rlm_trajectory.speed = rlm_rlm_trajectory_0_xf3_speed_encode(gps.speed.mps());
             rlm_rlm_trajectory_0_xf3_pack(can_frame, &rlm_trajectory, CAN_MAX_SIZE);
-            sendCAN(RLM_RLM_TRAJECTORY_0_XF3_FRAME_ID, can_frame, RLM_RLM_TRAJECTORY_0_XF3_LENGTH);
+
+            twai_message_t trajectory_msg{.identifier = RLM_RLM_POSITION_0_XF2_FRAME_ID, .data_length_code = RLM_RLM_POSITION_0_XF2_LENGTH};
+            for (int i = 0; i < trajectory_msg.data_length_code; i++) {
+                trajectory_msg.data[i] = can_frame[i];
+            }
+
+            xQueueSend(can_queue, &position_msg, portMAX_DELAY);
+            xQueueSend(can_queue, &trajectory_msg, portMAX_DELAY);
+
+            xQueueSend(radio_queue, &position_msg, portMAX_DELAY);
+            xQueueSend(radio_queue, &trajectory_msg, portMAX_DELAY);
 
             return;
         }
+    }
+}
+
+//==============================================================================
+// Tasks
+//==============================================================================
+
+void canTransmitTask(void* parameter) {
+    twai_message_t can_message;
+    for (;;) {
+        if (xQueueReceive(can_queue, &can_message, portMAX_DELAY) == pdPASS) {
+            if (twai_transmit(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+                printf("CAN message sent\n");
+            } else {
+                printf("Failed to send CAN message\n");
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+void canReceiveTask(void* parameter) {
+    twai_message_t can_message;
+    for (;;) {
+        if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
+            printf("CAN message received\n");
+            xQueueSend(radio_queue, &can_message, portMAX_DELAY);
+        } else {
+            printf("Failed to receive CAN message\n");
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+void sensorReadTask(void* parameter) {
+    for (;;) {
+        // readMPU();
+        readGPS();
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+void radioTransmitTask(void* parameter) {
+    twai_message_t can_message;
+    for (;;) {
+        if (xQueueReceive(radio_queue, &can_message, portMAX_DELAY) == pdPASS) {
+            sendProto(can_message);
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -248,9 +285,18 @@ void setup() {
     initGPS();
     initCAN();
 
-    pinMode(MPU_CAL, INPUT);
-
     calibrateMPU();
+
+    can_queue = xQueueCreate(10, sizeof(twai_message_t));
+    radio_queue = xQueueCreate(10, sizeof(twai_message_t));
+
+    // isolate CAN transmission and reception to Core 0
+    xTaskCreatePinnedToCore(canTransmitTask, "CAN Transmit Task", 10000, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(canReceiveTask, "CAN Receive Task", 10000, NULL, 1, NULL, 0);
+
+    // isolate sensor reading and radio transmission to Core 1
+    xTaskCreatePinnedToCore(sensorReadTask, "CAN Receive Task", 10000, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(radioTransmitTask, "CAN Receive Task", 10000, NULL, 1, NULL, 1);
 
     Serial.println();
 }
@@ -259,19 +305,4 @@ void setup() {
 // Loop
 //==============================================================================
 
-void loop() {
-    cur_time = millis();
-
-    if (cur_time - prev_time >= interval) {
-        prev_time = cur_time;
-
-        readMPU();
-        readGPS();
-    }
-
-    readCAN();
-
-    // if (digitalRead(MPU_CAL) == HIGH) {
-    //     calibrateMPU();
-    // }
-}
+void loop() {}
