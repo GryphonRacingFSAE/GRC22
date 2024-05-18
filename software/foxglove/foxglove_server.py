@@ -54,7 +54,7 @@ def parse_can_message(message, db):
         decoded_message = db.decode_message(message.frame_id, data)
         return message.name, decoded_message, time
     except KeyError:
-        return (None, None)
+        return (None, None, None)
 
 
 def load_dbc_files(folder):
