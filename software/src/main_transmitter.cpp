@@ -235,7 +235,7 @@ void canTransmitTask(void* parameter) {
                 printf("Failed to send CAN message\n");
             }
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -248,7 +248,7 @@ void canReceiveTask(void* parameter) {
         } else {
             printf("Failed to receive CAN message\n");
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -266,7 +266,7 @@ void radioTransmitTask(void* parameter) {
         if (xQueueReceive(radio_queue, &can_message, portMAX_DELAY) == pdPASS) {
             sendProto(can_message);
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -287,8 +287,8 @@ void setup() {
 
     calibrateMPU();
 
-    can_queue = xQueueCreate(10, sizeof(twai_message_t));
-    radio_queue = xQueueCreate(10, sizeof(twai_message_t));
+    can_queue = xQueueCreate(50, sizeof(twai_message_t));
+    radio_queue = xQueueCreate(50, sizeof(twai_message_t));
 
     // isolate CAN transmission and reception to Core 0
     xTaskCreatePinnedToCore(canTransmitTask, "CAN Transmit Task", 10000, NULL, 1, NULL, 0);

@@ -124,7 +124,7 @@ async def main():
             )
 
             print(message_name)
-            print(decoded_message)
+            # print(decoded_message)
 
             # check dictionary for message name
             if message_name in channel_ids:
