@@ -162,20 +162,30 @@ std::pair<std::string, std::string> FGLogger::serializeCANToProtobuf(const can_f
         case pb::FieldDescriptor::TYPE_BOOL:
             refl->SetBool(actual_msg, fd, sig.Decode(can_frame.data));
             break;
-        case pb::FieldDescriptor::TYPE_INT32:
-            refl->SetInt32(actual_msg, fd, sig.RawToPhys(sig.Decode(can_frame.data)));
+        case pb::FieldDescriptor::TYPE_INT32: {
+            uint64_t decoded = sig.Decode(can_frame.data);
+            int32_t value = *reinterpret_cast<int32_t*>(&decoded) * sig.Factor() + sig.Offset();
+            refl->SetInt32(actual_msg, fd, value);
             break;
-        case pb::FieldDescriptor::TYPE_INT64:
-            // This might cut off data due to limits in the size of doubles
-            refl->SetInt64(actual_msg, fd, sig.RawToPhys(sig.Decode(can_frame.data)));
+        }
+        case pb::FieldDescriptor::TYPE_INT64: {
+            uint64_t decoded = sig.Decode(can_frame.data);
+            int64_t value = *reinterpret_cast<int64_t*>(&decoded) * sig.Factor() + sig.Offset();
+            refl->SetInt64(actual_msg, fd, value);
             break;
-        case pb::FieldDescriptor::TYPE_UINT32:
-            refl->SetUInt32(actual_msg, fd, sig.RawToPhys(sig.Decode(can_frame.data)));
+        }
+        case pb::FieldDescriptor::TYPE_UINT32: {
+            uint64_t decoded = sig.Decode(can_frame.data);
+            uint32_t value = *reinterpret_cast<uint32_t*>(&decoded) * sig.Factor() + sig.Offset();
+            refl->SetUInt32(actual_msg, fd, value);
             break;
-        case pb::FieldDescriptor::TYPE_UINT64:
-            // This might cut off data due to limits in the size of doubles
-            refl->SetUInt64(actual_msg, fd, sig.RawToPhys(sig.Decode(can_frame.data)));
+        }
+        case pb::FieldDescriptor::TYPE_UINT64: {
+            uint64_t decoded = sig.Decode(can_frame.data);
+            uint64_t value = decoded * sig.Factor() + sig.Offset();
+            refl->SetUInt64(actual_msg, fd, value);
             break;
+        }
         case pb::FieldDescriptor::TYPE_FLOAT:
             refl->SetFloat(actual_msg, fd, sig.RawToPhys(sig.Decode(can_frame.data)));
             break;
@@ -201,6 +211,11 @@ void FGLogger::saveAndPublish(const can_frame& can_frame) {
     if (serialized_message.empty()) {
         return;
     }
+
+    // Hopefully this fixes it but if the USB is removed it won't
+    if (mcap_writer.dataSink() == nullptr) {
+        this->restartSaving();
+    } 
 
     // Save the protobuf message to a local mcap file.
     mcap::Message mcap_msg;

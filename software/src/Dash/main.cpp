@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     real::MotorController* motor_controller = new real::MotorController(app_root + "/DBCs/20220510_Gen5_CAN_DB.dbc");
     real::EnergyMeter* energy_meter = new real::EnergyMeter(app_root + "/DBCs/Energy_Meter_CAN_Messages.dbc");
     real::BMS* bms = new real::BMS(app_root + "/DBCs/Orion_CANBUS.dbc");
-    real::VCU* vcu = new real::VCU(app_root + "/DBCs/VCU.dbc", app_root + "/TorqueMaps");
+    real::VCU* vcu = new real::VCU(app_root + "/DBCs/VCU.dbc");
     real::SMU* smu = new real::SMU(app_root + "/DBCs/SMU.dbc");
 
     QQmlApplicationEngine engine;

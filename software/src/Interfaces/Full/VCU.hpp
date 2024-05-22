@@ -13,14 +13,11 @@ namespace real {
 class VCU : public QObject, public CAN::DBCInterface<VCU> {
     Q_OBJECT
     Q_PROPERTY(QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
-    Q_PROPERTY(int profileId MEMBER m_profile_id NOTIFY profileIdChanged)
-    Q_PROPERTY(QList<float> currentTcTune MEMBER m_current_tc_tune NOTIFY currentTcTuneChanged)
-    Q_PROPERTY(int tcTuneId MEMBER m_tc_tune_id NOTIFY tcTuneIdChanged)
     Q_PROPERTY(int maxPower MEMBER m_max_power)
     Q_PROPERTY(int maxTorque MEMBER m_max_torque)
   public:
-    VCU(const std::string& dbc_file = "VCU.dbc", const std::string& torque_map_directory = "")
-        : QObject(nullptr), DBCInterface(dbc_file), m_torque_map_directory(torque_map_directory), m_profile_id(0), m_tc_tune_id(0) {
+    VCU(const std::string& dbc_file = "VCU.dbc")
+        : QObject(nullptr), DBCInterface(dbc_file) {
 
         can_signal_dispatch["ACCELERATOR_POSITION"] = &VCU::newAcceleratorPos;
         can_signal_dispatch["BRAKE_PRESSURE"] = &VCU::newBrakePressure;        
@@ -34,7 +31,7 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
         can_signal_dispatch["PUMP_ACTIVE"] = &VCU::newPumpActive;
         can_signal_dispatch["ACCUMULATOR_FAN_ACTIVE"] = &VCU::newAccumulatorFanActive;
         can_signal_dispatch["RADIATOR_FAN_ACTIVE"] = &VCU::newRadiatorFanActive;
-        sendTorqueMap();
+        sendTorqueConfig();
     }
 
     Q_INVOKABLE void sendTorqueConfig() {
@@ -72,11 +69,9 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
     void newAccumulatorFanActive(float state);
     void newRadiatorFanActive(float state);
   private:
-    std::filesystem::path m_torque_map_directory;
     QList<int> m_current_torque_map;
-    QList<float> m_current_tc_tune;
     int m_max_torque;
-    int m_min_torque;
+    int m_max_power;
 
   public:
     static constexpr size_t num_of_filters = 1;
