@@ -1,4 +1,4 @@
-#include <EEPROM.h>
+#include <Preferences.h>
 #include <HardwareSerial.h>
 #include <driver/twai.h>
 
@@ -71,6 +71,8 @@ void startTransmitCANTask(void* pvParameters) {
 void startReceiveCANTask(void* pvParameters) {
     (void)pvParameters;
     twai_message_t rx_msg;
+    Preferences torque_param_storage;
+    torque_param_storage.begin("TorqueParams", READ_WRITE_MODE); 
 
     while (1) {
         if (twai_receive(&rx_msg, portMAX_DELAY) == ESP_OK) {
@@ -103,32 +105,37 @@ void startReceiveCANTask(void* pvParameters) {
                 global_bms.last_heartbeat = xTaskGetTickCount();
                 break;
             }
-            case 0x400: {
+            case 0x400: {               
+                //store defaults 
+                int16_t stored_torque = torque_param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
+                int16_t stored_power = torque_param_storage.getShort("powerRaw", DEFAULT_POWER);
+                int16_t stored_target_speed = torque_param_storage.getShort("targetSpeedLim", DEFAULT_TARGET_SPEED_LIM);
+
                 // Torque Parameter Editing
                 uint16_t torque_raw = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
                 int16_t new_torque_raw = *(int16_t*)(&torque_raw);
-                bool new_max_torque = new_torque_raw != global_torque_map.max_torque_scaling_factor;
+                bool new_max_torque = new_torque_raw != stored_torque;
 
                 uint16_t power_raw = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
                 int16_t new_power_raw = *(int16_t*)(&power_raw);
-                bool new_max_power = global_torque_map.max_power_scaling_factor != new_power_raw;
+                bool new_max_power = new_power_raw != stored_power;
 
                 uint16_t target_speed_limit = ((uint16_t)rx_msg.data[5] << 8) | ((uint16_t)rx_msg.data[4]);
                 int16_t new_target_speed_limit = *(int16_t*)(&target_speed_limit);
-                bool new_speed_limit = global_torque_map.target_speed_limit != new_target_speed_limit;
+                bool new_speed_limit = new_target_speed_limit != stored_target_speed;
 
+                //update stored values if different 
                 if (new_max_torque || new_max_power || new_speed_limit) {
-                    global_torque_map.max_torque_scaling_factor = new_torque_raw;
-                    EEPROM.writeShort(TORQUE_SCALING_FACTOR_ADDR, global_torque_map.max_torque_scaling_factor);
+                    stored_torque = new_torque_raw;
+                    torque_param_storage.putShort("torqueRaw", stored_torque);
 
-                    global_torque_map.target_speed_limit = new_target_speed_limit;
-                    EEPROM.writeShort(TARGET_SPEED_LIM_ADDR, global_torque_map.target_speed_limit);
+                    stored_target_speed = new_target_speed_limit;
+                    torque_param_storage.putShort("powerRaw", stored_target_speed);
 
-                    global_torque_map.max_power_scaling_factor = new_power_raw;
-                    EEPROM.writeShort(POWER_SCALING_FACTOR_ADDR, global_torque_map.max_power_scaling_factor);
-
-                    EEPROM.commit();
+                    stored_power = new_power_raw;
+                    torque_param_storage.putShort("targetSpeedLim", stored_power);
                 }
+            
                 break;
             }
             }

@@ -4,11 +4,6 @@
 #include <Arduino.h>
 #include <stdint.h>
 
-#define EEPROM_LARGEST_SIZE 16
-#define TORQUE_SCALING_FACTOR_ADDR 0
-#define POWER_SCALING_FACTOR_ADDR 15
-#define TARGET_SPEED_LIM_ADDR 31
-
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
 #define PUMP_PWM_PIN GPIO_NUM_4
@@ -20,7 +15,7 @@
 #define BRAKE_PRESSURE_PIN GPIO_NUM_25
 #define PUSH_BUTTON_PIN GPIO_NUM_35
 
-#define AMS_SHUTDOWN_PIN GPIO_NUM_14
+#define AMS_SHUTDOWN_PIN GPIO_NUM_22
 #define AIR_CONTACT_PIN GPIO_NUM_23
 #define RAD_FAN_PIN GPIO_NUM_21
 
@@ -30,6 +25,7 @@
 
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
+#define PUMP_MOTOR_CONTROLLER_MAX_TEMP 800
 // Turn on Pump if tractive voltage > 450v
 #define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 300
 // Turn on Fan if coolant temp > 45c
@@ -65,6 +61,15 @@
 #define IMD_DEVICE_ERROR 4
 #define IMD_EARTH_FAULT 5
 
+#define READ_ONLY_MODE true
+#define READ_WRITE_MODE false
+
+#define DEFAULT_TORQUE 1200             // Torque in Nm * 10
+#define DEFAULT_POWER 500               // Power in kW * 10
+#define DEFAULT_TARGET_SPEED_LIM 6000   // in RPM
+#define SPEED_LIM_RANGE 500             // in RPM
+#define REGEN_ENABLED 0
+
 typedef struct {
     int16_t motor_speed;
     int16_t tractive_voltage;
@@ -80,18 +85,6 @@ typedef struct {
 } Peripherals;
 
 extern Peripherals global_peripherals;
-
-typedef struct {
-    int16_t max_torque;                 // Torque in Nm * 10
-    int16_t max_power;                  // Power in kW * 10
-    uint16_t max_torque_scaling_factor; // in % * 10
-    uint16_t max_power_scaling_factor;  // in % * 10
-    int16_t target_speed_limit;         // in RPM
-    int16_t speed_limit_range;          // in RPM
-    uint8_t regen_enabled;
-} TorqueMap;
-
-extern TorqueMap global_torque_map;
 
 typedef struct {
     int16_t max_temp;

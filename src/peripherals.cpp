@@ -23,9 +23,9 @@ void IRAM_ATTR imdFallingEdgeTime(void) {
 }
 
 void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
-    Serial.printf("Difference %d \r\n", (imd_rising1 - imd_rising0));
-    Serial.printf("Frequency %d \r\n", global_imd.frequency);
-    Serial.printf("Duty Cycle %d \r\n", global_imd.duty_cycle);
+    // Serial.printf("Difference %d \r\n", (imd_rising1 - imd_rising0));
+    // Serial.printf("Frequency %d \t", global_imd.frequency);
+    // Serial.printf("Duty Cycle %d \r\n", global_imd.duty_cycle);
 
     if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
@@ -196,10 +196,11 @@ void startControlTask(void* pvParameters) {
         if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD ||
             !FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
             SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            pumpCycle(60);
+            uint16_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD)*(100-11)/(PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + 11;
+            pumpCycle(pump_speed);
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            pumpCycle(0);
+            pumpCycle(10);
         }
 
         // Turn on fan based on coolant temperature threshold
