@@ -30,7 +30,7 @@ void initNRF() {
 
     radio.setDataRate(RF24_1MBPS);
     radio.setPALevel(RF24_PA_MAX);
-
+    radio.setAutoAck(false);
     radio.openReadingPipe(0, address);
     radio.startListening();
 }

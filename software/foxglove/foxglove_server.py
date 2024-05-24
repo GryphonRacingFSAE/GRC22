@@ -123,7 +123,7 @@ async def main():
                 message.decode(), db
             )
 
-            print(message_name)
+            # print(message_name)
             # print(decoded_message)
 
             # check dictionary for message name

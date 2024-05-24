@@ -74,6 +74,7 @@ void initNRF() {
     }
 
     radio.setDataRate(RF24_1MBPS);
+    radio.setAutoAck(false);
     radio.setPALevel(RF24_PA_MAX);
 
     radio.openWritingPipe(address);
@@ -91,9 +92,8 @@ void sendProto(twai_message_t can_message) {
     pb_ostream_t output_stream = pb_ostream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
     pb_encode(&output_stream, ProtoMessage_fields, &msg);
 
-    if (radio.write(nrf_buffer, output_stream.bytes_written)) {
-        Serial.println("Radio message sent");
-    } else {
+    // As auto-ack is disabled, this will always succeed
+    if (!radio.write(nrf_buffer, output_stream.bytes_written)) {
         Serial.println("Failed to send radio message");
     }
 }
@@ -210,12 +210,11 @@ void readGPS() {
                 trajectory_msg.data[i] = can_frame[i];
             }
 
-            xQueueSend(can_queue, &position_msg, portMAX_DELAY);
-            xQueueSend(can_queue, &trajectory_msg, portMAX_DELAY);
+            // xQueueSend(can_queue, &position_msg, 0);
+            // xQueueSend(can_queue, &trajectory_msg, 0);
 
-            xQueueSend(radio_queue, &position_msg, portMAX_DELAY);
-            xQueueSend(radio_queue, &trajectory_msg, portMAX_DELAY);
-
+            xQueueSend(radio_queue, &position_msg, 0);
+            xQueueSend(radio_queue, &trajectory_msg, 0);
             return;
         }
     }
@@ -229,26 +228,21 @@ void canTransmitTask(void* parameter) {
     twai_message_t can_message;
     for (;;) {
         if (xQueueReceive(can_queue, &can_message, portMAX_DELAY) == pdPASS) {
-            if (twai_transmit(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
-                printf("CAN message sent\n");
-            } else {
+            if (twai_transmit(&can_message, 1) != ESP_OK) {
                 printf("Failed to send CAN message\n");
             }
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
 void canReceiveTask(void* parameter) {
     twai_message_t can_message;
     for (;;) {
-        if (twai_receive(&can_message, pdMS_TO_TICKS(10000)) == ESP_OK) {
-            printf("CAN message received\n");
-            xQueueSend(radio_queue, &can_message, portMAX_DELAY);
+        if (twai_receive(&can_message, portMAX_DELAY) == ESP_OK) {
+            xQueueSend(radio_queue, &can_message, 0);
         } else {
             printf("Failed to receive CAN message\n");
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -256,7 +250,7 @@ void sensorReadTask(void* parameter) {
     for (;;) {
         // readMPU();
         readGPS();
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -266,7 +260,6 @@ void radioTransmitTask(void* parameter) {
         if (xQueueReceive(radio_queue, &can_message, portMAX_DELAY) == pdPASS) {
             sendProto(can_message);
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -276,29 +269,24 @@ void radioTransmitTask(void* parameter) {
 
 void setup() {
     Serial.begin(921600);
-    delay(500);
-
-    Serial.println();
 
     initNRF();
-    initMPU();
+    // initMPU();
     initGPS();
     initCAN();
 
-    calibrateMPU();
+    // calibrateMPU();
 
     can_queue = xQueueCreate(50, sizeof(twai_message_t));
     radio_queue = xQueueCreate(50, sizeof(twai_message_t));
 
     // isolate CAN transmission and reception to Core 0
-    xTaskCreatePinnedToCore(canTransmitTask, "CAN Transmit Task", 10000, NULL, 1, NULL, 0);
-    xTaskCreatePinnedToCore(canReceiveTask, "CAN Receive Task", 10000, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(canTransmitTask, "CAN Transmit Task", 8096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(canReceiveTask, "CAN Receive Task", 8096, NULL, 3, NULL, 0);
 
     // isolate sensor reading and radio transmission to Core 1
-    xTaskCreatePinnedToCore(sensorReadTask, "CAN Receive Task", 10000, NULL, 1, NULL, 1);
-    xTaskCreatePinnedToCore(radioTransmitTask, "CAN Receive Task", 10000, NULL, 1, NULL, 1);
-
-    Serial.println();
+    xTaskCreatePinnedToCore(sensorReadTask, "CAN Receive Task", 8096, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(radioTransmitTask, "CAN Receive Task", 8096, NULL, 4, NULL, 1);
 }
 
 //==============================================================================
