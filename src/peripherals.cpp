@@ -30,10 +30,10 @@ void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
     if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
     } else if (frequency > 70 && frequency < 130) {
-        global_imd.resistance = ((90 - 1200) / (duty_cycle - 5)) - 1200;
+        global_imd.resistance = ((90 * 1200) / (duty_cycle - 5)) - 1200;
         global_imd.state = IMD_NORMAL_CONDITION;
     } else if (frequency > 170 && frequency < 230) {
-        global_imd.resistance = ((90 - 1200) / (duty_cycle - 5)) - 1200;
+        global_imd.resistance = ((90 * 1200) / (duty_cycle - 5)) - 1200;
         global_imd.state = IMD_UNDERVOLTAGE;
     } else if (frequency > 270 && frequency < 330) {
         global_imd.state = IMD_STARTUP;
@@ -182,7 +182,6 @@ void startControlTask(void* pvParameters) {
                 global_motor_controller.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON && FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON)) {
                 CLEAR_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Remove the invalid flag
                 digitalWrite(BUZZER_PIN, 1);
-                // digitalWrite(LED_PIN, 1);
                 rtd_call_counts = 0;
             }
         } else if (global_motor_controller.tractive_voltage < RTD_TRACTIVE_VOLTAGE_OFF ||

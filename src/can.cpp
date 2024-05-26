@@ -6,6 +6,8 @@
 #include "globals.h"
 #include "utils.h"
 
+Preferences torque_param_storage;
+
 // CAN
 twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
@@ -71,8 +73,6 @@ void startTransmitCANTask(void* pvParameters) {
 void startReceiveCANTask(void* pvParameters) {
     (void)pvParameters;
     twai_message_t rx_msg;
-    Preferences torque_param_storage;
-    torque_param_storage.begin("TorqueParams", READ_WRITE_MODE); 
 
     while (1) {
         if (twai_receive(&rx_msg, portMAX_DELAY) == ESP_OK) {
@@ -105,7 +105,8 @@ void startReceiveCANTask(void* pvParameters) {
                 global_bms.last_heartbeat = xTaskGetTickCount();
                 break;
             }
-            case 0x400: {               
+            case 0x400: {           
+                torque_param_storage.begin("TorqueParams", READ_WRITE_MODE);     
                 //store defaults 
                 int16_t stored_torque = torque_param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
                 int16_t stored_power = torque_param_storage.getShort("powerRaw", DEFAULT_POWER);
@@ -135,6 +136,8 @@ void startReceiveCANTask(void* pvParameters) {
                     stored_power = new_power_raw;
                     torque_param_storage.putShort("targetSpeedLim", stored_power);
                 }
+
+                torque_param_storage.end();
             
                 break;
             }
@@ -229,6 +232,30 @@ void sendIMD() {
     tx_msg.data[2] = resistance >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
+        printf("Failed to send CAN message\n");
+    }
+}
+
+void sendTorqueParameters(){
+    twai_message_t tx_msg;
+    tx_msg.identifier = 0x305;
+    tx_msg.data_length_code = 6;
+
+    torque_param_storage.begin("TorqueParams", READ_ONLY_MODE);
+    
+    int16_t torque = torque_param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
+    tx_msg.data[0] = torque & 0xFF;
+    tx_msg.data[2] = torque >> 8;
+
+    int16_t power = torque_param_storage.getShort("powerRaw", DEFAULT_POWER);
+    tx_msg.data[3] = power & 0xFF;
+    tx_msg.data[4] = power >> 8;
+    
+    int16_t target_speed = torque_param_storage.getShort("targetSpeedLim", DEFAULT_TARGET_SPEED_LIM);
+    tx_msg.data[5] = target_speed & 0xFF;
+    tx_msg.data[6] = target_speed >> 8;
+
+    if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK){
         printf("Failed to send CAN message\n");
     }
 }

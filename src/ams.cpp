@@ -24,7 +24,6 @@ void startAMSTask(void* params) {
                 SET_FLAG(global_output_peripherals.flags, AMS_CHATTER_ACTIVE);
                 digitalWrite(LED_PIN, HIGH);
                 xTaskDelayUntil(&tick, pdMS_TO_TICKS(AMS_TASK_PERIOD));
-        
                 ams_chatter_count = 0;
                 continue;
             }
@@ -41,11 +40,9 @@ void startAMSTask(void* params) {
 
             } else {
                 digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
-                // digitalWrite(LED_PIN, LOW);
             }
         } else {
             digitalWrite(AMS_SHUTDOWN_PIN, LOW);
-            digitalWrite(LED_PIN, HIGH);
         }
 
         xTaskDelayUntil(&tick, pdMS_TO_TICKS(AMS_TASK_PERIOD));
