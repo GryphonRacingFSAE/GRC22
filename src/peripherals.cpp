@@ -5,6 +5,9 @@
 static uint32_t imd_rising0 = 0;
 static uint32_t imd_rising1 = 0;
 static uint32_t imd_falling = 0;
+static uint32_t flow_sens1_prev = 0;
+static uint32_t flow_sens1_current = 0;
+
 
 void IRAM_ATTR imdRisingEdgeTime(void) {
     imd_rising0 = imd_rising1;
@@ -22,11 +25,15 @@ void IRAM_ATTR imdFallingEdgeTime(void) {
     }
 }
 
-void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
-    // Serial.printf("Difference %d \r\n", (imd_rising1 - imd_rising0));
-    // Serial.printf("Frequency %d \t", global_imd.frequency);
-    // Serial.printf("Duty Cycle %d \r\n", global_imd.duty_cycle);
+void IRAM_ATTR flowSens1Frequency(void){
+    flow_sens1_prev = flow_sens1_current;
+    flow_sens1_current = micros();
+    if(flow_sens1_current != flow_sens1_prev){
+        global_flow_sensors.flow1_rate = (10000000/ (flow_sens1_current - flow_sens1_prev));
+    }
+}
 
+void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
     if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
     } else if (frequency > 70 && frequency < 130) {
@@ -69,12 +76,16 @@ uint16_t analogReadRepeated(uint8_t pin) {
 
 void startPeripheralTask(void* pvParameters) {
     (void)pvParameters;
-
     TickType_t tick = xTaskGetTickCount();
 
     bool push_button_status = LOW;
     TickType_t last_push_button_change = tick;
     while (1) {
+        if (flow_sens1_current + 1000000 < micros())
+        {
+            global_flow_sensors.flow1_rate = 0;
+        }
+        
         uint16_t apps1_adc = analogReadRepeated(APPS1_PIN);
         uint16_t apps2_adc = analogReadRepeated(APPS2_PIN);
 
@@ -158,14 +169,11 @@ void startPeripheralTask(void* pvParameters) {
 
 void startControlTask(void* pvParameters) {
     (void)pvParameters;
-
     static int rtd_call_counts = 0;
-
     TickType_t tick = xTaskGetTickCount();
+
     while (1) {
-
         imdReadings(global_imd.duty_cycle, global_imd.frequency);
-
         if (global_peripherals.brake_pressure > 300) {
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
         } else {

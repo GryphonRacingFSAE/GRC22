@@ -4,24 +4,23 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+#define LED_PIN GPIO_NUM_2
+#define PUMP_PWM_PIN GPIO_NUM_4
+#define IMD_PWM_FALLING_PIN GPIO_NUM_5
+#define FLOW_SENS1_PIN GPIO_NUM_12      
+#define IMD_PWM_RISING_PIN GPIO_NUM_15
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
-#define PUMP_PWM_PIN GPIO_NUM_4
-#define IMD_PWM_RISING_PIN GPIO_NUM_15
-#define IMD_PWM_FALLING_PIN GPIO_NUM_5
-
-#define APPS1_PIN GPIO_NUM_33
-#define APPS2_PIN GPIO_NUM_32
-#define BRAKE_PRESSURE_PIN GPIO_NUM_25
-#define PUSH_BUTTON_PIN GPIO_NUM_35
-
+#define RAD_FAN_PIN GPIO_NUM_21
 #define AMS_SHUTDOWN_PIN GPIO_NUM_22
 #define AIR_CONTACT_PIN GPIO_NUM_23
-#define RAD_FAN_PIN GPIO_NUM_21
-
+#define BRAKE_PRESSURE_PIN GPIO_NUM_25    
 #define BRAKE_LIGHT_PIN GPIO_NUM_26
 #define BUZZER_PIN GPIO_NUM_27
-#define LED_PIN GPIO_NUM_2
+#define APPS2_PIN GPIO_NUM_32
+#define APPS1_PIN GPIO_NUM_33
+#define PUSH_BUTTON_PIN GPIO_NUM_35
+
 
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
@@ -107,6 +106,11 @@ typedef struct {
     uint8_t state;
 } IMD;
 extern IMD global_imd;
+
+typedef struct{
+    uint32_t flow1_rate; // ~L/min * 10
+} FlowSensors;
+extern FlowSensors global_flow_sensors;
 
 #define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 

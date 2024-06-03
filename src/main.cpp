@@ -30,8 +30,10 @@ void setup() {
     pinMode(IMD_PWM_RISING_PIN, INPUT);
     pinMode(IMD_PWM_FALLING_PIN, INPUT);
     pinMode(AIR_CONTACT_PIN, INPUT);
+    pinMode(FLOW_SENS1_PIN, INPUT);
 
     attachInterrupt(AIR_CONTACT_PIN, amsRisingEdgeInterrupt, RISING);
+    attachInterrupt(FLOW_SENS1_PIN, flowSens1Frequency, RISING);
     attachInterrupt(IMD_PWM_RISING_PIN, imdRisingEdgeTime, RISING);
     attachInterrupt(IMD_PWM_FALLING_PIN, imdFallingEdgeTime, FALLING);
 

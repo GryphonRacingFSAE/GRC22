@@ -13,7 +13,7 @@ void IRAM_ATTR amsRisingEdgeInterrupt() {
 
 void startAMSTask(void* params) {
     (void)params;
-    uint16_t loop_count = 0;
+    static uint16_t loop_count = 0;
     TickType_t tick = xTaskGetTickCount();
     digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
     while (1) {

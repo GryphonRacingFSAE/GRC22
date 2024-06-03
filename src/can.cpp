@@ -64,6 +64,7 @@ void startTransmitCANTask(void* pvParameters) {
             sendState();
             sendPedals();
             sendIMD();
+            sendTorqueParameters();
         }
 
         xTaskDelayUntil(&tick, pdMS_TO_TICKS(1));
@@ -182,7 +183,7 @@ void sendTorque() {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        Serial.printf("Failed to send CAN message: %#02x\n", resp);
+        // Serial.printf("Failed to send CAN message: %#02x\n", resp);
     }
 }
 
@@ -197,7 +198,7 @@ void sendState() {
     tx_msg.data[1] = (flags >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        printf("Failed to send CAN message\n");
+        // printf("Failed to send CAN message\n");
     }
 }
 
@@ -216,7 +217,7 @@ void sendPedals() {
     tx_msg.data[3] = pressure >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        printf("Failed to send CAN message\n");
+        // printf("Failed to send CAN message\n");
     }
 }
 
@@ -232,7 +233,7 @@ void sendIMD() {
     tx_msg.data[2] = resistance >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        printf("Failed to send CAN message\n");
+        // printf("Failed to send CAN message\n");
     }
 }
 
@@ -245,17 +246,17 @@ void sendTorqueParameters(){
     
     int16_t torque = torque_param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
     tx_msg.data[0] = torque & 0xFF;
-    tx_msg.data[2] = torque >> 8;
+    tx_msg.data[1] = torque >> 8;
 
     int16_t power = torque_param_storage.getShort("powerRaw", DEFAULT_POWER);
-    tx_msg.data[3] = power & 0xFF;
-    tx_msg.data[4] = power >> 8;
+    tx_msg.data[2] = power & 0xFF;
+    tx_msg.data[3] = power >> 8;
     
     int16_t target_speed = torque_param_storage.getShort("targetSpeedLim", DEFAULT_TARGET_SPEED_LIM);
-    tx_msg.data[5] = target_speed & 0xFF;
-    tx_msg.data[6] = target_speed >> 8;
+    tx_msg.data[4] = target_speed & 0xFF;
+    tx_msg.data[5] = target_speed >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK){
-        printf("Failed to send CAN message\n");
+        // printf("Failed to send CAN message\n");
     }
 }
