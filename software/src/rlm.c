@@ -32,91 +32,47 @@
 
 #include "rlm.h"
 
-static inline uint8_t pack_left_shift_u8(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint8_t pack_left_shift_u8(uint8_t value, uint8_t shift, uint8_t mask) {
     return (uint8_t)((uint8_t)(value << shift) & mask);
 }
 
-static inline uint8_t pack_left_shift_u16(
-    uint16_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint8_t pack_left_shift_u16(uint16_t value, uint8_t shift, uint8_t mask) {
     return (uint8_t)((uint8_t)(value << shift) & mask);
 }
 
-static inline uint8_t pack_left_shift_u32(
-    uint32_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint8_t pack_left_shift_u32(uint32_t value, uint8_t shift, uint8_t mask) {
     return (uint8_t)((uint8_t)(value << shift) & mask);
 }
 
-static inline uint8_t pack_right_shift_u16(
-    uint16_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint8_t pack_right_shift_u16(uint16_t value, uint8_t shift, uint8_t mask) {
     return (uint8_t)((uint8_t)(value >> shift) & mask);
 }
 
-static inline uint8_t pack_right_shift_u32(
-    uint32_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint8_t pack_right_shift_u32(uint32_t value, uint8_t shift, uint8_t mask) {
     return (uint8_t)((uint8_t)(value >> shift) & mask);
 }
 
-static inline uint16_t unpack_left_shift_u16(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint16_t unpack_left_shift_u16(uint8_t value, uint8_t shift, uint8_t mask) {
     return (uint16_t)((uint16_t)(value & mask) << shift);
 }
 
-static inline uint32_t unpack_left_shift_u32(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint32_t unpack_left_shift_u32(uint8_t value, uint8_t shift, uint8_t mask) {
     return (uint32_t)((uint32_t)(value & mask) << shift);
 }
 
-static inline uint8_t unpack_right_shift_u8(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint8_t unpack_right_shift_u8(uint8_t value, uint8_t shift, uint8_t mask) {
     return (uint8_t)((uint8_t)(value & mask) >> shift);
 }
 
-static inline uint16_t unpack_right_shift_u16(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint16_t unpack_right_shift_u16(uint8_t value, uint8_t shift, uint8_t mask) {
     return (uint16_t)((uint16_t)(value & mask) >> shift);
 }
 
-static inline uint32_t unpack_right_shift_u32(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
+static inline uint32_t unpack_right_shift_u32(uint8_t value, uint8_t shift, uint8_t mask) {
     return (uint32_t)((uint32_t)(value & mask) >> shift);
 }
 
-int rlm_rlm_accel_0_xf0_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_accel_0_xf0_t *src_p,
-    size_t size)
-{
+int rlm_rlm_accel_0_xf0_pack(uint8_t* dst_p, const struct rlm_rlm_accel_0_xf0_t* src_p, size_t size) {
     uint16_t x_accel;
     uint16_t y_accel;
     uint16_t z_accel;
@@ -140,11 +96,7 @@ int rlm_rlm_accel_0_xf0_pack(
     return (6);
 }
 
-int rlm_rlm_accel_0_xf0_unpack(
-    struct rlm_rlm_accel_0_xf0_t *dst_p,
-    const uint8_t *src_p,
-    size_t size)
-{
+int rlm_rlm_accel_0_xf0_unpack(struct rlm_rlm_accel_0_xf0_t* dst_p, const uint8_t* src_p, size_t size) {
     uint16_t x_accel;
     uint16_t y_accel;
     uint16_t z_accel;
@@ -166,71 +118,58 @@ int rlm_rlm_accel_0_xf0_unpack(
     return (0);
 }
 
-int rlm_rlm_accel_0_xf0_init(struct rlm_rlm_accel_0_xf0_t *msg_p)
-{
-    if (msg_p == NULL) return -1;
+int rlm_rlm_accel_0_xf0_init(struct rlm_rlm_accel_0_xf0_t* msg_p) {
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct rlm_rlm_accel_0_xf0_t));
 
     return 0;
 }
 
-int16_t rlm_rlm_accel_0_xf0_x_accel_encode(double value)
-{
+int16_t rlm_rlm_accel_0_xf0_x_accel_encode(double value) {
     return (int16_t)(value / 0.000122);
 }
 
-double rlm_rlm_accel_0_xf0_x_accel_decode(int16_t value)
-{
+double rlm_rlm_accel_0_xf0_x_accel_decode(int16_t value) {
     return ((double)value * 0.000122);
 }
 
-bool rlm_rlm_accel_0_xf0_x_accel_is_in_range(int16_t value)
-{
+bool rlm_rlm_accel_0_xf0_x_accel_is_in_range(int16_t value) {
     (void)value;
 
     return (true);
 }
 
-int16_t rlm_rlm_accel_0_xf0_y_accel_encode(double value)
-{
+int16_t rlm_rlm_accel_0_xf0_y_accel_encode(double value) {
     return (int16_t)(value / 0.000122);
 }
 
-double rlm_rlm_accel_0_xf0_y_accel_decode(int16_t value)
-{
+double rlm_rlm_accel_0_xf0_y_accel_decode(int16_t value) {
     return ((double)value * 0.000122);
 }
 
-bool rlm_rlm_accel_0_xf0_y_accel_is_in_range(int16_t value)
-{
+bool rlm_rlm_accel_0_xf0_y_accel_is_in_range(int16_t value) {
     (void)value;
 
     return (true);
 }
 
-int16_t rlm_rlm_accel_0_xf0_z_accel_encode(double value)
-{
+int16_t rlm_rlm_accel_0_xf0_z_accel_encode(double value) {
     return (int16_t)(value / 0.000122);
 }
 
-double rlm_rlm_accel_0_xf0_z_accel_decode(int16_t value)
-{
+double rlm_rlm_accel_0_xf0_z_accel_decode(int16_t value) {
     return ((double)value * 0.000122);
 }
 
-bool rlm_rlm_accel_0_xf0_z_accel_is_in_range(int16_t value)
-{
+bool rlm_rlm_accel_0_xf0_z_accel_is_in_range(int16_t value) {
     (void)value;
 
     return (true);
 }
 
-int rlm_rlm_gyro_0_xf1_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_gyro_0_xf1_t *src_p,
-    size_t size)
-{
+int rlm_rlm_gyro_0_xf1_pack(uint8_t* dst_p, const struct rlm_rlm_gyro_0_xf1_t* src_p, size_t size) {
     uint16_t x_rot;
     uint16_t y_rot;
     uint16_t z_rot;
@@ -254,11 +193,7 @@ int rlm_rlm_gyro_0_xf1_pack(
     return (6);
 }
 
-int rlm_rlm_gyro_0_xf1_unpack(
-    struct rlm_rlm_gyro_0_xf1_t *dst_p,
-    const uint8_t *src_p,
-    size_t size)
-{
+int rlm_rlm_gyro_0_xf1_unpack(struct rlm_rlm_gyro_0_xf1_t* dst_p, const uint8_t* src_p, size_t size) {
     uint16_t x_rot;
     uint16_t y_rot;
     uint16_t z_rot;
@@ -280,65 +215,52 @@ int rlm_rlm_gyro_0_xf1_unpack(
     return (0);
 }
 
-int rlm_rlm_gyro_0_xf1_init(struct rlm_rlm_gyro_0_xf1_t *msg_p)
-{
-    if (msg_p == NULL) return -1;
+int rlm_rlm_gyro_0_xf1_init(struct rlm_rlm_gyro_0_xf1_t* msg_p) {
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct rlm_rlm_gyro_0_xf1_t));
 
     return 0;
 }
 
-int16_t rlm_rlm_gyro_0_xf1_x_rot_encode(double value)
-{
+int16_t rlm_rlm_gyro_0_xf1_x_rot_encode(double value) {
     return (int16_t)(value / 0.00763);
 }
 
-double rlm_rlm_gyro_0_xf1_x_rot_decode(int16_t value)
-{
+double rlm_rlm_gyro_0_xf1_x_rot_decode(int16_t value) {
     return ((double)value * 0.00763);
 }
 
-bool rlm_rlm_gyro_0_xf1_x_rot_is_in_range(int16_t value)
-{
+bool rlm_rlm_gyro_0_xf1_x_rot_is_in_range(int16_t value) {
     return ((value >= -32765) && (value <= 32765));
 }
 
-int16_t rlm_rlm_gyro_0_xf1_y_rot_encode(double value)
-{
+int16_t rlm_rlm_gyro_0_xf1_y_rot_encode(double value) {
     return (int16_t)(value / 0.00763);
 }
 
-double rlm_rlm_gyro_0_xf1_y_rot_decode(int16_t value)
-{
+double rlm_rlm_gyro_0_xf1_y_rot_decode(int16_t value) {
     return ((double)value * 0.00763);
 }
 
-bool rlm_rlm_gyro_0_xf1_y_rot_is_in_range(int16_t value)
-{
+bool rlm_rlm_gyro_0_xf1_y_rot_is_in_range(int16_t value) {
     return ((value >= -32765) && (value <= 32765));
 }
 
-int16_t rlm_rlm_gyro_0_xf1_z_rot_encode(double value)
-{
+int16_t rlm_rlm_gyro_0_xf1_z_rot_encode(double value) {
     return (int16_t)(value / 0.00763);
 }
 
-double rlm_rlm_gyro_0_xf1_z_rot_decode(int16_t value)
-{
+double rlm_rlm_gyro_0_xf1_z_rot_decode(int16_t value) {
     return ((double)value * 0.00763);
 }
 
-bool rlm_rlm_gyro_0_xf1_z_rot_is_in_range(int16_t value)
-{
+bool rlm_rlm_gyro_0_xf1_z_rot_is_in_range(int16_t value) {
     return ((value >= -32765) && (value <= 32765));
 }
 
-int rlm_rlm_position_0_xf2_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_position_0_xf2_t *src_p,
-    size_t size)
-{
+int rlm_rlm_position_0_xf2_pack(uint8_t* dst_p, const struct rlm_rlm_position_0_xf2_t* src_p, size_t size) {
     uint32_t latitude;
     uint32_t longitude;
 
@@ -362,11 +284,7 @@ int rlm_rlm_position_0_xf2_pack(
     return (8);
 }
 
-int rlm_rlm_position_0_xf2_unpack(
-    struct rlm_rlm_position_0_xf2_t *dst_p,
-    const uint8_t *src_p,
-    size_t size)
-{
+int rlm_rlm_position_0_xf2_unpack(struct rlm_rlm_position_0_xf2_t* dst_p, const uint8_t* src_p, size_t size) {
     uint32_t latitude;
     uint32_t longitude;
 
@@ -388,50 +306,40 @@ int rlm_rlm_position_0_xf2_unpack(
     return (0);
 }
 
-int rlm_rlm_position_0_xf2_init(struct rlm_rlm_position_0_xf2_t *msg_p)
-{
-    if (msg_p == NULL) return -1;
+int rlm_rlm_position_0_xf2_init(struct rlm_rlm_position_0_xf2_t* msg_p) {
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct rlm_rlm_position_0_xf2_t));
 
     return 0;
 }
 
-int32_t rlm_rlm_position_0_xf2_latitude_encode(double value)
-{
+int32_t rlm_rlm_position_0_xf2_latitude_encode(double value) {
     return (int32_t)(value / 1e-07);
 }
 
-double rlm_rlm_position_0_xf2_latitude_decode(int32_t value)
-{
+double rlm_rlm_position_0_xf2_latitude_decode(int32_t value) {
     return ((double)value * 1e-07);
 }
 
-bool rlm_rlm_position_0_xf2_latitude_is_in_range(int32_t value)
-{
+bool rlm_rlm_position_0_xf2_latitude_is_in_range(int32_t value) {
     return ((value >= -900000000) && (value <= 900000000));
 }
 
-int32_t rlm_rlm_position_0_xf2_longitude_encode(double value)
-{
+int32_t rlm_rlm_position_0_xf2_longitude_encode(double value) {
     return (int32_t)(value / 1e-07);
 }
 
-double rlm_rlm_position_0_xf2_longitude_decode(int32_t value)
-{
+double rlm_rlm_position_0_xf2_longitude_decode(int32_t value) {
     return ((double)value * 1e-07);
 }
 
-bool rlm_rlm_position_0_xf2_longitude_is_in_range(int32_t value)
-{
+bool rlm_rlm_position_0_xf2_longitude_is_in_range(int32_t value) {
     return ((value >= -1800000000) && (value <= 1800000000));
 }
 
-int rlm_rlm_trajectory_0_xf3_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_trajectory_0_xf3_t *src_p,
-    size_t size)
-{
+int rlm_rlm_trajectory_0_xf3_pack(uint8_t* dst_p, const struct rlm_rlm_trajectory_0_xf3_t* src_p, size_t size) {
     uint16_t direction;
     uint16_t speed;
 
@@ -451,11 +359,7 @@ int rlm_rlm_trajectory_0_xf3_pack(
     return (4);
 }
 
-int rlm_rlm_trajectory_0_xf3_unpack(
-    struct rlm_rlm_trajectory_0_xf3_t *dst_p,
-    const uint8_t *src_p,
-    size_t size)
-{
+int rlm_rlm_trajectory_0_xf3_unpack(struct rlm_rlm_trajectory_0_xf3_t* dst_p, const uint8_t* src_p, size_t size) {
     uint16_t direction;
     uint16_t speed;
 
@@ -473,52 +377,42 @@ int rlm_rlm_trajectory_0_xf3_unpack(
     return (0);
 }
 
-int rlm_rlm_trajectory_0_xf3_init(struct rlm_rlm_trajectory_0_xf3_t *msg_p)
-{
-    if (msg_p == NULL) return -1;
+int rlm_rlm_trajectory_0_xf3_init(struct rlm_rlm_trajectory_0_xf3_t* msg_p) {
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct rlm_rlm_trajectory_0_xf3_t));
 
     return 0;
 }
 
-int16_t rlm_rlm_trajectory_0_xf3_speed_encode(double value)
-{
+int16_t rlm_rlm_trajectory_0_xf3_speed_encode(double value) {
     return (int16_t)(value / 0.01);
 }
 
-double rlm_rlm_trajectory_0_xf3_speed_decode(int16_t value)
-{
+double rlm_rlm_trajectory_0_xf3_speed_decode(int16_t value) {
     return ((double)value * 0.01);
 }
 
-bool rlm_rlm_trajectory_0_xf3_speed_is_in_range(int16_t value)
-{
+bool rlm_rlm_trajectory_0_xf3_speed_is_in_range(int16_t value) {
     (void)value;
 
     return (true);
 }
 
-int16_t rlm_rlm_trajectory_0_xf3_direction_encode(double value)
-{
+int16_t rlm_rlm_trajectory_0_xf3_direction_encode(double value) {
     return (int16_t)(value / 0.01);
 }
 
-double rlm_rlm_trajectory_0_xf3_direction_decode(int16_t value)
-{
+double rlm_rlm_trajectory_0_xf3_direction_decode(int16_t value) {
     return ((double)value * 0.01);
 }
 
-bool rlm_rlm_trajectory_0_xf3_direction_is_in_range(int16_t value)
-{
+bool rlm_rlm_trajectory_0_xf3_direction_is_in_range(int16_t value) {
     return (value >= 0);
 }
 
-int rlm_rlm_bus_load_0_xf4_pack(
-    uint8_t *dst_p,
-    const struct rlm_rlm_bus_load_0_xf4_t *src_p,
-    size_t size)
-{
+int rlm_rlm_bus_load_0_xf4_pack(uint8_t* dst_p, const struct rlm_rlm_bus_load_0_xf4_t* src_p, size_t size) {
     if (size < 1u) {
         return (-EINVAL);
     }
@@ -530,11 +424,7 @@ int rlm_rlm_bus_load_0_xf4_pack(
     return (1);
 }
 
-int rlm_rlm_bus_load_0_xf4_unpack(
-    struct rlm_rlm_bus_load_0_xf4_t *dst_p,
-    const uint8_t *src_p,
-    size_t size)
-{
+int rlm_rlm_bus_load_0_xf4_unpack(struct rlm_rlm_bus_load_0_xf4_t* dst_p, const uint8_t* src_p, size_t size) {
     if (size < 1u) {
         return (-EINVAL);
     }
@@ -544,26 +434,23 @@ int rlm_rlm_bus_load_0_xf4_unpack(
     return (0);
 }
 
-int rlm_rlm_bus_load_0_xf4_init(struct rlm_rlm_bus_load_0_xf4_t *msg_p)
-{
-    if (msg_p == NULL) return -1;
+int rlm_rlm_bus_load_0_xf4_init(struct rlm_rlm_bus_load_0_xf4_t* msg_p) {
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct rlm_rlm_bus_load_0_xf4_t));
 
     return 0;
 }
 
-uint8_t rlm_rlm_bus_load_0_xf4_bus_load_encode(double value)
-{
+uint8_t rlm_rlm_bus_load_0_xf4_bus_load_encode(double value) {
     return (uint8_t)(value / 0.5);
 }
 
-double rlm_rlm_bus_load_0_xf4_bus_load_decode(uint8_t value)
-{
+double rlm_rlm_bus_load_0_xf4_bus_load_decode(uint8_t value) {
     return ((double)value * 0.5);
 }
 
-bool rlm_rlm_bus_load_0_xf4_bus_load_is_in_range(uint8_t value)
-{
+bool rlm_rlm_bus_load_0_xf4_bus_load_is_in_range(uint8_t value) {
     return (value <= 200u);
 }

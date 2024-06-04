@@ -127,47 +127,47 @@ void calibrateMPU() {
 }
 
 void readMPU() {
-//     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    //     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
-//     ax -= ax_offset;
-//     ay -= ay_offset;
-//     az -= az_offset;
-//     gx -= gx_offset;
-//     gy -= gy_offset;
-//     gz -= gz_offset;
+    //     ax -= ax_offset;
+    //     ay -= ay_offset;
+    //     az -= az_offset;
+    //     gx -= gx_offset;
+    //     gy -= gy_offset;
+    //     gz -= gz_offset;
 
-//     float ax_real = 4 * ((float)ax / 32768);
-//     float ay_real = 4 * ((float)ay / 32768);
-//     float az_real = 4 * ((float)az / 32768);
-//     float gx_real = 250 * ((float)gx / 32768);
-//     float gy_real = 250 * ((float)gy / 32768);
-//     float gz_real = 250 * ((float)gz / 32768);
+    //     float ax_real = 4 * ((float)ax / 32768);
+    //     float ay_real = 4 * ((float)ay / 32768);
+    //     float az_real = 4 * ((float)az / 32768);
+    //     float gx_real = 250 * ((float)gx / 32768);
+    //     float gy_real = 250 * ((float)gy / 32768);
+    //     float gz_real = 250 * ((float)gz / 32768);
 
-//     rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax_real);
-//     rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay_real);
-//     rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az_real);
-//     rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_MAX_SIZE);
+    //     rlm_accel.x_accel = rlm_rlm_accel_0_xf0_x_accel_encode(ax_real);
+    //     rlm_accel.y_accel = rlm_rlm_accel_0_xf0_y_accel_encode(ay_real);
+    //     rlm_accel.z_accel = rlm_rlm_accel_0_xf0_z_accel_encode(az_real);
+    //     rlm_rlm_accel_0_xf0_pack(can_frame, &rlm_accel, CAN_MAX_SIZE);
 
-//     twai_message_t accel_msg{.identifier = RLM_RLM_ACCEL_0_XF0_FRAME_ID, .data_length_code = RLM_RLM_ACCEL_0_XF0_LENGTH};
-//     for (int i = 0; i < accel_msg.data_length_code; i++) {
-//         accel_msg.data[i] = can_frame[i];
-//     }
+    //     twai_message_t accel_msg{.identifier = RLM_RLM_ACCEL_0_XF0_FRAME_ID, .data_length_code = RLM_RLM_ACCEL_0_XF0_LENGTH};
+    //     for (int i = 0; i < accel_msg.data_length_code; i++) {
+    //         accel_msg.data[i] = can_frame[i];
+    //     }
 
-//     rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx_real);
-//     rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy_real);
-//     rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz_real);
-//     rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_MAX_SIZE);
+    //     rlm_gyro.x_rot = rlm_rlm_gyro_0_xf1_x_rot_encode(gx_real);
+    //     rlm_gyro.y_rot = rlm_rlm_gyro_0_xf1_y_rot_encode(gy_real);
+    //     rlm_gyro.z_rot = rlm_rlm_gyro_0_xf1_z_rot_encode(gz_real);
+    //     rlm_rlm_gyro_0_xf1_pack(can_frame, &rlm_gyro, CAN_MAX_SIZE);
 
-//     twai_message_t gyro_msg{.identifier = RLM_RLM_GYRO_0_XF1_FRAME_ID, .data_length_code = RLM_RLM_GYRO_0_XF1_LENGTH};
-//     for (int i = 0; i < gyro_msg.data_length_code; i++) {
-//         gyro_msg.data[i] = can_frame[i];
-//     }
+    //     twai_message_t gyro_msg{.identifier = RLM_RLM_GYRO_0_XF1_FRAME_ID, .data_length_code = RLM_RLM_GYRO_0_XF1_LENGTH};
+    //     for (int i = 0; i < gyro_msg.data_length_code; i++) {
+    //         gyro_msg.data[i] = can_frame[i];
+    //     }
 
-//     // xQueueSend(can_queue, &accel_msg, portMAX_DELAY);
-//     // xQueueSend(can_queue, &gyro_msg, portMAX_DELAY);
+    //     // xQueueSend(can_queue, &accel_msg, portMAX_DELAY);
+    //     // xQueueSend(can_queue, &gyro_msg, portMAX_DELAY);
 
-//     xQueueSend(radio_queue, &accel_msg, portMAX_DELAY);
-//     xQueueSend(radio_queue, &gyro_msg, portMAX_DELAY);
+    //     xQueueSend(radio_queue, &accel_msg, portMAX_DELAY);
+    //     xQueueSend(radio_queue, &gyro_msg, portMAX_DELAY);
 }
 
 //==============================================================================
@@ -185,7 +185,7 @@ void readGPS() {
             TickType_t tick = xTaskGetTickCount();
 
             // Position Data
-            twai_message_t position_msg{.identifier = RLM_RLM_POSITION_0_XF2_FRAME_ID, .data_length_code = RLM_RLM_POSITION_0_XF2_LENGTH};    
+            twai_message_t position_msg{.identifier = RLM_RLM_POSITION_0_XF2_FRAME_ID, .data_length_code = RLM_RLM_POSITION_0_XF2_LENGTH};
             rlm_rlm_position_0_xf2_t rlm_position = {};
             rlm_position.latitude = rlm_rlm_position_0_xf2_latitude_encode(gps.location.lat());
             rlm_position.longitude = rlm_rlm_position_0_xf2_longitude_encode(gps.location.lng());
@@ -257,17 +257,17 @@ void sensorReadTask(void* parameter) {
     TickType_t tick = xTaskGetTickCount();
     TickType_t last_tick = tick;
     for (;;) {
-        if (tick > last_tick + 1000 && global_can_message_count != 0) {  
+        if (tick > last_tick + 1000 && global_can_message_count != 0) {
             last_tick = tick;
 
             uint16_t average_bit_length = global_can_bit_count / global_can_message_count;
-    
+
             twai_message_t bus_load_msg{.identifier = RLM_RLM_BUS_LOAD_0_XF4_FRAME_ID, .data_length_code = RLM_RLM_BUS_LOAD_0_XF4_LENGTH};
             rlm_rlm_bus_load_0_xf4_t bus_load = {};
             bus_load.bus_load = rlm_rlm_bus_load_0_xf4_bus_load_encode(2 * global_can_message_count * (47 + average_bit_length + 19) / 5000);
             rlm_rlm_bus_load_0_xf4_pack(bus_load_msg.data, &bus_load, CAN_MAX_SIZE);
             xQueueSend(can_queue, &bus_load_msg, 0);
-            
+
             global_can_bit_count = 0;
             global_can_message_count = 0;
 
