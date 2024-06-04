@@ -84,12 +84,11 @@ void startThermistorMonitorTask() {
         // Grab the temperature for all modules at once
         for (uint8_t cur_mux = 0; cur_mux < MUX_COUNT; cur_mux++) {
         	// Skip this multiplexer for this select line, as there is no thermistor here.
-        	if (select_line == UNPOPULATED_THERMISTORS[cur_mux][0] || select_line == UNPOPULATED_THERMISTORS[cur_mux][1]) {
+        	if ((1 << select_line) & UNPOPULATED_THERMISTORS[cur_mux]) {
         		continue;
         	}
 
-        	// This math relies on the fact that the UNPOPULATED_THERMISTORS array is arranged from least to greatest
-            uint8_t current_thermistor_id = cur_mux * THERMISTORS_PER_MUX + select_line - (uint8_t)(select_line >= UNPOPULATED_THERMISTORS[cur_mux][0]) - (uint8_t)(select_line >= UNPOPULATED_THERMISTORS[cur_mux][1]);
+            uint8_t current_thermistor_id = cur_mux * THERMISTORS_PER_MUX + select_line - __builtin_popcount((0xFF >> (7 - select_line)) & UNPOPULATED_THERMISTORS[cur_mux]);
 
             // changes the MUX that the ADC polls
             adcChangeMUX(cur_mux);
