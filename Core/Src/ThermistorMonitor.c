@@ -12,7 +12,7 @@ extern ADC_HandleTypeDef hadc1;
 
 #define CALIBRATION_TEMPERATURE 298.15
 #define CALIBRATION_RESISTANCE 10000
-#define RESISTANCE_ADJUSTMENT 850
+#define TEMPERATURE_ADJUSTMENT (-4)
 #define THERMISTOR_BETA 3930
 
 #define DIVIDER_RESISTANCE 10000
@@ -114,12 +114,9 @@ void startThermistorMonitorTask() {
                 continue;
             }
 
-            // Add this calibration factor after checking for short circuits
-            thermistor_resistance += RESISTANCE_ADJUSTMENT;
-
             // Convert Thermistor Resistance to Temperature
             // https://www.lasercalculator.com/ntc-thermistor-calculator/
-            double stein_temp_celsius = 1.0 / (log(thermistor_resistance/CALIBRATION_RESISTANCE) / THERMISTOR_BETA + 1.0 / CALIBRATION_TEMPERATURE) - 273.15;
+            double stein_temp_celsius = 1.0 / (log(thermistor_resistance/CALIBRATION_RESISTANCE) / THERMISTOR_BETA + 1.0 / CALIBRATION_TEMPERATURE) - 273.15 + TEMPERATURE_ADJUSTMENT;
 
             int8_t thermistor_temperature_celsius = (int8_t)round(stein_temp_celsius);
 

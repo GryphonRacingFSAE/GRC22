@@ -10,12 +10,12 @@ extern CAN_HandleTypeDef hcan;
 // Please see CANBUS Protocol from Orion's TEM: https://www.orionbms.com/products/thermistor-expansion-module/
 CANTXMsg bms_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x1839F380, .DLC = 8}, .to = &hcan, .data = {}};
 CANTXMsg general_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x1838F380, .DLC = 8}, .to = &hcan, .data = {}};
+CANTXMsg filtered_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x183AF380, .DLC = 2}, .to = &hcan, .data = {}};
 
 void startTEMInterfaceTask() {
     uint32_t tick = osKernelGetTickCount();
 
     uint8_t current_thermistor_id = 0;
-
 
     while (1) {
         // Grab the current module ID.
@@ -78,8 +78,14 @@ void startTEMInterfaceTask() {
     	general_broadcast.data[6] = THERMISTOR_COUNT - 1;
     	general_broadcast.data[7] = 0;
 
+		uint8_t excluded_thermistors = (module_number == 1 && current_thermistor_id == 25);
+    	filtered_broadcast.header.ExtId = 0x183AF380;
+    	filtered_broadcast.data[0] = (uint8_t)(absolute_thermistor_id & 0xFF);
+    	filtered_broadcast.data[1] = (uint8_t)((absolute_thermistor_id >> 8) & 0x7F | ((ThermistorData.thermistors[i] > -10 && !excluded_thermistors) ? 0x80 : 0));
+
         osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 0);
         osMessageQueuePut(CANTX_QHandle, &general_broadcast, 0, 0);
+        osMessageQueuePut(CANTX_QHandle, &filtered_broadcast, 0, 0);
 
     	if (++current_thermistor_id == THERMISTOR_COUNT) {
     		current_thermistor_id = 0;
