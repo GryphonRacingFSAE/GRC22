@@ -2,45 +2,73 @@
 #include <RF24.h>
 #include <pb_decode.h>
 
-#include "message.pb.h"
+#include "RLMPacket.pb.h"
 
-RF24 radio(4, 5); // CE, CSN
+//==============================================================================
+// Global
+//==============================================================================
 
-const byte address[6] = "00001";
+// GPIO
+#define NRF_CE GPIO_NUM_4
+#define NRF_CSN GPIO_NUM_5
 
-void setup() {
-    Serial.begin(115200);
-    delay(500);
+// nRF24L01+
+RF24 radio(NRF_CE, NRF_CSN);
+const byte address[3] = {0b111000, 0b11100011, 0b10001110};
+uint8_t nrf_buffer[128];
 
-    while (!Serial)
-        delay(100);
+//==============================================================================
+// nRF24L01+
+//==============================================================================
 
-    Serial.println("\nInitializing radio...");
-    radio.begin();
+void initNRF() {
+    if (radio.begin()) {
+        Serial.println("Radio initialized successfully");
+    } else {
+        Serial.println("Failed to initialize radio");
+    }
+
+    radio.setDataRate(RF24_250KBPS);
+    radio.setPALevel(RF24_PA_MAX);
+    radio.setAutoAck(false);
+    radio.setAddressWidth(3);
     radio.openReadingPipe(0, address);
     radio.startListening();
-    Serial.println("Done\n");
 }
+
+//==============================================================================
+// Setup
+//==============================================================================
+
+void setup() {
+    Serial.begin(921600);
+    delay(500);
+
+    Serial.println();
+
+    initNRF();
+}
+
+//==============================================================================
+// Loop
+//==============================================================================
 
 void loop() {
     if (radio.available()) {
-        uint8_t buffer[128];
-        radio.read(&buffer, sizeof(buffer));
+        radio.read(&nrf_buffer, sizeof(nrf_buffer));
 
-        MyMessage msg = MyMessage_init_default;
+        RLMPacket msg = RLMPacket_init_default;
 
-        pb_istream_t stream = pb_istream_from_buffer(buffer, sizeof(buffer));
-        pb_decode(&stream, MyMessage_fields, &msg);
+        pb_istream_t input_stream = pb_istream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
+        pb_decode(&input_stream, RLMPacket_fields, &msg);
 
-        Serial.printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.6f,%.6f,%.2f\r\n",
-                      msg.acceleration_x,
-                      msg.acceleration_y,
-                      msg.acceleration_z,
-                      msg.rotation_x,
-                      msg.rotation_y,
-                      msg.rotation_z,
-                      msg.latitude,
-                      msg.longitude,
-                      msg.altitude);
+        Serial.printf("%d|", msg.address);
+        for (int i = 0; i < msg.data.size; i++) {
+            Serial.printf("%02X", msg.data.bytes[i]);
+            if (i != msg.data.size - 1) {
+                Serial.printf(",");
+            }
+        }
+        Serial.printf("|%d\n", msg.time);
     }
 }
