@@ -2,7 +2,7 @@
 #include <RF24.h>
 #include <pb_decode.h>
 
-#include "message.pb.h"
+#include "RLMPacket.pb.h"
 
 //==============================================================================
 // Global
@@ -14,7 +14,7 @@
 
 // nRF24L01+
 RF24 radio(NRF_CE, NRF_CSN);
-const byte address[6] = "00001";
+const byte address[3] = {0b111000, 0b11100011, 0b10001110};
 uint8_t nrf_buffer[128];
 
 //==============================================================================
@@ -28,9 +28,10 @@ void initNRF() {
         Serial.println("Failed to initialize radio");
     }
 
-    radio.setDataRate(RF24_1MBPS);
+    radio.setDataRate(RF24_250KBPS);
     radio.setPALevel(RF24_PA_MAX);
     radio.setAutoAck(false);
+    radio.setAddressWidth(3);
     radio.openReadingPipe(0, address);
     radio.startListening();
 }
@@ -56,10 +57,10 @@ void loop() {
     if (radio.available()) {
         radio.read(&nrf_buffer, sizeof(nrf_buffer));
 
-        ProtoMessage msg = ProtoMessage_init_default;
+        RLMPacket msg = RLMPacket_init_default;
 
         pb_istream_t input_stream = pb_istream_from_buffer(nrf_buffer, sizeof(nrf_buffer));
-        pb_decode(&input_stream, ProtoMessage_fields, &msg);
+        pb_decode(&input_stream, RLMPacket_fields, &msg);
 
         Serial.printf("%d|", msg.address);
         for (int i = 0; i < msg.data.size; i++) {
