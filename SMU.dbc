@@ -36,4 +36,7 @@ BO_ 2553869184 GENERAL_BROADCAST_0X1838F380: 8 Vector__XXX
  SG_ Highest_Temperature : 47|8@0- (1,0) [0|0] "C" Vector__XXX
  SG_ Highest_ID : 55|8@0+ (1,0) [0|0] "#" Vector__XXX
  SG_ Lowest_ID : 63|8@0+ (1,0) [0|0] "#" Vector__XXX
-
+ 
+BO_ 2554000256 FILTERED_BROADCAST_0X183AF380: 2 Vector__XXX
+ SG_ Thermistor_ID : 0|15@1+ (1,0) [0|799] "#" Vector__XXX
+ SG_ Filtered : 15|1@1+ (1,0) [0|1] "bool" Vector__XXX
