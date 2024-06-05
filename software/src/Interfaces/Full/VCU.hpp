@@ -54,10 +54,6 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
 
 
   signals:
-    void maxPowerChanged();
-    void maxTorqueChanged();
-    void maxRPMChanged();
-    void maxPumpIdleSpeedChanged();
     void newAcceleratorPos(float pos);
     void newBrakePressure(float psi);   
     void newBSPCInvalid(float state);
