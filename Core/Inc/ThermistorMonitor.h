@@ -15,10 +15,10 @@
 
 // This has to be done because Chris and Zohair didn't listen/forgot logic.
 static const uint16_t UNPOPULATED_THERMISTORS[MUX_COUNT] = {
-	0x90,
-	0x0C,
-	0x03,
-	0x03,
+	0x8100,
+	0x00C0,
+	0x0003,
+	0x0003,
 };
 
 #else

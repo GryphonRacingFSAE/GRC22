@@ -12,7 +12,7 @@ extern ADC_HandleTypeDef hadc1;
 
 #define CALIBRATION_TEMPERATURE 298.15
 #define CALIBRATION_RESISTANCE 10000
-#define TEMPERATURE_ADJUSTMENT (-4)
+#define TEMPERATURE_ADJUSTMENT (-3)
 #define THERMISTOR_BETA 3930
 
 #define DIVIDER_RESISTANCE 10000
@@ -88,7 +88,9 @@ void startThermistorMonitorTask() {
         		continue;
         	}
 
-            uint8_t current_thermistor_id = cur_mux * THERMISTORS_PER_MUX + select_line - __builtin_popcount((0xFF >> (7 - select_line)) & UNPOPULATED_THERMISTORS[cur_mux]);
+        	uint16_t gaps = __builtin_popcount((0x7FFF >> (15 - select_line)) & UNPOPULATED_THERMISTORS[cur_mux]);
+
+            uint8_t current_thermistor_id = cur_mux * THERMISTORS_PER_MUX + select_line - gaps;
 
             // changes the MUX that the ADC polls
             adcChangeMUX(cur_mux);
