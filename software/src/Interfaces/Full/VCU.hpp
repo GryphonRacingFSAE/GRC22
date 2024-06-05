@@ -12,10 +12,7 @@ namespace real {
 
 class VCU : public QObject, public CAN::DBCInterface<VCU> {
     Q_OBJECT
-    Q_PROPERTY(QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
-    Q_PROPERTY(int maxPower MEMBER m_max_power)
-    Q_PROPERTY(int maxTorque MEMBER m_max_torque)
-  public:
+    public:
     VCU(const std::string& dbc_file = "VCU.dbc")
         : QObject(nullptr), DBCInterface(dbc_file) {
 
@@ -31,31 +28,36 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
         can_signal_dispatch["PUMP_ACTIVE"] = &VCU::newPumpActive;
         can_signal_dispatch["ACCUMULATOR_FAN_ACTIVE"] = &VCU::newAccumulatorFanActive;
         can_signal_dispatch["RADIATOR_FAN_ACTIVE"] = &VCU::newRadiatorFanActive;
-        sendTorqueConfig();
+        can_signal_dispatch["STORED_TORQUE"] = &VCU::newStoredTorque;
+        can_signal_dispatch["STORED_POWER"] = &VCU::newStoredPower;
+        can_signal_dispatch["STORED_SPEED_LIMIT"] = &VCU::newStoredSpeedLimit;
+        can_signal_dispatch["STORED_IDLE_PUMP_SPEED"] = &VCU::newStoredIdlePumpSpeed;
     }
 
-    Q_INVOKABLE void sendTorqueConfig() {
-        // std::array<uint8_t, 6> packet_values = {};
-        // packet_values[0] = ;
-        // packet_values[1] = m_max_torque & ;
-        // packet_values[2] = *it;
-        // packet_values[3] = *it;
-        // packet_values[4] = *it;
-        // packet_values[5] = *it;
+    Q_INVOKABLE void sendTorqueConfig(uint16_t torque, uint16_t power, uint16_t rpm, uint8_t pump) {
+        std::array<uint8_t, 7> packet_values = {};
+        packet_values[0] = (torque * 10) & 0xFF;
+        packet_values[1] = ((torque * 10) >> 8) & 0xFF;
+        packet_values[2] = (power * 10) & 0xFF;
+        packet_values[3] = ((power * 10) >> 8) & 0xFF;
+        packet_values[4] = rpm & 0xFF;
+        packet_values[5] = (rpm >> 8) & 0xFF;
+        packet_values[6] = pump & 0xFF;
 
-        // RetCode ans = CAN::Interface::write(0x300, packet_values.data(), 6);
-        // if (ans != RetCode::Success) {
-        //     fmt::print("Failed to send packet (size: {}, packet: {})\n", packet_size, packet_values);
-        //     return ans;
-        // }
+        RetCode ans = CAN::Interface::write(0x400, packet_values.data(), 7);
+        if (ans != RetCode::Success) {
+            fmt::print("Failed to send packet (size: {}, packet: {})\n", 7, packet_values);
+        } else {
+            fmt::print("Sent Config: Torque: {}, Power: {}, RPM: {}, Idle Speed: {}\n", torque, power, rpm, pump);
+        }
     }
 
 
   signals:
-    void currentTorqueMapChanged();
-    void currentTcTuneChanged();
-    void profileIdChanged();
-    void tcTuneIdChanged();
+    void maxPowerChanged();
+    void maxTorqueChanged();
+    void maxRPMChanged();
+    void maxPumpIdleSpeedChanged();
     void newAcceleratorPos(float pos);
     void newBrakePressure(float psi);   
     void newBSPCInvalid(float state);
@@ -68,16 +70,16 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
     void newPumpActive(float state);
     void newAccumulatorFanActive(float state);
     void newRadiatorFanActive(float state);
-  private:
-    QList<int> m_current_torque_map;
-    int m_max_torque;
-    int m_max_power;
+    void newStoredTorque(float);
+    void newStoredPower(float);
+    void newStoredSpeedLimit(float);
+    void newStoredIdlePumpSpeed(float);
 
   public:
     static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {{
-        0x200,
-        0x7F0 // Grab all messages VCU from 0x200 to 0x20F (16 Addresses)
+        0x300,
+        0x7F0 // Grab all messages VCU from 0x300 to 0x30F (16 Addresses)
     }};
 
     static constexpr uint32_t timeout_ms = 500;

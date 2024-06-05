@@ -40,6 +40,8 @@ Rectangle {
             Rectangle{
                 width: boxSize
                 height: boxSize
+                border.color: "orange"
+                border.width: SMU.filtered[root.segment*(root.rows*root.columns) + index] ? 4 : 0   
 
                 property double value: {
                     if(root.type == 0){
@@ -49,7 +51,6 @@ Rectangle {
                     } else if(root.type == 2){
                         return SMU.temperatures[root.segment*(root.rows*root.columns) + index]
                     } 
-
                 }
 
                 Text{

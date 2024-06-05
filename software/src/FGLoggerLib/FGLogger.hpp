@@ -23,7 +23,7 @@ class FGLogger {
     FGLogger(std::string dbc_folder, std::string protobuf_desc_file, uint16_t publishing_port, std::string saving_folder);
     virtual ~FGLogger();
 
-    void saveAndPublish(const can_frame& can_frame);
+    void saveAndPublish(const can_frame& can_frame, const uint64_t timestamp = 0);
     void restartSaving();
 
   private:

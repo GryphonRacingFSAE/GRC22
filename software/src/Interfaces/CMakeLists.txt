@@ -5,9 +5,9 @@ endif()
 add_library(CANInterfaces)
 
 if(BUILD_BACKEND)
-    target_sources(CANInterfaces PUBLIC Full/MotorController.hpp Full/EnergyMeter.hpp Full/VCU.hpp Full/BMS.hpp Full/SMU.hpp)
+    target_sources(CANInterfaces PUBLIC Full/MotorController.hpp Full/EnergyMeter.hpp Full/VCU.hpp Full/BMS.hpp Full/SMU.hpp Full/FGCANLogger.hpp)
 
-    target_link_libraries(CANInterfaces PUBLIC dbcppp::dbcppp CANLib)
+    target_link_libraries(CANInterfaces PUBLIC dbcppp::dbcppp CANLib FGLoggerLib)
 endif()
 
 set_target_properties(

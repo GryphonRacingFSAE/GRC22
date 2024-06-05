@@ -36,11 +36,14 @@ void FGLogger::restartSaving() {
 
     auto now = std::chrono::system_clock::now();
     uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-
-    fs::create_directory(fmt::format("{}/{:%Y-%m-%d}", saving_folder_path, now));
+    
+    std::string folder_path = fmt::format("{}/{:%Y-%m-%d}", saving_folder_path, now);
+    if (!fs::exists(folder_path)) {
+        fs::create_directory(folder_path);
+    }
 
     auto options = mcap::McapWriterOptions("");
-    std::string save_path = fmt::format("{}/{:%Y-%m-%d}/{}.mcap", saving_folder_path, now, timestamp);
+    std::string save_path = fmt::format("{}/{}.mcap", folder_path, timestamp);
     fmt::print("Saving to: {}\n", save_path);
     const auto res = mcap_writer.open(save_path, options);
     if (!res.ok()) {
@@ -141,7 +144,7 @@ std::pair<std::string, std::string> FGLogger::serializeCANToProtobuf(const can_f
         return std::make_pair("", ""); // Could not find decoding logic for message in the provided DBCs
     }
     const dbcppp::IMessage& msg = *message->second;
-    fmt::print("Found matching network & message ({}) for ID: {}\r", msg.Name(), can_frame.can_id);
+    // fmt::print("Found matching network & message ({}) for ID: {}\r", msg.Name(), can_frame.can_id);
 
     // Create a protobuf message matching the DBC CAN message
     pb::DynamicMessageFactory dmf;
@@ -202,9 +205,9 @@ std::pair<std::string, std::string> FGLogger::serializeCANToProtobuf(const can_f
     return std::make_pair(msg.Name(), actual_msg->SerializeAsString());
 }
 
-void FGLogger::saveAndPublish(const can_frame& can_frame) {
+void FGLogger::saveAndPublish(const can_frame& can_frame, const uint64_t timestamp) {
     // Grab the timestamp for the mcap with the lowest latency we can.
-    mcap::Timestamp frame_timestamp =
+    mcap::Timestamp frame_timestamp = timestamp ? timestamp :
         std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     const auto& [message_name, serialized_message] = FGLogger::serializeCANToProtobuf(can_frame);
