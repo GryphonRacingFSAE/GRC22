@@ -4,18 +4,21 @@
 #include "utils.h"
 #include <CAN.h>
 
-
 extern CAN_HandleTypeDef hcan;
+
+uint8_t isThermistorIgnored(uint8_t module_number, uint8_t thermistor_id) {
+	return (IGNORED_THERMISTORS[module_number] & (1ULL << thermistor_id)) != 0 || ThermistorData.thermistors[thermistor_id] < NEGATIVE_TEMPERATURE_CUTOFF;
+}
 
 // Please see CANBUS Protocol from Orion's TEM: https://www.orionbms.com/products/thermistor-expansion-module/
 CANTXMsg bms_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x1839F380, .DLC = 8}, .to = &hcan, .data = {}};
 CANTXMsg general_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x1838F380, .DLC = 8}, .to = &hcan, .data = {}};
+CANTXMsg filtered_broadcast = {.header = {.IDE = CAN_ID_EXT, .RTR = CAN_RTR_DATA, .ExtId = 0x183AF380, .DLC = 2}, .to = &hcan, .data = {}};
 
 void startTEMInterfaceTask() {
     uint32_t tick = osKernelGetTickCount();
 
     uint8_t current_thermistor_id = 0;
-
 
     while (1) {
         // Grab the current module ID.
@@ -31,8 +34,7 @@ void startTEMInterfaceTask() {
     	int16_t thermistor_temperature_sum = 0;
     	uint8_t actual_thermistor_count = 0;
     	for (uint8_t i = 0; i < THERMISTOR_COUNT; i++) {
-    		uint8_t excluded_thermistors = (module_number == 1 && i == 25);
-    		if (ThermistorData.thermistors[i] > -10 && !excluded_thermistors) {
+    		if (!isThermistorIgnored(module_number, i)) {
     			actual_thermistor_count++;
 				if (ThermistorData.thermistors[i] < minimum_thermistor_temperature) {
 					minimum_thermistor_temperature = ThermistorData.thermistors[i];
@@ -64,7 +66,9 @@ void startTEMInterfaceTask() {
     	}
     	bms_broadcast.data[7] = bms_broadcast_checksum;
 
-    	// The TEM modules don't actually seem to offset their module numbers even though the CAN specification says they should.
+        osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 0);
+
+        // The TEM modules don't actually seem to offset their module numbers even though the CAN specification says they should.
     	general_broadcast.header.ExtId = 0x1838F380; // The CAN ID is offset by the module number
     	uint16_t absolute_thermistor_id = (uint16_t)module_number * 80 + current_thermistor_id;
     	general_broadcast.data[0] = (uint8_t)((absolute_thermistor_id & 0xFF00) >> 8);
@@ -77,9 +81,12 @@ void startTEMInterfaceTask() {
     	general_broadcast.data[5] = *(uint8_t*)(&maximum_thermistor_temperature); // Max thermistor
     	general_broadcast.data[6] = THERMISTOR_COUNT - 1;
     	general_broadcast.data[7] = 0;
-
-        osMessageQueuePut(CANTX_QHandle, &bms_broadcast, 0, 0);
         osMessageQueuePut(CANTX_QHandle, &general_broadcast, 0, 0);
+
+    	filtered_broadcast.header.ExtId = 0x183AF380;
+    	filtered_broadcast.data[0] = (uint8_t)(absolute_thermistor_id & 0xFF);
+    	filtered_broadcast.data[1] = (uint8_t)(((absolute_thermistor_id >> 8) & 0x7F) | (isThermistorIgnored(module_number, current_thermistor_id) ? 0x80 : 0));
+        osMessageQueuePut(CANTX_QHandle, &filtered_broadcast, 0, 0);
 
     	if (++current_thermistor_id == THERMISTOR_COUNT) {
     		current_thermistor_id = 0;

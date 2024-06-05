@@ -14,11 +14,11 @@
 #define THERMISTORS_PER_MUX 14
 
 // This has to be done because Chris and Zohair didn't listen/forgot logic.
-static const uint8_t UNPOPULATED_THERMISTORS[MUX_COUNT][2] = {
-	{8, 15},
-	{6, 7},
-	{0, 1},
-	{0, 1},
+static const uint16_t UNPOPULATED_THERMISTORS[MUX_COUNT] = {
+	0x8100,
+	0x00C0,
+	0x0003,
+	0x0003,
 };
 
 #else
