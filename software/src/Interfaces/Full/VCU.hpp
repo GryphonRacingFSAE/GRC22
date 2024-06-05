@@ -12,12 +12,11 @@ namespace real {
 
 class VCU : public QObject, public CAN::DBCInterface<VCU> {
     Q_OBJECT
-    Q_PROPERTY(QList<int> currentTorqueMap MEMBER m_current_torque_map NOTIFY currentTorqueMapChanged)
     Q_PROPERTY(int maxPower MEMBER m_max_power)
     Q_PROPERTY(int maxTorque MEMBER m_max_torque)
   public:
-    VCU(const std::string& dbc_file = "VCU.dbc")
-        : QObject(nullptr), DBCInterface(dbc_file) {
+    VCU(const std::string& dbc_file = "VCU.dbc", const std::string& torque_map_directory = "")
+        : QObject(nullptr), DBCInterface(dbc_file){
 
         can_signal_dispatch["ACCELERATOR_POSITION"] = &VCU::newAcceleratorPos;
         can_signal_dispatch["BRAKE_PRESSURE"] = &VCU::newBrakePressure;        
@@ -53,7 +52,6 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
 
   signals:
     void currentTorqueMapChanged();
-    void currentTcTuneChanged();
     void profileIdChanged();
     void tcTuneIdChanged();
     void newAcceleratorPos(float pos);
@@ -69,14 +67,13 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
     void newAccumulatorFanActive(float state);
     void newRadiatorFanActive(float state);
   private:
-    QList<int> m_current_torque_map;
     int m_max_torque;
     int m_max_power;
 
   public:
     static constexpr size_t num_of_filters = 1;
     inline static can_filter filters[num_of_filters] = {{
-        0x200,
+        0x300,
         0x7F0 // Grab all messages VCU from 0x200 to 0x20F (16 Addresses)
     }};
 
