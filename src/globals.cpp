@@ -12,4 +12,4 @@ OutputPeripherals global_output_peripherals = {.requested_torque = 0,
 
 IMD global_imd = {.duty_cycle = 0, .frequency = 0, .resistance = 0, .state = IMD_STARTUP};
 
-FlowSensors global_flow_sensors = {.flow1_rate = 0};
+FlowSensors global_flow_sensors = {.flow_rate = 0};

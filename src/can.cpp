@@ -1,12 +1,9 @@
-#include <Preferences.h>
 #include <HardwareSerial.h>
 #include <driver/twai.h>
 
 #include "can.h"
 #include "globals.h"
 #include "utils.h"
-
-Preferences torque_param_storage;
 
 // CAN
 twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
@@ -64,6 +61,10 @@ void startTransmitCANTask(void* pvParameters) {
             sendState();
             sendPedals();
             sendIMD();
+        }
+
+        // Send messages that should be transmitted every 1000ms
+        if(tick % 1000 == 0){
             sendTorqueParameters();
         }
 
@@ -107,38 +108,24 @@ void startReceiveCANTask(void* pvParameters) {
                 break;
             }
             case 0x400: {           
-                torque_param_storage.begin("TorqueParams", READ_WRITE_MODE);     
-                //store defaults 
-                int16_t stored_torque = torque_param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
-                int16_t stored_power = torque_param_storage.getShort("powerRaw", DEFAULT_POWER);
-                int16_t stored_target_speed = torque_param_storage.getShort("targetSpeedLim", DEFAULT_TARGET_SPEED_LIM);
-
                 // Torque Parameter Editing
                 uint16_t torque_raw = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
                 int16_t new_torque_raw = *(int16_t*)(&torque_raw);
-                bool new_max_torque = new_torque_raw != stored_torque;
 
                 uint16_t power_raw = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
                 int16_t new_power_raw = *(int16_t*)(&power_raw);
-                bool new_max_power = new_power_raw != stored_power;
 
                 uint16_t target_speed_limit = ((uint16_t)rx_msg.data[5] << 8) | ((uint16_t)rx_msg.data[4]);
                 int16_t new_target_speed_limit = *(int16_t*)(&target_speed_limit);
-                bool new_speed_limit = new_target_speed_limit != stored_target_speed;
 
+                // Idle pump speed editing
+                uint8_t idle_pump_raw = rx_msg.data[6];                
+                                
                 //update stored values if different 
-                if (new_max_torque || new_max_power || new_speed_limit) {
-                    stored_torque = new_torque_raw;
-                    torque_param_storage.putShort("torqueRaw", stored_torque);
-
-                    stored_target_speed = new_target_speed_limit;
-                    torque_param_storage.putShort("powerRaw", stored_target_speed);
-
-                    stored_power = new_power_raw;
-                    torque_param_storage.putShort("targetSpeedLim", stored_power);
-                }
-
-                torque_param_storage.end();
+                param_storage.putShort("torqueRaw", new_torque_raw);
+                param_storage.putShort("powerRaw", new_power_raw);
+                param_storage.putShort("targetSpeedLim", new_target_speed_limit);
+                param_storage.putUChar("idlePumpSpeed", idle_pump_raw);
             
                 break;
             }
@@ -240,23 +227,38 @@ void sendIMD() {
 void sendTorqueParameters(){
     twai_message_t tx_msg;
     tx_msg.identifier = 0x305;
-    tx_msg.data_length_code = 6;
-
-    torque_param_storage.begin("TorqueParams", READ_ONLY_MODE);
+    tx_msg.data_length_code = 7;
     
-    int16_t torque = torque_param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
+    int16_t torque = param_storage.getShort("torqueRaw", DEFAULT_TORQUE);
     tx_msg.data[0] = torque & 0xFF;
     tx_msg.data[1] = torque >> 8;
 
-    int16_t power = torque_param_storage.getShort("powerRaw", DEFAULT_POWER);
+    int16_t power = param_storage.getShort("powerRaw", DEFAULT_POWER);
     tx_msg.data[2] = power & 0xFF;
     tx_msg.data[3] = power >> 8;
     
-    int16_t target_speed = torque_param_storage.getShort("targetSpeedLim", DEFAULT_TARGET_SPEED_LIM);
+    int16_t target_speed = param_storage.getShort("targetSpeedLim", DEFAULT_TARGET_SPEED_LIM);
     tx_msg.data[4] = target_speed & 0xFF;
     tx_msg.data[5] = target_speed >> 8;
 
+    uint8_t idle_pump_speed = param_storage.getUChar("idlePumpSpeed", DEFAULT_IDLE_PUMP_SPEED);
+    tx_msg.data[6] = idle_pump_speed & 0xFF;
+
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK){
+        // printf("Failed to send CAN message\n");
+    }
+}
+
+void sendFlowSensor(){
+    twai_message_t tx_msg;
+    tx_msg.identifier = 0x306;
+    tx_msg.data_length_code = 2;
+    
+    uint16_t flow_rate = global_flow_sensors.flow_rate;
+    tx_msg.data[0] = flow_rate & 0xFF;
+    tx_msg.data[1] = (flow_rate >> 8) && 0xFF;
+    
+    if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
         // printf("Failed to send CAN message\n");
     }
 }

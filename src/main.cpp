@@ -8,16 +8,19 @@
 #include "peripherals.h"
 #include "torque.h"
 #include "utils.h"
+#include <Preferences.h>
+
+Preferences param_storage;
 
 void setup() {
     Serial.begin(921600);
 
     initCAN();
+    param_storage.begin("params", READ_WRITE_MODE);     
 
     ledcSetup(0, 50, 10); // 50Hz PWM, 10-bit resolution
     pinMode(PUMP_PWM_PIN, OUTPUT);
     ledcAttachPin(PUMP_PWM_PIN, 0); // assign RGB led pins to channels
-    pumpCycle(0);
 
     pinMode(APPS1_PIN, INPUT);
     pinMode(APPS2_PIN, INPUT);

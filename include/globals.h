@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <Preferences.h>
 
 #define LED_PIN GPIO_NUM_2
 #define PUMP_PWM_PIN GPIO_NUM_4
@@ -11,7 +12,7 @@
 #define IMD_PWM_RISING_PIN GPIO_NUM_15
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
-#define RAD_FAN_PIN GPIO_NUM_21
+#define ACCUM_FAN_PIN GPIO_NUM_21
 #define AMS_SHUTDOWN_PIN GPIO_NUM_22
 #define AIR_CONTACT_PIN GPIO_NUM_23
 #define BRAKE_PRESSURE_PIN GPIO_NUM_25    
@@ -68,6 +69,9 @@
 #define DEFAULT_TARGET_SPEED_LIM 6000   // in RPM
 #define SPEED_LIM_RANGE 500             // in RPM
 #define REGEN_ENABLED 0
+#define DEFAULT_IDLE_PUMP_SPEED 10      // Speed in %
+
+extern Preferences param_storage;
 
 typedef struct {
     int16_t motor_speed;
@@ -108,7 +112,7 @@ typedef struct {
 extern IMD global_imd;
 
 typedef struct{
-    uint32_t flow1_rate; // ~L/min * 10
+    uint32_t flow_rate; // ~L/min * 10
 } FlowSensors;
 extern FlowSensors global_flow_sensors;
 
