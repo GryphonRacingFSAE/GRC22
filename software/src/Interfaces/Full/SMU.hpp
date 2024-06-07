@@ -11,7 +11,8 @@ class SMU : public QObject, public CAN::DBCInterface<SMU> {
     Q_PROPERTY(QList<int> temperatures MEMBER m_temperatures NOTIFY temperaturesChanged)
     Q_PROPERTY(QList<bool> filtered MEMBER m_filtered NOTIFY filteredChanged)
   public:
-    SMU(const std::string& dbc_file_path = "SMU_CANBUS.dbc") : QObject(nullptr), DBCInterface(dbc_file_path), m_temperatures(5 * 56, -40), m_filtered(5 * 56, false) {
+    SMU(const std::string& dbc_file_path = "SMU_CANBUS.dbc")
+        : QObject(nullptr), DBCInterface(dbc_file_path), m_temperatures(5 * 56, -40), m_filtered(5 * 56, false) {
         can_message_dispatch[0x1838F380] = &SMU::handleGeneralBroadcast;
         can_message_dispatch[0x183AF380] = &SMU::handleFilteredBroadcast;
     }

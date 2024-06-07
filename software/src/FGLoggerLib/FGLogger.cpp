@@ -36,7 +36,7 @@ void FGLogger::restartSaving() {
 
     auto now = std::chrono::system_clock::now();
     uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-    
+
     std::string folder_path = fmt::format("{}/{:%Y-%m-%d}", saving_folder_path, now);
     if (!fs::exists(folder_path)) {
         fs::create_directory(folder_path);
@@ -207,8 +207,8 @@ std::pair<std::string, std::string> FGLogger::serializeCANToProtobuf(const can_f
 
 void FGLogger::saveAndPublish(const can_frame& can_frame, const uint64_t timestamp) {
     // Grab the timestamp for the mcap with the lowest latency we can.
-    mcap::Timestamp frame_timestamp = timestamp ? timestamp :
-        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    mcap::Timestamp frame_timestamp =
+        timestamp ? timestamp : std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     const auto& [message_name, serialized_message] = FGLogger::serializeCANToProtobuf(can_frame);
     if (serialized_message.empty()) {
@@ -218,7 +218,7 @@ void FGLogger::saveAndPublish(const can_frame& can_frame, const uint64_t timesta
     // Hopefully this fixes it but if the USB is removed it won't
     if (mcap_writer.dataSink() == nullptr) {
         this->restartSaving();
-    } 
+    }
 
     // Save the protobuf message to a local mcap file.
     mcap::Message mcap_msg;

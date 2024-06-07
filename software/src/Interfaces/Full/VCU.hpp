@@ -12,12 +12,11 @@ namespace real {
 
 class VCU : public QObject, public CAN::DBCInterface<VCU> {
     Q_OBJECT
-    public:
-    VCU(const std::string& dbc_file = "VCU.dbc")
-        : QObject(nullptr), DBCInterface(dbc_file) {
+  public:
+    VCU(const std::string& dbc_file = "VCU.dbc") : QObject(nullptr), DBCInterface(dbc_file) {
 
         can_signal_dispatch["ACCELERATOR_POSITION"] = &VCU::newAcceleratorPos;
-        can_signal_dispatch["BRAKE_PRESSURE"] = &VCU::newBrakePressure;        
+        can_signal_dispatch["BRAKE_PRESSURE"] = &VCU::newBrakePressure;
         can_signal_dispatch["BSPC_INVALID"] = &VCU::newBSPCInvalid;
         can_signal_dispatch["APPS_OUT_OF_RANGE"] = &VCU::newAPPSOutOfRange;
         can_signal_dispatch["APPS_SENSOR_CONFLICT"] = &VCU::newAPPSSensorConflict;
@@ -52,10 +51,9 @@ class VCU : public QObject, public CAN::DBCInterface<VCU> {
         }
     }
 
-
   signals:
     void newAcceleratorPos(float pos);
-    void newBrakePressure(float psi);   
+    void newBrakePressure(float psi);
     void newBSPCInvalid(float state);
     void newAPPSOutOfRange(float state);
     void newAPPSSensorConflict(float state);
