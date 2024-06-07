@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <HardwareSerial.h>
 #include <freertos/task.h>
 
@@ -9,18 +8,19 @@
 #include "peripherals.h"
 #include "torque.h"
 #include "utils.h"
+#include <Preferences.h>
+
+Preferences param_storage;
 
 void setup() {
     Serial.begin(921600);
 
     initCAN();
-
-    EEPROM.begin(EEPROM_LARGEST_SIZE);
+    param_storage.begin("params", READ_WRITE_MODE);
 
     ledcSetup(0, 50, 10); // 50Hz PWM, 10-bit resolution
     pinMode(PUMP_PWM_PIN, OUTPUT);
     ledcAttachPin(PUMP_PWM_PIN, 0); // assign RGB led pins to channels
-    pumpCycle(0);
 
     pinMode(APPS1_PIN, INPUT);
     pinMode(APPS2_PIN, INPUT);
@@ -33,8 +33,10 @@ void setup() {
     pinMode(IMD_PWM_RISING_PIN, INPUT);
     pinMode(IMD_PWM_FALLING_PIN, INPUT);
     pinMode(AIR_CONTACT_PIN, INPUT);
+    pinMode(FLOW_SENS1_PIN, INPUT);
 
     attachInterrupt(AIR_CONTACT_PIN, amsRisingEdgeInterrupt, RISING);
+    attachInterrupt(FLOW_SENS1_PIN, flowSens1Frequency, RISING);
     attachInterrupt(IMD_PWM_RISING_PIN, imdRisingEdgeTime, RISING);
     attachInterrupt(IMD_PWM_FALLING_PIN, imdFallingEdgeTime, FALLING);
 

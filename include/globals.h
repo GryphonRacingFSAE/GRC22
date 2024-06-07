@@ -2,34 +2,29 @@
 #define GLOBALS_H
 
 #include <Arduino.h>
+#include <Preferences.h>
 #include <stdint.h>
 
-#define EEPROM_LARGEST_SIZE 16
-#define TORQUE_SCALING_FACTOR_ADDR 0
-#define POWER_SCALING_FACTOR_ADDR 15
-#define TARGET_SPEED_LIM_ADDR 31
-
+#define LED_PIN GPIO_NUM_2
+#define PUMP_PWM_PIN GPIO_NUM_4
+#define IMD_PWM_FALLING_PIN GPIO_NUM_5
+#define FLOW_SENS1_PIN GPIO_NUM_12
+#define IMD_PWM_RISING_PIN GPIO_NUM_15
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
-#define PUMP_PWM_PIN GPIO_NUM_4
-#define IMD_PWM_RISING_PIN GPIO_NUM_15
-#define IMD_PWM_FALLING_PIN GPIO_NUM_5
-
-#define APPS1_PIN GPIO_NUM_33
-#define APPS2_PIN GPIO_NUM_32
-#define BRAKE_PRESSURE_PIN GPIO_NUM_25
-#define PUSH_BUTTON_PIN GPIO_NUM_35
-
-#define AMS_SHUTDOWN_PIN GPIO_NUM_14
+#define ACCUM_FAN_PIN GPIO_NUM_21
+#define AMS_SHUTDOWN_PIN GPIO_NUM_22
 #define AIR_CONTACT_PIN GPIO_NUM_23
-#define RAD_FAN_PIN GPIO_NUM_21
-
+#define BRAKE_PRESSURE_PIN GPIO_NUM_25
 #define BRAKE_LIGHT_PIN GPIO_NUM_26
 #define BUZZER_PIN GPIO_NUM_27
-#define LED_PIN GPIO_NUM_2
+#define APPS2_PIN GPIO_NUM_32
+#define APPS1_PIN GPIO_NUM_33
+#define PUSH_BUTTON_PIN GPIO_NUM_35
 
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
+#define PUMP_MOTOR_CONTROLLER_MAX_TEMP 800
 // Turn on Pump if tractive voltage > 450v
 #define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 300
 // Turn on Fan if coolant temp > 45c
@@ -65,6 +60,18 @@
 #define IMD_DEVICE_ERROR 4
 #define IMD_EARTH_FAULT 5
 
+#define READ_ONLY_MODE true
+#define READ_WRITE_MODE false
+
+#define DEFAULT_TORQUE 1200           // Torque in Nm * 10
+#define DEFAULT_POWER 500             // Power in kW * 10
+#define DEFAULT_TARGET_SPEED_LIM 6000 // in RPM
+#define SPEED_LIM_RANGE 500           // in RPM
+#define REGEN_ENABLED 0
+#define DEFAULT_IDLE_PUMP_SPEED 10 // Speed in %
+
+extern Preferences param_storage;
+
 typedef struct {
     int16_t motor_speed;
     int16_t tractive_voltage;
@@ -80,18 +87,6 @@ typedef struct {
 } Peripherals;
 
 extern Peripherals global_peripherals;
-
-typedef struct {
-    int16_t max_torque;                 // Torque in Nm * 10
-    int16_t max_power;                  // Power in kW * 10
-    uint16_t max_torque_scaling_factor; // in % * 10
-    uint16_t max_power_scaling_factor;  // in % * 10
-    int16_t target_speed_limit;         // in RPM
-    int16_t speed_limit_range;          // in RPM
-    uint8_t regen_enabled;
-} TorqueMap;
-
-extern TorqueMap global_torque_map;
 
 typedef struct {
     int16_t max_temp;
@@ -114,6 +109,11 @@ typedef struct {
     uint8_t state;
 } IMD;
 extern IMD global_imd;
+
+typedef struct {
+    uint32_t flow_rate; // ~L/min * 10
+} FlowSensors;
+extern FlowSensors global_flow_sensors;
 
 #define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 

@@ -13,14 +13,16 @@ void IRAM_ATTR amsRisingEdgeInterrupt() {
 
 void startAMSTask(void* params) {
     (void)params;
-    uint16_t loop_count = 0;
+    static uint16_t loop_count = 0;
     TickType_t tick = xTaskGetTickCount();
+    digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
     while (1) {
         if (loop_count * AMS_TASK_PERIOD >= 1000) {
             loop_count = 0;
-            if (ams_chatter_count >= 4) {
+            if (ams_chatter_count > 2) {
                 digitalWrite(AMS_SHUTDOWN_PIN, LOW);
                 SET_FLAG(global_output_peripherals.flags, AMS_CHATTER_ACTIVE);
+                digitalWrite(LED_PIN, HIGH);
                 xTaskDelayUntil(&tick, pdMS_TO_TICKS(AMS_TASK_PERIOD));
                 ams_chatter_count = 0;
                 continue;
@@ -34,6 +36,8 @@ void startAMSTask(void* params) {
         if (!can_error && (tick < (global_bms.last_heartbeat + 1000))) {
             if ((global_bms.DTC1 & 0x00FF) || (global_bms.DTC2 & 0xFFF2)) {
                 digitalWrite(AMS_SHUTDOWN_PIN, LOW);
+                digitalWrite(LED_PIN, HIGH);
+
             } else {
                 digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
             }
