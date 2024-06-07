@@ -7,7 +7,7 @@ set_target_properties(FGLoggerLib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BI
 target_link_libraries(
     FGLoggerLib
     PUBLIC mcap::mcap foxglove-websocket::foxglove-websocket protobuf::protobuf
-    PRIVATE dbcppp::dbcppp  fmt::fmt Threads::Threads)
+    PRIVATE dbcppp::dbcppp fmt::fmt Threads::Threads)
 target_include_directories(FGLoggerLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_command(
