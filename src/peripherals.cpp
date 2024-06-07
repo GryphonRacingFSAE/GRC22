@@ -1,14 +1,13 @@
 #include "peripherals.h"
 #include "globals.h"
 #include "utils.h"
-#include <freertos/task.h>
 #include <Preferences.h>
+#include <freertos/task.h>
 static uint32_t imd_rising_prev = 0;
 static uint32_t imd_rising_current = 0;
 static uint32_t imd_falling = 0;
 static uint32_t flow_sens_prev = 0;
 static uint32_t flow_sens_current = 0;
-
 
 void IRAM_ATTR imdRisingEdgeTime(void) {
     imd_rising_prev = imd_rising_current;
@@ -26,11 +25,11 @@ void IRAM_ATTR imdFallingEdgeTime(void) {
     }
 }
 
-void IRAM_ATTR flowSens1Frequency(void){
+void IRAM_ATTR flowSens1Frequency(void) {
     flow_sens_prev = flow_sens_current;
     flow_sens_current = micros();
-    if(flow_sens_current != flow_sens_prev){
-        global_flow_sensors.flow_rate = (10000000/ (flow_sens_current - flow_sens_prev));
+    if (flow_sens_current != flow_sens_prev) {
+        global_flow_sensors.flow_rate = (10000000 / (flow_sens_current - flow_sens_prev));
     }
 }
 
@@ -82,11 +81,10 @@ void startPeripheralTask(void* pvParameters) {
     bool push_button_status = LOW;
     TickType_t last_push_button_change = tick;
     while (1) {
-        if (flow_sens_current + 1000000 < micros())
-        {
+        if (flow_sens_current + 1000000 < micros()) {
             global_flow_sensors.flow_rate = 0;
         }
-        
+
         uint16_t apps1_adc = analogReadRepeated(APPS1_PIN);
         uint16_t apps2_adc = analogReadRepeated(APPS2_PIN);
 
@@ -204,7 +202,9 @@ void startControlTask(void* pvParameters) {
         if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD ||
             !FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
             SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD)*(100-11)/(PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + 11;
+            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - 11) /
+                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) +
+                                 11;
             pumpCycle(pump_speed);
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);

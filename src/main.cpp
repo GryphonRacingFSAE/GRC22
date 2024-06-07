@@ -16,7 +16,7 @@ void setup() {
     Serial.begin(921600);
 
     initCAN();
-    param_storage.begin("params", READ_WRITE_MODE);     
+    param_storage.begin("params", READ_WRITE_MODE);
 
     ledcSetup(0, 50, 10); // 50Hz PWM, 10-bit resolution
     pinMode(PUMP_PWM_PIN, OUTPUT);

@@ -1,9 +1,8 @@
 #include "torque.h"
 #include "globals.h"
 #include "utils.h"
-#include <freertos/task.h>
 #include <Preferences.h>
-
+#include <freertos/task.h>
 
 int32_t kmphToRPM(int32_t kmph) {
     return kmph * 4500 / 99 / 10;
