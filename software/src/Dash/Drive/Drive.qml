@@ -185,54 +185,64 @@ Item {
                 Indicator {
                     id: pump_active
                     name: "PUMP"
-                    color: "green"
+                    color: "greenyellow"
                 }
                 Indicator {
                     id: acc_fan_active
                     name: "ACC FAN"
-                    color: "green"
+                    color: "greenyellow"
                 }
                 Indicator {
                     id: rad_fan_active
                     name: "RAD FAN"
-                    color: "green"
+                    color: "greenyellow"
                 }
                 Indicator {
                     id: brake_switch
                     name: "BRAKE"
-                    color: "green"
+                    color: "greenyellow"
                 }
                 Indicator {
                     id: rtd_button
                     name: "RTD BUT"
-                    color: "green"
+                    color: "greenyellow"
+                }
+                Indicator {
+                    id: inverter_active
+                    name: "INV ACT"
+                    color: "greenyellow"
                 }
             }
             RowLayout {
                 Indicator {
                     id: rtd_invalid
                     name: "RTD"
-                    color: "green"
+                    color: "greenyellow"
                 }
                 Indicator {
                     id: bspc_invalid
                     name: "BSPC"
-                    color: "red"
+                    color: "orangered"
                 }
                 Indicator {
                     id: apps_conflict
                     name: ">10%"
-                    color: "red"
+                    color: "orangered"
                 }
                 Indicator {
                     id: apps_oor    
                     name: "A OOR"
-                    color: "red"
+                    color: "orangered"
                 }
                 Indicator {
                     id: brake_oor
                     name: "B OOR"
-                    color: "red"
+                    color: "orangered"
+                } 
+                Indicator {
+                    id: inverter_lockout
+                    name: "INV LOCK"
+                    color: "orangered"
                 }
             }
         }
@@ -261,41 +271,9 @@ Item {
         function onNewMotorTemp(temp) {
             motorTempBox.value = temp
         }
-        function onNewAnalogInput1(voltage) // 12V voltage
+        function onNewHotSpotTemp(temp) // 12V voltage
         {
-        }
-
-        function onNewRequestedTorque(torque)
-        {
-            if (torque < 0)
-            {
-                torqueContainer.color = "red"
-            }
-            else if(torque > 0)
-            {
-                torqueContainer.color = "green"
-            }
-            else{
-                torqueContainer.color = "grey"
-            }
-
-            torqueValue.text = `${torque.toFixed(0)}`
-        }
-
-        function onNewOutputTorque(torque) {
-            if (torque < 0)
-            {
-                torqueContainer2.color = "red"
-            }
-            else if(torque > 0)
-            {
-                torqueContainer2.color = "green"
-            }
-            else{
-                torqueContainer2.color = "grey"
-            }
-
-            torqueValue2.text = `${torque.toFixed(0)}`
+            inverterTempBox.value = temp  
         }
     }
 
@@ -332,6 +310,12 @@ Item {
         function onNewPumpActive(state) {
             pump_active.value = state;
         }
+        function onNewLockoutStatus(state) {
+            inverter_lockout.value = state;
+        }
+        function onNewActiveStatus(state) {
+            inverter_active.value = state;
+        }
         function onNewAccumulatorFanActive(state) {
             acc_fan_active.value = state;
         }
@@ -341,16 +325,16 @@ Item {
     }
     Connections {
         target: BMS
-        function onNewStateOfCharge(percent) {
-            battery_bar.percent = percent
+        function onNewSOC(percent) {
+            battery_bar.percent = percent;
         }
         function onNewAvgTemp(temp) {}
         function onNewHighestTemp(temp) {
-            inverterTempBox.value = temp
             accumTempBox.value = temp
         }
         function onNewAvgPackCurrent(current) {}
-        function onNewVoltage(voltage) {}
-        function onNewOpenVoltage(voltage){}
+        function onNewVoltage(voltage){
+            battery_bar.voltage = voltage;
+        }
     }
 }

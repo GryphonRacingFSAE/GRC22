@@ -20,7 +20,7 @@ Item{
         property double value
         anchors.centerIn: root
 
-        color: root.value ? root.color : Qt.tint(root.color, "#80000000");
+        color: root.value ? root.color : Qt.tint(root.color, "#C0000000");
         border {
             color: "black"
             width: 3

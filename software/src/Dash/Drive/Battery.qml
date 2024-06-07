@@ -4,6 +4,7 @@ Rectangle {
     id: battery
     radius:height/10
     property double percent: 0
+    property double voltage: 0
     color: "red"
 
     onPercentChanged: () => {
@@ -57,7 +58,7 @@ Rectangle {
         font.pointSize: battery.height/3
         color: "black"
         font.bold: true
-        text: `${percent.toFixed(1)}%`
+        text: `${voltage.toFixed(1)}v`
 
         anchors {
             verticalCenter: batteryIcon.verticalCenter

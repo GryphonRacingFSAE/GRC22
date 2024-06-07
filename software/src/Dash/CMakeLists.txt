@@ -13,20 +13,10 @@ set_target_properties(
 target_compile_definitions(GryphonDash PRIVATE ROOT_SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(GryphonDash PUBLIC fmt::fmt qt::qt runtimeqml::runtimeqml CANInterfaces)
 
-# add_executable(GryphonDashDemo DemoDash.cpp qml.qrc) set_target_properties(GryphonDashDemo PROPERTIES AUTOUIC ON AUTOMOC ON AUTORCC ON)
-# target_compile_definitions(GryphonDashDemo PRIVATE ROOT_SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}") target_link_libraries(GryphonDashDemo PRIVATE fmt::fmt
-# qt::qt runtimeqml::runtimeqml CANInterfaces) add_custom_command( TARGET GryphonDashDemo PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
-# ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/DBCs $<TARGET_FILE_DIR:GryphonDashDemo>/DBCs ) add_custom_command( TARGET GryphonDashDemo PRE_BUILD COMMAND
-# ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps $<TARGET_FILE_DIR:GryphonDashDemo>/TorqueMaps )
-
 add_custom_command(
     TARGET GryphonDash
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/DBCs $<TARGET_FILE_DIR:GryphonDash>/DBCs)
-add_custom_command(
-    TARGET GryphonDash
-    PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Interfaces/Full/TorqueMaps $<TARGET_FILE_DIR:GryphonDash>/TorqueMaps)
 
 if(WIN32)
     set_target_properties(GryphonDash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)

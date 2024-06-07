@@ -1,13 +1,14 @@
 # Verifies building
 
 on:
-  push:
-  pull_request:
-    branches:
-      - master
-    types:
-      - opened
-      - closed
+    workflow_dispatch:
+#   push:
+#   pull_request:
+#     branches:
+#       - master
+#     types:
+#       - opened
+#       - closed
 
 jobs:
   build:

@@ -23,9 +23,9 @@ endif()
 
 if(${BUILD_BACKEND})
     find_package(dbcppp CONFIG REQUIRED)
-#    find_package(protobuf CONFIG REQUIRED)
-#    find_package(mcap CONFIG REQUIRED)
-#    find_package(foxglove-websocket CONFIG REQUIRED)
+    find_package(protobuf CONFIG REQUIRED)
+    find_package(mcap CONFIG REQUIRED)
+    find_package(foxglove-websocket CONFIG REQUIRED)
 endif()
 
 find_package(fmt CONFIG REQUIRED)

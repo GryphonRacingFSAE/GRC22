@@ -27,7 +27,7 @@ Rectangle {
                 font.pixelSize: 30
                 font.bold: true
                 color: "white"
-                text: "Thermistor Tempuratures (°C)"
+                text: "Thermistor Temperatures (°C)"
             }
 
             Rectangle{
@@ -90,7 +90,7 @@ Rectangle {
                                         //gets min
                                         var temp = 40;
                                         for(var i = 0; i<28; i++){
-                                            if(SMU.temperatures[seg*28 + i] < temp){
+                                            if(!SMU.filtered[seg*28 + i] && SMU.temperatures[seg*28 + i] < temp){
                                                 temp = SMU.temperatures[seg*28 + i];
                                             }
                                         }
@@ -116,7 +116,7 @@ Rectangle {
                                         //gets min
                                         var temp = -40;
                                         for(var i = 0; i<28; i++){
-                                            if(SMU.temperatures[seg*28 + i] > temp){
+                                            if(!SMU.filtered[seg*28 + i] && SMU.temperatures[seg*28 + i] > temp){
                                                 temp = SMU.temperatures[seg*28 + i];
                                             }
                                         }
@@ -167,7 +167,7 @@ Rectangle {
                     id: segDisplay
                     type: 2 //type 2 = temperatures from smu
                     segment: num
-                    max: 55
+                    max: 70
                     min: 10
                     boxSize: root.boxSize
                     rows: 2
