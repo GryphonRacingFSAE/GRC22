@@ -53,3 +53,7 @@ BO_ 242 RLM_POSITION_0XF2: 8 Vector__XXX
 BO_ 243 RLM_TRAJECTORY_0XF3: 4 Vector__XXX
  SG_ SPEED : 0|16@1- (0.01,0) [0|0] "m/s" Vector__XXX
  SG_ DIRECTION : 16|16@1- (0.01,0) [0|360] "degree" Vector__XXX
+ 
+BO_ 244 RLM_SYSTEM_HEALTH_0XF4: 2 Vector__XXX
+ SG_ BUS_LOAD : 0|8@1+ (0.5,0) [0|100] "%" Vector__XXX
+ SG_ TELEMETRY_PACKET_SIZE : 8|8@1+ (0.25,0) [0|32] "bytes" Vector__XXX
