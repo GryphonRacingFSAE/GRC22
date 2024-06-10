@@ -8,7 +8,7 @@
 #define LED_PIN GPIO_NUM_2
 #define PUMP_PWM_PIN GPIO_NUM_4
 #define IMD_PWM_FALLING_PIN GPIO_NUM_5
-#define FLOW_SENS1_PIN GPIO_NUM_12
+#define FLOW_SENSE_PIN GPIO_NUM_12
 #define IMD_PWM_RISING_PIN GPIO_NUM_15
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
@@ -84,6 +84,7 @@ extern MotorController global_motor_controller;
 typedef struct {
     uint16_t pedal_position;
     uint16_t brake_pressure;
+    uint32_t flow_rate; // ~L/min * 10
 } Peripherals;
 
 extern Peripherals global_peripherals;
@@ -109,11 +110,6 @@ typedef struct {
     uint8_t state;
 } IMD;
 extern IMD global_imd;
-
-typedef struct {
-    uint32_t flow_rate; // ~L/min * 10
-} FlowSensors;
-extern FlowSensors global_flow_sensors;
 
 #define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 

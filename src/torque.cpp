@@ -40,7 +40,6 @@ void startTorqueTask(void* pvParameters) {
             requested_torque = MAX(requested_torque, 0);
         }
         global_output_peripherals.requested_torque = requested_torque;
-        // xTaskDelayUntil(&tick, pdMS_TO_TICKS(TORQUE_TASK_PERIOD));
 
         vTaskDelay(pdMS_TO_TICKS(TORQUE_TASK_PERIOD));
     }

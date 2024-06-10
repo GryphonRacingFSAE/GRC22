@@ -25,11 +25,11 @@ void IRAM_ATTR imdFallingEdgeTime(void) {
     }
 }
 
-void IRAM_ATTR flowSens1Frequency(void) {
+void IRAM_ATTR flowSensFrequency(void) {
     flow_sens_prev = flow_sens_current;
     flow_sens_current = micros();
     if (flow_sens_current != flow_sens_prev) {
-        global_flow_sensors.flow_rate = (10000000 / (flow_sens_current - flow_sens_prev));
+        global_peripherals.flow_rate = (1000000 / (flow_sens_current - flow_sens_prev));
     }
 }
 
@@ -53,9 +53,9 @@ void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
 }
 
 void pumpCycle(uint8_t pump_speed) {
-    if (pump_speed == 0) {
+    if (pump_speed <= 0) {
         ledcWrite(0, 1023 - 1023 * 10 / 100); // Stop / Error Reset
-    } else if (pump_speed == 100) {
+    } else if (pump_speed >= 100) {
         ledcWrite(0, 1023 - 1023 * 90 / 100); // Maximum Speed
     } else {
         // between 1-99% pump speed, 13-85% duty cycle (We only use from 15% - 85% duty cycle as 15% duty cycle at 50Hz will wake the pump)
@@ -82,7 +82,7 @@ void startPeripheralTask(void* pvParameters) {
     TickType_t last_push_button_change = tick;
     while (1) {
         if (flow_sens_current + 1000000 < micros()) {
-            global_flow_sensors.flow_rate = 0;
+            global_peripherals.flow_rate = 0;
         }
 
         uint16_t apps1_adc = analogReadRepeated(APPS1_PIN);
@@ -155,9 +155,7 @@ void startPeripheralTask(void* pvParameters) {
 
         // if ((tick - last_push_button_change) > pdMS_TO_TICKS(10)) {
         //     push_button_status = push_button;
-        //
         // }
-        // xTaskDelayUntil(&tick, pdMS_TO_TICKS(2));
         vTaskDelay(pdMS_TO_TICKS(2));
     }
 
@@ -196,19 +194,16 @@ void startControlTask(void* pvParameters) {
                     FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON))) {
             SET_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Add the invalid flag
             digitalWrite(BUZZER_PIN, 0);
-            // digitalWrite(LED_PIN, 0);
         }
 
-        if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD ||
-            !FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
+        uint8_t pump_idle_speed = param_storage.getUChar("idlePumpSpeed");
+        if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) {
             SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - 11) /
-                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) +
-                                 11;
+            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - pump_idle_speed) /
+                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + pump_idle_speed;
             pumpCycle(pump_speed);
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            uint8_t pump_idle_speed = param_storage.getUChar("idlePumpSpeed");
             pumpCycle(pump_idle_speed);
         }
 

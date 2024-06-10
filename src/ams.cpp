@@ -17,18 +17,18 @@ void startAMSTask(void* params) {
     TickType_t tick = xTaskGetTickCount();
     digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
     while (1) {
-        if (loop_count * AMS_TASK_PERIOD >= 1000) {
-            loop_count = 0;
-            if (ams_chatter_count > 2) {
-                digitalWrite(AMS_SHUTDOWN_PIN, LOW);
-                SET_FLAG(global_output_peripherals.flags, AMS_CHATTER_ACTIVE);
-                digitalWrite(LED_PIN, HIGH);
-                xTaskDelayUntil(&tick, pdMS_TO_TICKS(AMS_TASK_PERIOD));
-                ams_chatter_count = 0;
-                continue;
-            }
-            ams_chatter_count = 0;
-        }
+        // if (loop_count * AMS_TASK_PERIOD >= 1000) {
+        //     loop_count = 0;
+        //     if (ams_chatter_count > 2) {
+        //         digitalWrite(AMS_SHUTDOWN_PIN, LOW);
+        //         SET_FLAG(global_output_peripherals.flags, AMS_CHATTER_ACTIVE);
+        //         digitalWrite(LED_PIN, HIGH);
+        //         xTaskDelayUntil(&tick, pdMS_TO_TICKS(AMS_TASK_PERIOD));
+        //         ams_chatter_count = 0;
+        //         continue;
+        //     }
+        //     ams_chatter_count = 0;
+        // }
 
         uint32_t can_error = 0;
         twai_read_alerts(&can_error, 0);

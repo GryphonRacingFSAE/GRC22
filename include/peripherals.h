@@ -16,7 +16,7 @@
 
 void imdFallingEdgeTime(void);
 void imdRisingEdgeTime(void);
-void flowSens1Frequency(void);
+void flowSensFrequency(void);
 void pumpCycle(uint8_t pump_speed);
 void startPeripheralTask(void* pvParameters);
 void startControlTask(void* pvParameters);

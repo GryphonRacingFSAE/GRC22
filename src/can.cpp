@@ -30,7 +30,6 @@ void startTransmitCANTask(void* pvParameters) {
     twai_message_t tx_msg = {};
 
     // Clear motor controller faults
-
     tx_msg.identifier = 0x0c1;
     tx_msg.data_length_code = 8;
 
@@ -45,7 +44,7 @@ void startTransmitCANTask(void* pvParameters) {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        // Serial.printf("Failed to send CAN message: %#02x\n", resp);
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 
     TickType_t tick = xTaskGetTickCount();
@@ -61,6 +60,7 @@ void startTransmitCANTask(void* pvParameters) {
             sendState();
             sendPedals();
             sendIMD();
+            sendFlowSensor();
         }
 
         // Send messages that should be transmitted every 1000ms
@@ -117,8 +117,6 @@ void startReceiveCANTask(void* pvParameters) {
 
                 uint16_t target_speed_limit = ((uint16_t)rx_msg.data[5] << 8) | ((uint16_t)rx_msg.data[4]);
                 int16_t new_target_speed_limit = *(int16_t*)(&target_speed_limit);
-
-                // Idle pump speed editing
                 uint8_t idle_pump_raw = rx_msg.data[6];
 
                 // update stored values if different
@@ -170,7 +168,7 @@ void sendTorque() {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        // Serial.printf("Failed to send CAN message: %#02x\n", resp);
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 }
 
@@ -185,7 +183,7 @@ void sendState() {
     tx_msg.data[1] = (flags >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 }
 
@@ -204,7 +202,7 @@ void sendPedals() {
     tx_msg.data[3] = pressure >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 }
 
@@ -220,7 +218,7 @@ void sendIMD() {
     tx_msg.data[2] = resistance >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 }
 
@@ -245,7 +243,7 @@ void sendTorqueParameters() {
     tx_msg.data[6] = idle_pump_speed & 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 }
 
@@ -254,11 +252,11 @@ void sendFlowSensor() {
     tx_msg.identifier = 0x306;
     tx_msg.data_length_code = 2;
 
-    uint16_t flow_rate = global_flow_sensors.flow_rate;
+    uint16_t flow_rate = global_peripherals.flow_rate;
     tx_msg.data[0] = flow_rate & 0xFF;
     tx_msg.data[1] = (flow_rate >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
-        // printf("Failed to send CAN message\n");
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 }

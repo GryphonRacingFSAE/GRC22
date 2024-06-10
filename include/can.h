@@ -12,6 +12,7 @@ void sendTorque();
 void sendState();
 void sendPedals();
 void sendIMD();
+void sendFlowSensor();
 void sendTorqueParameters();
 
 #endif // CAN_H
