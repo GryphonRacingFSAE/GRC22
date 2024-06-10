@@ -129,8 +129,11 @@ void startReceiveCANTask(void* pvParameters) {
                 break;
             }
             case 0x401: {
-               global_bms.DTC1_mask = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
-               global_bms.DTC2_mask = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
+               uint16_t dtc1_mask = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
+               uint16_t dtc2_mask = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
+
+               param_storage.putShort("dtc1Mask", dtc1_mask);
+               param_storage.putShort("dtc2Mask", dtc2_mask);
                break;
             }
             }
@@ -272,11 +275,11 @@ void sendAmsDtcMask(){
     tx_msg.identifier = 0x307;
     tx_msg.data_length_code = 4;
 
-    uint16_t dtc1_mask = global_bms.DTC1_mask;
+    uint16_t dtc1_mask = param_storage.getShort("dtc1Mask", DEFAULT_DTC1_MASK);
     tx_msg.data[0] = dtc1_mask & 0xFF;
     tx_msg.data[1] = (dtc1_mask >> 8) && 0xFF;
 
-    uint16_t dtc2_mask = global_bms.DTC2_mask;
+    uint16_t dtc2_mask = param_storage.getShort("dtc2Mask", DEFAULT_DTC2_MASK);
     tx_msg.data[2] = dtc2_mask & 0xFF;
     tx_msg.data[3] = (dtc2_mask >> 8) && 0xFF;
 

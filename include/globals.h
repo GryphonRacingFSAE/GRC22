@@ -70,6 +70,9 @@
 #define REGEN_ENABLED 0
 #define DEFAULT_IDLE_PUMP_SPEED 10 // Speed in %
 
+#define DEFAULT_DTC1_MASK (0x00FF)
+#define DEFAULT_DTC2_MASK (0xFFF2)
+
 extern Preferences param_storage;
 
 typedef struct {
