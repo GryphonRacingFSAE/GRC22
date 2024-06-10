@@ -92,7 +92,9 @@ extern Peripherals global_peripherals;
 typedef struct {
     int16_t max_temp;
     uint16_t DTC1;
+    uint16_t DTC1_mask;
     uint16_t DTC2;
+    uint16_t DTC2_mask;
     uint32_t last_heartbeat;
 } BMS;
 

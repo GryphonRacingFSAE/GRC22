@@ -66,6 +66,7 @@ void startTransmitCANTask(void* pvParameters) {
         // Send messages that should be transmitted every 1000ms
         if (tick % 1000 == 0) {
             sendTorqueParameters();
+            sendAmsDtcMask();
         }
 
         xTaskDelayUntil(&tick, pdMS_TO_TICKS(1));
@@ -126,6 +127,11 @@ void startReceiveCANTask(void* pvParameters) {
                 param_storage.putUChar("idlePumpSpeed", idle_pump_raw);
 
                 break;
+            }
+            case 0x401: {
+               global_bms.DTC1_mask = ((uint16_t)rx_msg.data[1] << 8) | ((uint16_t)rx_msg.data[0]);
+               global_bms.DTC2_mask = ((uint16_t)rx_msg.data[3] << 8) | ((uint16_t)rx_msg.data[2]);
+               break;
             }
             }
         }
@@ -255,6 +261,24 @@ void sendFlowSensor() {
     uint16_t flow_rate = global_peripherals.flow_rate;
     tx_msg.data[0] = flow_rate & 0xFF;
     tx_msg.data[1] = (flow_rate >> 8) && 0xFF;
+
+    if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
+        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
+    }
+}
+
+void sendAmsDtcMask(){
+    twai_message_t tx_msg;
+    tx_msg.identifier = 0x307;
+    tx_msg.data_length_code = 4;
+
+    uint16_t dtc1_mask = global_bms.DTC1_mask;
+    tx_msg.data[0] = dtc1_mask & 0xFF;
+    tx_msg.data[1] = (dtc1_mask >> 8) && 0xFF;
+
+    uint16_t dtc2_mask = global_bms.DTC2_mask;
+    tx_msg.data[2] = dtc2_mask & 0xFF;
+    tx_msg.data[3] = (dtc2_mask >> 8) && 0xFF;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
         Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);

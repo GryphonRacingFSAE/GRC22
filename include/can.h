@@ -14,5 +14,7 @@ void sendPedals();
 void sendIMD();
 void sendFlowSensor();
 void sendTorqueParameters();
+void sendAmsDtcMask();
+
 
 #endif // CAN_H
