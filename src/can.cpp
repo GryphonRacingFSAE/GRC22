@@ -277,11 +277,11 @@ void sendAmsDtcMask(){
 
     uint16_t dtc1_mask = param_storage.getShort("dtc1Mask", DEFAULT_DTC1_MASK);
     tx_msg.data[0] = dtc1_mask & 0xFF;
-    tx_msg.data[1] = (dtc1_mask >> 8) && 0xFF;
+    tx_msg.data[1] = dtc1_mask >> 8;
 
     uint16_t dtc2_mask = param_storage.getShort("dtc2Mask", DEFAULT_DTC2_MASK);
     tx_msg.data[2] = dtc2_mask & 0xFF;
-    tx_msg.data[3] = (dtc2_mask >> 8) && 0xFF;
+    tx_msg.data[3] = dtc2_mask >> 8;
 
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
         Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);

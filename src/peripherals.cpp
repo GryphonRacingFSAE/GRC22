@@ -37,10 +37,10 @@ void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
     if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
     } else if (frequency > 70 && frequency < 130) {
-        global_imd.resistance = ((90 * 1200) / (duty_cycle - 5)) - 1200;
+        global_imd.resistance = ((900 * 1200) / (duty_cycle - 50)) - 1200;
         global_imd.state = IMD_NORMAL_CONDITION;
     } else if (frequency > 170 && frequency < 230) {
-        global_imd.resistance = ((90 * 1200) / (duty_cycle - 5)) - 1200;
+        global_imd.resistance = ((900 * 1200) / (duty_cycle - 50)) - 1200;
         global_imd.state = IMD_UNDERVOLTAGE;
     } else if (frequency > 270 && frequency < 330) {
         global_imd.state = IMD_STARTUP;
@@ -81,9 +81,15 @@ void startPeripheralTask(void* pvParameters) {
     bool push_button_status = LOW;
     TickType_t last_push_button_change = tick;
     while (1) {
+        // set flow rate to 0 if no pulses detected in flow sensor in a second
         if (flow_sens_current + 1000000 < micros()) {
             global_peripherals.flow_rate = 0;
         }
+
+        //reset imd frequency if no pulses are detected each second
+        if(imd_rising_current + 1000000 < micros()){
+            global_imd.frequency = 0;
+        } 
 
         uint16_t apps1_adc = analogReadRepeated(APPS1_PIN);
         uint16_t apps2_adc = analogReadRepeated(APPS2_PIN);
@@ -170,7 +176,7 @@ void startControlTask(void* pvParameters) {
     TickType_t tick = xTaskGetTickCount();
 
     while (1) {
-        // imdReadings(global_imd.duty_cycle, global_imd.frequency);
+        imdReadings(global_imd.duty_cycle, global_imd.frequency);
         if (global_peripherals.brake_pressure > 300) {
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
         } else {

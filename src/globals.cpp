@@ -2,7 +2,7 @@
 
 MotorController global_motor_controller = {.motor_speed = 0, .tractive_voltage = 0, .motor_controller_temp = 0, .coolant_temp = 0};
 
-BMS global_bms = {.max_temp = 0, .DTC1 = 0, .DTC1_mask = 0, .DTC2 = 0, .DTC2_mask = 0, .last_heartbeat = 0};
+BMS global_bms = {.max_temp = 0, .DTC1 = 0, .DTC2 = 0, .last_heartbeat = 0};
 
 Peripherals global_peripherals = {.pedal_position = 0, .brake_pressure = 0, .flow_rate = 0};
 

@@ -12,7 +12,7 @@
 #define IMD_PWM_RISING_PIN GPIO_NUM_15
 #define CAN_TX_PIN GPIO_NUM_16
 #define CAN_RX_PIN GPIO_NUM_17
-#define ACCUM_FAN_PIN GPIO_NUM_21
+#define ACCUM_FAN_PIN GPIO_NUM_19
 #define AMS_SHUTDOWN_PIN GPIO_NUM_22
 #define AIR_CONTACT_PIN GPIO_NUM_23
 #define BRAKE_PRESSURE_PIN GPIO_NUM_25
@@ -95,9 +95,7 @@ extern Peripherals global_peripherals;
 typedef struct {
     int16_t max_temp;
     uint16_t DTC1;
-    uint16_t DTC1_mask;
     uint16_t DTC2;
-    uint16_t DTC2_mask;
     uint32_t last_heartbeat;
 } BMS;
 

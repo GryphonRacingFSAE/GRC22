@@ -22,14 +22,16 @@ void setup() {
     pinMode(PUMP_PWM_PIN, OUTPUT);
     ledcAttachPin(PUMP_PWM_PIN, 0); // assign RGB led pins to channels
 
-    pinMode(APPS1_PIN, INPUT);
-    pinMode(APPS2_PIN, INPUT);
-    pinMode(BRAKE_PRESSURE_PIN, INPUT);
-    pinMode(PUSH_BUTTON_PIN, INPUT);
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUZZER_PIN, OUTPUT);
     pinMode(BRAKE_LIGHT_PIN, OUTPUT);
     pinMode(AMS_SHUTDOWN_PIN, OUTPUT);
+    pinMode(ACCUM_FAN_PIN, OUTPUT);
+    
+    pinMode(APPS1_PIN, INPUT);
+    pinMode(APPS2_PIN, INPUT);
+    pinMode(BRAKE_PRESSURE_PIN, INPUT);
+    pinMode(PUSH_BUTTON_PIN, INPUT);
     pinMode(IMD_PWM_RISING_PIN, INPUT);
     pinMode(IMD_PWM_FALLING_PIN, INPUT);
     pinMode(AIR_CONTACT_PIN, INPUT);
