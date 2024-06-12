@@ -33,9 +33,12 @@ void IRAM_ATTR flowSensFrequency(void) {
     }
 }
 
-void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
+void imdReadings() {
+    uint32_t frequency = global_imd.frequency;
+    uint32_t duty_cycle = global_imd.duty_cycle;
     if (frequency < 30) {
         global_imd.state = IMD_SHORT_CIRCUIT;
+        global_imd.resistance = 0;
     } else if (frequency > 70 && frequency < 130) {
         global_imd.resistance = ((900 * 1200) / (duty_cycle - 50)) - 1200;
         global_imd.state = IMD_NORMAL_CONDITION;
@@ -47,8 +50,10 @@ void imdReadings(uint32_t duty_cycle, uint32_t frequency) {
         global_imd.resistance = 0;
     } else if (frequency > 370 && frequency < 430) {
         global_imd.state = IMD_DEVICE_ERROR;
+        global_imd.resistance = 0;
     } else if (frequency > 470 && frequency < 530) {
         global_imd.state = IMD_EARTH_FAULT;
+        global_imd.resistance = 0;
     }
 }
 
@@ -89,7 +94,10 @@ void startPeripheralTask(void* pvParameters) {
         //reset imd frequency if no pulses are detected each second
         if(imd_rising_current + 1000000 < micros()){
             global_imd.frequency = 0;
+            global_imd.duty_cycle = 0;
         } 
+        
+        imdReadings();
 
         uint16_t apps1_adc = analogReadRepeated(APPS1_PIN);
         uint16_t apps2_adc = analogReadRepeated(APPS2_PIN);
@@ -176,10 +184,11 @@ void startControlTask(void* pvParameters) {
     TickType_t tick = xTaskGetTickCount();
 
     while (1) {
-        imdReadings(global_imd.duty_cycle, global_imd.frequency);
         if (global_peripherals.brake_pressure > 300) {
+            SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
         } else {
+            SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, LOW);
         }
 
