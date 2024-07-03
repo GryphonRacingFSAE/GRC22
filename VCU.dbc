@@ -55,11 +55,9 @@ BO_ 770 VCU_COOLANT_MSG_ID_0X302: 2 VCU
  SG_ MOTOR_FLOW_RATE: 0|8@1+ (0.1,0) [0|30] "L/min" Vector__XXX
  SG_ INVERTER_FLOW_RATE : 8|8@1+ (0.1,0) [0|30] "L/min" Vector__XXX
 
-BO_ 771 VCU_WHEEL_SPEED_MSG_ID_0X303: 6 VCU
- SG_ FRONT_LEFT : 0|12@1+ (1,0) [0|0] "rpm" Vector__XXX
- SG_ FRONT_RIGHT : 12|12@1+ (1,0) [0|0] "rpm" Vector__XXX
- SG_ REAR_LEFT : 24|12@1+ (1,0) [0|0] "rpm" Vector__XXX
- SG_ REAR_RIGHT : 36|12@1+ (1,0) [0|0] "rpm" Vector__XXX
+BO_ 771 VCU_WHEEL_SPEED_MSG_ID_0X303: 4 VCU
+ SG_ FRONT_LEFT : 0|16@1+ (0.1,0) [0|0] "rpm" Vector__XXX
+ SG_ FRONT_RIGHT : 16|16@1+ (0.1,0) [0|0] "rpm" Vector__XXX
 
 BO_ 772 VCU_IMD_MSG_ID_0X304: 3 VCU
  SG_ STATE : 0|8@1+ (1,0) [0|5] "" Vector__XXX
