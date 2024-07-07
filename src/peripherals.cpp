@@ -112,14 +112,14 @@ void startPeripheralTask(void* pvParameters) {
         int32_t apps1_pos = CLAMP(0, (apps1_adc - APPS1_MIN) * 1000 / (APPS1_MAX - APPS1_MIN), 1000);
         int32_t apps2_pos = CLAMP(0, (apps2_adc - APPS2_MIN) * 1000 / (APPS2_MAX - APPS2_MIN), 1000);
 
-        // Serial.print("apps1:");
-        // Serial.print(apps1_adc);
-        // Serial.print(",apps2:");
-        // Serial.print(apps2_adc);
-        // Serial.print(",apps1 pos:");
-        // Serial.print(apps1_pos);
-        // Serial.print(",apps2 pos:");
-        // Serial.println(apps2_pos);
+        Serial.print("apps1:");
+        Serial.print(apps1_adc);
+        Serial.print(",apps2:");
+        Serial.print(apps2_adc);
+        Serial.print(",apps1 pos:");
+        Serial.print(apps1_pos);
+        Serial.print(",apps2 pos:");
+        Serial.println(apps2_pos);
 
         // RULE (2024 V1): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
         if (ABS(apps1_pos - apps2_pos) <= 100) {
@@ -188,7 +188,7 @@ void startControlTask(void* pvParameters) {
             SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
         } else {
-            SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
+            CLEAR_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, LOW);
         }
 
