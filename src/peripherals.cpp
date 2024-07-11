@@ -245,15 +245,16 @@ void startControlTask(void* pvParameters) {
             SET_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Add the invalid flag
             digitalWrite(BUZZER_PIN, 0);
         }
-
+        
+        uint8_t pump_idle_speed = param_storage.getUChar("idlePumpSpeed", 25);
         if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) {
             SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - PUMP_IDLE_SPEED) /
-                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + PUMP_IDLE_SPEED;
+            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - pump_idle_speed) /
+                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + pump_idle_speed;
             pumpCycle(pump_speed);
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            pumpCycle(PUMP_IDLE_SPEED);
+            pumpCycle(pump_idle_speed);
         }
 
         if (global_bms.max_temp > ACC_FAN_ACC_TEMP_THRESHOLD) {

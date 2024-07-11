@@ -76,7 +76,6 @@
 #define DEFAULT_DTC2_MASK (0xFFF2)
 
 #define NUM_WHEELSPEED_HUB_TEETH 32
-#define PUMP_IDLE_SPEED 25
 
 extern Preferences param_storage;
 
