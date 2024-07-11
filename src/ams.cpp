@@ -34,10 +34,9 @@ void startAMSTask(void* params) {
         twai_read_alerts(&can_error, 0);
         // Serial.printf("DTC1: %04x, DTC2: %04x\n", global_bms.DTC1, global_bms.DTC2);
         if (!can_error && (tick < (global_bms.last_heartbeat + 1000))) {
-            if ((global_bms.DTC1 & param_storage.getShort("dtc1Mask", DEFAULT_DTC1_MASK)) || (global_bms.DTC2 & param_storage.getShort("dtc2Mask", DEFAULT_DTC2_MASK))) {
+            if ((global_bms.DTC1 & 0x00E0) || (global_bms.DTC2 & 0x0010)) {
                 digitalWrite(AMS_SHUTDOWN_PIN, LOW);
                 digitalWrite(LED_PIN, HIGH);
-
             } else {
                 digitalWrite(AMS_SHUTDOWN_PIN, HIGH);
             }

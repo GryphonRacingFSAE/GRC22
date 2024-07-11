@@ -44,7 +44,7 @@ void startTransmitCANTask(void* pvParameters) {
 
     auto resp = twai_transmit(&tx_msg, pdMS_TO_TICKS(1));
     if (resp != ESP_OK) {
-        Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
+        // Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
 
     TickType_t tick = xTaskGetTickCount();
@@ -53,6 +53,7 @@ void startTransmitCANTask(void* pvParameters) {
         // Send messages that should be transmitted every 3ms
         if (tick % 3 == 0) {
             sendTorque();
+            sendWheelSpeedSensors();
         }
 
         // Send messages that should be transmitted every 100ms
@@ -213,6 +214,20 @@ void sendPedals() {
     if (twai_transmit(&tx_msg, pdMS_TO_TICKS(1)) != ESP_OK) {
         Serial.printf("Failed to send CAN message: 0x%0x\n", tx_msg.identifier);
     }
+}
+
+void sendWheelSpeedSensors(){
+    twai_message_t tx_msg;
+    tx_msg.identifier = 0x303;
+    tx_msg.data_length_code = 4;
+
+    uint16_t fr_rpm = global_wss.fr_rpm;
+    uint16_t fl_rpm = global_wss.fl_rpm;
+
+    tx_msg.data[0] = fr_rpm & 0xFF;
+    tx_msg.data[1] = (fr_rpm >> 8) && 0xFF;
+    tx_msg.data[2] = fl_rpm & 0xFF;
+    tx_msg.data[3] = (fl_rpm >> 8) && 0xFF;
 }
 
 void sendIMD() {

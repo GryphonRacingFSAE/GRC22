@@ -14,6 +14,7 @@ void sendPedals();
 void sendIMD();
 void sendFlowSensor();
 void sendTorqueParameters();
+void sendWheelSpeedSensors();
 void sendAmsDtcMask();
 
 

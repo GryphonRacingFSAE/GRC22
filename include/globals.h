@@ -21,6 +21,8 @@
 #define APPS2_PIN GPIO_NUM_32
 #define APPS1_PIN GPIO_NUM_33
 #define PUSH_BUTTON_PIN GPIO_NUM_35
+#define FL_WSS_PIN GPIO_NUM_18
+#define FR_WSS_PIN GPIO_NUM_34
 
 // Turn on Pump if motor controller > 40c
 #define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
@@ -73,6 +75,9 @@
 #define DEFAULT_DTC1_MASK (0x00FF)
 #define DEFAULT_DTC2_MASK (0xFFF2)
 
+#define NUM_WHEELSPEED_HUB_TEETH 32
+#define PUMP_IDLE_SPEED 25
+
 extern Preferences param_storage;
 
 typedef struct {
@@ -113,6 +118,14 @@ typedef struct {
     uint8_t state;
 } IMD;
 extern IMD global_imd;
+
+typedef struct{
+    uint32_t fr_frequency; // in hs * 10
+    uint32_t fl_frequency; // in hz * 10
+    uint16_t fr_rpm;       // in rpm * 10
+    uint16_t fl_rpm;       // in rpm * 10
+} WSS;
+extern WSS global_wss;
 
 #define FAULTS_ACTIVE(flags) ((flags)&0x1F)
 

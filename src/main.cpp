@@ -36,11 +36,15 @@ void setup() {
     pinMode(IMD_PWM_FALLING_PIN, INPUT);
     pinMode(AIR_CONTACT_PIN, INPUT);
     pinMode(FLOW_SENSE_PIN, INPUT);
+    pinMode(FL_WSS_PIN, INPUT);
+    pinMode(FR_WSS_PIN, INPUT);
 
     attachInterrupt(AIR_CONTACT_PIN, amsRisingEdgeInterrupt, RISING);
     attachInterrupt(FLOW_SENSE_PIN, flowSensFrequency, RISING);
     attachInterrupt(IMD_PWM_RISING_PIN, imdRisingEdgeTime, RISING);
     attachInterrupt(IMD_PWM_FALLING_PIN, imdFallingEdgeTime, FALLING);
+    attachInterrupt(FL_WSS_PIN, frontLeftWheelSpeed, RISING);
+    attachInterrupt(FR_WSS_PIN, frontRightWheelSpeed, RISING);
 
     xTaskCreate(startAMSTask, "AMS_TASK", 2048, NULL, 8, NULL);
     Serial.println("Finished creating task 0");

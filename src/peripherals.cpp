@@ -8,6 +8,10 @@ static uint32_t imd_rising_current = 0;
 static uint32_t imd_falling = 0;
 static uint32_t flow_sens_prev = 0;
 static uint32_t flow_sens_current = 0;
+static uint32_t fr_rising_prev = 0;
+static uint32_t fr_rising_current = 0;
+static uint32_t fl_rising_prev = 0;
+static uint32_t fl_rising_current = 0;
 
 void IRAM_ATTR imdRisingEdgeTime(void) {
     imd_rising_prev = imd_rising_current;
@@ -22,6 +26,8 @@ void IRAM_ATTR imdFallingEdgeTime(void) {
 
     if (imd_rising_current != imd_rising_prev) {
         global_imd.duty_cycle = 1000 - (imd_falling - imd_rising_current) * 1000 / (imd_rising_current - imd_rising_prev);
+        // another option if needed
+        // global_imd.duty_cycle = 1000 - ((imd_falling - imd_rising_current)*50*1000);
     }
 }
 
@@ -29,8 +35,30 @@ void IRAM_ATTR flowSensFrequency(void) {
     flow_sens_prev = flow_sens_current;
     flow_sens_current = micros();
     if (flow_sens_current != flow_sens_prev) {
-        global_peripherals.flow_rate = (1000000 / (flow_sens_current - flow_sens_prev));
+        global_peripherals.flow_rate = (10000000 / (flow_sens_current - flow_sens_prev));
     }
+}
+
+void IRAM_ATTR frontLeftWheelSpeed(void){
+    fl_rising_prev = fl_rising_current;
+    fl_rising_current = micros();
+    if (fl_rising_prev != fl_rising_current){
+        global_wss.fl_frequency = 10000000 / (fl_rising_current - fl_rising_prev);
+    }
+}
+
+void IRAM_ATTR frontRightWheelSpeed(void){
+    fr_rising_prev = fr_rising_current;
+    fr_rising_current = micros();
+    if(fr_rising_prev != fr_rising_current){
+        global_wss.fr_frequency = 10000000 / (fr_rising_current - fr_rising_prev);
+    }
+}
+
+void calculateWheelSpeed(){
+    //wheel speed frequency to rpm
+    global_wss.fr_rpm = (global_wss.fr_frequency * 60) / NUM_WHEELSPEED_HUB_TEETH; 
+    global_wss.fl_rpm = (global_wss.fl_frequency * 60) / NUM_WHEELSPEED_HUB_TEETH;
 }
 
 void imdReadings() {
@@ -69,6 +97,7 @@ void pumpCycle(uint8_t pump_speed) {
     }
 }
 
+
 uint16_t analogReadRepeated(uint8_t pin) {
     uint32_t adc_avg = 0;
     const uint16_t counts = 150;
@@ -91,13 +120,14 @@ void startPeripheralTask(void* pvParameters) {
             global_peripherals.flow_rate = 0;
         }
 
+        calculateWheelSpeed();
+        imdReadings();
+
         //reset imd frequency if no pulses are detected each second
         if(imd_rising_current + 1000000 < micros()){
             global_imd.frequency = 0;
             global_imd.duty_cycle = 0;
         } 
-        
-        imdReadings();
 
         uint16_t apps1_adc = analogReadRepeated(APPS1_PIN);
         uint16_t apps2_adc = analogReadRepeated(APPS2_PIN);
@@ -112,15 +142,14 @@ void startPeripheralTask(void* pvParameters) {
         int32_t apps1_pos = CLAMP(0, (apps1_adc - APPS1_MIN) * 1000 / (APPS1_MAX - APPS1_MIN), 1000);
         int32_t apps2_pos = CLAMP(0, (apps2_adc - APPS2_MIN) * 1000 / (APPS2_MAX - APPS2_MIN), 1000);
 
-        // Serial.print("apps1:");
-        // Serial.print(apps1_adc);
-        // Serial.print(",apps2:");
-        // Serial.print(apps2_adc);
-        // Serial.print(",apps1 pos:");
-        // Serial.print(apps1_pos);
-        // Serial.print(",apps2 pos:");
-        // Serial.println(apps2_pos);
-
+        Serial.print("apps1:");
+        Serial.print(apps1_adc);
+        Serial.print(",apps2:");
+        Serial.print(apps2_adc);
+        Serial.print(",apps1 pos:");
+        Serial.print(apps1_pos);
+        Serial.print(",apps2 pos:");
+        Serial.print(apps2_pos);
         // RULE (2024 V1): T.4.2.4 (Both APPS sensor positions must be within 10% of pedal travel of each other)
         if (ABS(apps1_pos - apps2_pos) <= 100) {
             global_peripherals.pedal_position = (apps1_pos + apps2_pos) / 2;
@@ -129,6 +158,9 @@ void startPeripheralTask(void* pvParameters) {
             global_peripherals.pedal_position = 0;
             SET_FLAG(global_output_peripherals.flags, APPS_SENSOR_CONFLICT_INVALID);
         }
+        Serial.print(", POS");
+        Serial.println(global_peripherals.pedal_position);
+
 
         int32_t brake_pressure_adc = analogReadRepeated(BRAKE_PRESSURE_PIN);
         // Serial.print(",brake:");
@@ -188,7 +220,7 @@ void startControlTask(void* pvParameters) {
             SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
         } else {
-            SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
+            CLEAR_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, LOW);
         }
 
@@ -196,7 +228,10 @@ void startControlTask(void* pvParameters) {
             digitalWrite(BUZZER_PIN, 0);
         }
 
-        if (FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
+        if (global_bms.DTC2 & 0x0040) {
+            SET_FLAG(global_output_peripherals.flags, CTRL_RTD_INVALID); // Add the invalid flag
+            digitalWrite(BUZZER_PIN, 0);
+        } else if (FLAG_ACTIVE(global_output_peripherals.flags, CTRL_RTD_INVALID)) {
             // Check if the pedal position is <3% to put APPS back into a valid state (EV.10.4.3)
             if (global_peripherals.pedal_position < 30 && global_peripherals.brake_pressure > 800 &&
                 global_motor_controller.tractive_voltage > RTD_TRACTIVE_VOLTAGE_ON && FLAG_ACTIVE(global_output_peripherals.flags, RTD_BUTTON)) {
@@ -211,15 +246,14 @@ void startControlTask(void* pvParameters) {
             digitalWrite(BUZZER_PIN, 0);
         }
 
-        uint8_t pump_idle_speed = param_storage.getUChar("idlePumpSpeed");
         if (global_motor_controller.motor_controller_temp > PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) {
             SET_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - pump_idle_speed) /
-                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + pump_idle_speed;
+            uint8_t pump_speed = (global_motor_controller.motor_controller_temp - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) * (100 - PUMP_IDLE_SPEED) /
+                                     (PUMP_MOTOR_CONTROLLER_MAX_TEMP - PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD) + PUMP_IDLE_SPEED;
             pumpCycle(pump_speed);
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
-            pumpCycle(pump_idle_speed);
+            pumpCycle(PUMP_IDLE_SPEED);
         }
 
         if (global_bms.max_temp > ACC_FAN_ACC_TEMP_THRESHOLD) {
