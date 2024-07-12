@@ -25,8 +25,8 @@
 #define FR_WSS_PIN GPIO_NUM_34
 
 // Turn on Pump if motor controller > 40c
-#define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 400
-#define PUMP_MOTOR_CONTROLLER_MAX_TEMP 800
+#define PUMP_MOTOR_CONTROLLER_TEMP_THRESHOLD 300
+#define PUMP_MOTOR_CONTROLLER_MAX_TEMP 550
 // Turn on Pump if tractive voltage > 450v
 #define PUMP_TRACTIVE_VOLTAGE_THRESHOLD 300
 // Turn on Fan if coolant temp > 45c
