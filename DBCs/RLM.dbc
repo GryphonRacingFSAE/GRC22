@@ -1,0 +1,60 @@
+VERSION "1.0"
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: RLM Third_Party_Device
+
+
+BO_ 240 RLM_ACCEL_0XF0: 6 Vector__XXX
+ SG_ X_ACCEL : 0|16@1- (0.000122,0) [-4|4] "g" Vector__XXX
+ SG_ Y_ACCEL : 16|16@1- (0.000122,0) [-4|4] "g" Vector__XXX
+ SG_ Z_ACCEL : 32|16@1- (0.000122,0) [-4|4] "g" Vector__XXX
+
+BO_ 241 RLM_GYRO_0XF1: 6 Vector__XXX
+ SG_ X_ROT : 0|16@1- (0.00763,0) [-250|250] "degree/s" Vector__XXX
+ SG_ Y_ROT : 16|16@1- (0.00763,0) [-250|250] "degree/s" Vector__XXX
+ SG_ Z_ROT : 32|16@1- (0.00763,0) [-250|250] "degree/s" Vector__XXX
+
+BO_ 242 RLM_POSITION_0XF2: 8 Vector__XXX
+ SG_ LATITUDE : 0|32@1- (0.0000001,0) [-90|90] "degree" Vector__XXX
+ SG_ LONGITUDE : 32|32@1- (0.0000001,0) [-180|180] "degree" Vector__XXX
+ 
+BO_ 243 RLM_TRAJECTORY_0XF3: 4 Vector__XXX
+ SG_ SPEED : 0|16@1- (0.01,0) [0|0] "m/s" Vector__XXX
+ SG_ DIRECTION : 16|16@1- (0.01,0) [0|360] "degree" Vector__XXX
+ 
+BO_ 244 RLM_SYSTEM_HEALTH_0XF4: 3 Vector__XXX
+ SG_ BUS_LOAD : 0|8@1+ (0.5,0) [0|100] "%" Vector__XXX
+ SG_ TELEMETRY_PACKET_SIZE : 8|8@1+ (0.25,0) [0|32] "bytes" Vector__XXX
+ SG_ TELEMETRY_BANDWIDTH_LOAD : 16|8@1+ (0.5,0) [0|100] "%" Vector__XXX
