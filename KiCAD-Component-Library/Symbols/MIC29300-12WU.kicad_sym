@@ -1,0 +1,51 @@
+
+(kicad_symbol_lib (version 20211014) (generator kicad_symbol_editor)
+  (symbol "MIC29300-12WU" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+    (property "Reference" "U" (id 0) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom))
+    )
+    (property "Value" "MIC29300-12WU" (id 1) (at 0 0.0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom))
+    )
+    (property "Footprint" "TO263" (id 2) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (symbol "MIC29300-12WU_0_0"
+      (rectangle (start -20.32 -15.24) (end 20.32 7.62)
+        (stroke (width 0.254)) (fill (type background))
+      )
+      (pin input line (at -25.4 0.0 0) (length 5.08)
+        (name "IN"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "1"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at 0.0 -20.32 90.0) (length 5.08)
+        (name "GND"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "2"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at 0.0 -20.32 90.0) (length 5.08)
+        (name "GND"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "GND@"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin output line (at 25.4 0.0 180.0) (length 5.08)
+        (name "OUT"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "3"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+    )
+  )
+)
