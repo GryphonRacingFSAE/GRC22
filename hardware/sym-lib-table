@@ -1,5 +1,0 @@
-(sym_lib_table
-  (version 7)
-  (lib (name "U3V40F5")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/U3V40x.kicad_sym")(options "")(descr ""))
-  (lib (name "U3V40x")(type "KiCad")(uri "${KIPRJMOD}/KiCAD-Component-Library/Symbols/U3V40x.kicad_sym")(options "")(descr ""))
-)

@@ -1,4 +1,0 @@
-# Minimal overrides, longer line length, and proper tab size
-format:
-  line_width: 160
-  tab_size: 4
