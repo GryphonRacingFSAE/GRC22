@@ -1,0 +1,4 @@
+cantools
+foxglove_websocket
+pyserial-asyncio
+python-can==4.2.2
