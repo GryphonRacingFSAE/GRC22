@@ -216,6 +216,7 @@ void startControlTask(void* pvParameters) {
     TickType_t tick = xTaskGetTickCount();
 
     while (1) {
+        digitalWrite(RAD_FAN_PIN, HIGH);
         if (global_peripherals.brake_pressure > 300) {
             SET_FLAG(global_output_peripherals.flags, BRAKE_LIGHT);
             digitalWrite(BRAKE_LIGHT_PIN, HIGH);
@@ -255,14 +256,6 @@ void startControlTask(void* pvParameters) {
         } else {
             CLEAR_FLAG(global_output_peripherals.flags, PUMP_ACTIVE);
             pumpCycle(pump_idle_speed);
-        }
-
-        if (global_bms.max_temp > ACC_FAN_ACC_TEMP_THRESHOLD) {
-            SET_FLAG(global_output_peripherals.flags, ACCUMULATOR_FAN_ACTIVE);
-            digitalWrite(ACCUM_FAN_PIN, HIGH);
-        } else {
-            CLEAR_FLAG(global_output_peripherals.flags, ACCUMULATOR_FAN_ACTIVE);
-            digitalWrite(ACCUM_FAN_PIN, LOW);
         }
 
         rtd_call_counts++;

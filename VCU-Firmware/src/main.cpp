@@ -26,7 +26,7 @@ void setup() {
     pinMode(BUZZER_PIN, OUTPUT);
     pinMode(BRAKE_LIGHT_PIN, OUTPUT);
     pinMode(AMS_SHUTDOWN_PIN, OUTPUT);
-    pinMode(ACCUM_FAN_PIN, OUTPUT);
+    pinMode(RAD_FAN_PIN, OUTPUT);
     
     pinMode(APPS1_PIN, INPUT);
     pinMode(APPS2_PIN, INPUT);
