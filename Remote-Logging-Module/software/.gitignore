@@ -6,3 +6,4 @@
 .vscode
 
 foxglove/__pycache__
+foxglove/logs
