@@ -1,4 +1,5 @@
 cantools
 foxglove_websocket
+mcap
 pyserial-asyncio
 python-can==4.2.2
