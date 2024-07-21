@@ -17,7 +17,6 @@ from foxglove_websocket.types import (
 from mcap.writer import Writer
 from serial_asyncio import open_serial_connection
 
-
 # check for command-line argument
 if len(sys.argv) != 2:
     print("ERROR: No serial port selected")
@@ -154,9 +153,9 @@ async def main():
                 # write message to log file
                 mcap_writer.add_message(
                     channel_id=mcap_channel_id,
-                    log_time=delta_time,
+                    log_time=(delta_time * 1000000),
                     data=json.dumps(decoded_message).encode("utf8"),
-                    publish_time=delta_time,
+                    publish_time=(delta_time * 1000000),
                 )
 
                 # send message from server
@@ -185,4 +184,7 @@ def add_mcap_channel(message, schema):
 
 
 if __name__ == "__main__":
-    run_cancellable(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        mcap_writer.finish()  # close mcap file on exit
